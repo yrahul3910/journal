@@ -1,0 +1,24 @@
+{
+  "name": "journal",
+  "description": "Easy-to-use journaling application",
+  "author": "Rahul Yedida",
+  "build": {
+    "appId": "com.yrahul.journal"
+  },
+  "version": "5.0.0",
+  "main": "app/index.js",
+  "dependencies": {
+    "alertify.js": "^1.0.12",
+    "jquery": "^3.2.1"
+  },
+  "devDependencies": {
+    "electron-builder": "^19.4.2",
+    "electron-prebuilt": "^1.4.13"
+  },
+  "scripts": {
+    "postinstall": "install-app-deps",
+    "start": "electron app/index.js",
+    "pack": "build --dir",
+    "dist": "build"
+  }
+}

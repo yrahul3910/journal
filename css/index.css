@@ -1,0 +1,31 @@
+.col {
+  border-right: 1px solid lightgray;
+  overflow: scroll;
+  overflow-x: hidden;
+  height: 87%;
+  max-height: 87%;
+}
+
+.d-menu li a {
+  color: #727272 !important;
+}
+
+.d-menu li a:hover {
+  color: #000 !important;
+}
+
+.dialog {
+  width: 500px !important;
+}
+
+.modern {
+  height: 1em !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-right: 10px !important;
+  display: block !important;
+}
+
+#queryInput {
+  color: white;
+}
