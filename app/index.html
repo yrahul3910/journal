@@ -25,6 +25,12 @@
 						<li><a id="updateEntry">Update Entry</a></li>
 					</ul>
 				</li>
+				<li>
+					<a class="dropdown-toggle">Help</a>
+					<ul class="d-menu" data-role="dropdown">
+						<li><a id="aboutButton">About</a></li>
+					</ul>
+				</li>
 			</ul>
 			<div class="input-control modern text place-right">
 				<input type="text" id="queryInput">				
@@ -93,6 +99,15 @@
 			<div>
 				<button class="button" id="decryptJournal">Decrypt</button>
 				<button class="button danger" id="cancelDecrypt">Cancel</button>
+		</div>
+
+		<!-- About dialog -->
+		<div data-role="dialog" id="aboutDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+			<h2>About</h2>
+			<p><b>Journal 5.0</b><br/>
+			By <b>Rahul Yedida</b></p>
+			<p>Journal is a free and open source software. None of your data is collected. If you like the software,
+				consider spreading the word about it to support the software.</p>
 		</div>
 
     <!-- Scripts start here -->
