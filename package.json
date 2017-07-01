@@ -1,7 +1,10 @@
 {
   "name": "journal",
   "description": "Easy-to-use journaling application",
-  "author": "Rahul Yedida",
+  "author": {
+    "name": "Rahul Yedida",
+    "email": "yrahul3910@gmail.com"
+  },
   "build": {
     "appId": "com.yrahul.journal"
   },
@@ -9,7 +12,9 @@
   "main": "app/index.js",
   "dependencies": {
     "alertify.js": "^1.0.12",
-    "jquery": "^3.2.1"
+    "d3": "^4.9.1",
+    "jquery": "^3.2.1",
+    "sentiment": "^4.0.0"
   },
   "devDependencies": {
     "electron-builder": "^19.4.2",
