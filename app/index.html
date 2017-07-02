@@ -1,122 +1,123 @@
 <html>
-  <head>
-    <link rel="stylesheet" href="../css/bootstrap.css">
-		<link rel="stylesheet" href="../css/index.css">
-		<link rel="stylesheet" href="../css/metro.min.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  </head>
-  <body>
+    <head>
+        <link rel="stylesheet" href="../css/bootstrap.css">
+        <link rel="stylesheet" href="../css/index.css">
+        <link rel="stylesheet" href="../css/metro.min.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    </head>
+    <body>
     <!-- Menu -->
-		<div class="app-bar" data-role="appbar" style="margin-bottom: 10px">
-			<a class="app-bar-element branding" id="branding">Journal</a>
-			<ul class="app-bar-menu">
-				<li>
-					<a class="dropdown-toggle">File</a>
-					<ul class="d-menu" data-role="dropdown">
-						<li><a id="newJournal">New Journal</a></li>
-						<li><a id="open">Open</a></li>
-						<li><a id="save">Save</a></li>
-					</ul>
-				</li>
-				<li>
-					<a class="dropdown-toggle">Entry</a>
-					<ul class="d-menu" data-role="dropdown">
-						<li><a id="newEntry">New Entry</a></li>
-						<li><a id="updateEntry">Update Entry</a></li>
-					</ul>
-				</li>
-				<li>
-					<a class="dropdown-toggle">Help</a>
-					<ul class="d-menu" data-role="dropdown">
-						<li><a id="aboutButton">About</a></li>
-					</ul>
-				</li>
-			</ul>
-			<div class="input-control modern text place-right">
-				<input type="text" id="queryInput">				
-				<span class="placeholder">Search...</span>
-			</div>
-		</div>
+        <div class="app-bar" data-role="appbar" style="margin-bottom: 10px">
+            <a class="app-bar-element branding" id="branding">Journal</a>
+            <ul class="app-bar-menu">
+                <li>
+                    <a class="dropdown-toggle">File</a>
+                    <ul class="d-menu" data-role="dropdown">
+                        <li><a id="newJournal">New Journal</a></li>
+                        <li><a id="open">Open</a></li>
+                        <li><a id="save">Save</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a class="dropdown-toggle">Entry</a>
+                    <ul class="d-menu" data-role="dropdown">
+                        <li><a id="newEntry">New Entry</a></li>
+                        <li><a id="updateEntry">Update Entry</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a class="dropdown-toggle">Help</a>
+                    <ul class="d-menu" data-role="dropdown">
+                        <li><a id="aboutButton">About</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="input-control modern text place-right">
+                <input type="text" id="queryInput">
+                <span class="placeholder">Search...</span>
+            </div>
+        </div>
 
-		<!-- Main Page starts here -->
-		<div class="container">
-			<div class="row">
-				<div id="list" class="col">
+        <!-- Main Page starts here -->
+        <div class="container">
+            <div class="row">
+                <div id="list" class="col">
 
-				</div>
-				<div id="content" class="col">
-					
-				</div>
-			</div>
-		</div>
+                </div>
+                <div id="content" class="col">
 
-		<!-- New entry dialog -->
-		<div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-			<input type="date" id="date">
-			<p></p>
-			<div class="input-control textarea">
-				<textarea rows="15" cols="50"></textarea>
-			</div>
-			<div>
-				<span>Add an image (optional)</span>
-				<div class="input-control file" data-role="input">
-					<input type="file" accept="image/*" onchange="encodeImage(this)">
-					<button class="button">Choose</button>
-				</div>
-			</div>
-			<button class="button" id="addEntry">Add Entry</button>
-			<button class="button danger" id="cancelEntry">Cancel</button>
-		</div>
+                </div>
+            </div>
+        </div>
 
-		<!-- Error with new entry dialog -->
-		<div data-role="dialog" id="errDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-type="alert">
-			<h1>Cannot create new entry</h1>
-			<p> Please open a journal or create a new one first</p>
-		</div>
-		
-		<!-- New journal password entry dialog -->
-		<div data-role="dialog" id="newJournalDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-			<div><span id="encryptionNotice">Your journal will be encrypted. Please enter a password.</span></div>
-			<div class="input-control password">
-				<input type="password" id="password">
-			</div>
-			<div>Please re-enter your password</div>
-			<div class="input-control password">
-				<input type="password" id="confirmPassword">
-			</div>
-			<div>
-				<button class="button" id="confirmNewJournal">Create New Journal</button>
-				<button class="button danger" id="cancelNewJournal">Cancel</button>
-			</div>
-		</div>
+        <!-- New entry dialog -->
+        <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <input type="date" id="date">
+            <p></p>
+            <div class="input-control textarea">
+                <textarea rows="15" cols="50"></textarea>
+            </div>
+            <div>
+                <span>Add an image (optional)</span>
+                <div class="input-control file" data-role="input">
+                    <input type="file" id="selectFile" accept="image/*">
+                    <button class="button">Choose</button>
+                </div>
+            </div>
+            <button class="button" id="addEntry">Add Entry</button>
+            <button class="button danger" id="cancelEntry">Cancel</button>
+        </div>
 
-		<!-- Decrypt dialog -->
-		<div data-role="dialog" id="decryptDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-			<div><span id="prompt">Please enter the password to decrypt</span></div>
-			<div class="input-control password">
-				<input type="password" id="unlock">
-			</div>
-			<div>
-				<button class="button" id="decryptJournal">Decrypt</button>
-				<button class="button danger" id="cancelDecrypt">Cancel</button>
-		</div>
+        <!-- Error with new entry dialog -->
+        <div data-role="dialog" id="errDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-type="alert">
+            <h1>Cannot create new entry</h1>
+            <p> Please open a journal or create a new one first</p>
+        </div>
 
-		<!-- About dialog -->
-		<div data-role="dialog" id="aboutDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-			<h2>About</h2>
-			<p><b>Journal 5.0</b><br/>
-			By <b>Rahul Yedida</b></p>
-			<p>Journal is a free and open source software. None of your data is collected. If you like the software,
-				consider spreading the word about it to support the software.</p>
-		</div>
+        <!-- New journal password entry dialog -->
+        <div data-role="dialog" id="newJournalDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a password.</span></div>
+            <div class="input-control password">
+                <input type="password" id="password">
+            </div>
+            <div>Please re-enter your password</div>
+            <div class="input-control password">
+                <input type="password" id="confirmPassword">
+            </div>
+            <div>
+                <button class="button" id="confirmNewJournal">Create New Journal</button>
+                <button class="button danger" id="cancelNewJournal">Cancel</button>
+            </div>
+        </div>
 
-    <!-- Scripts start here -->
-    <script>window.$ = window.jQuery = require('../js/jquery-3.2.1.min.js');</script>
-    <script src="../js/bootstrap.min.js"></script>
-	  <script src="../js/jquery.tooltip.min.js"></script>
-		<script src="../js/metro.min.js"></script>
-		<script>
-			require('./render.js');
-		</script>
-  </body>
+        <!-- Decrypt dialog -->
+        <div data-role="dialog" id="decryptDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <div><span id="prompt">Please enter the password to decrypt</span></div>
+            <div class="input-control password">
+                <input type="password" id="unlock">
+            </div>
+            <div>
+                <button class="button" id="decryptJournal">Decrypt</button>
+                <button class="button danger" id="cancelDecrypt">Cancel</button>
+            </div>
+        </div>
+
+        <!-- About dialog -->
+        <div data-role="dialog" id="aboutDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <h2>About</h2>
+            <p><b>Journal 5.0</b><br/>
+            By <b>Rahul Yedida</b></p>
+            <p>Journal is a free and open source software. None of your data is collected. If you like the software,
+                consider spreading the word about it to support the software.</p>
+        </div>
+
+        <!-- Scripts start here -->
+        <script>window.$ = window.jQuery = require('../js/jquery-3.2.1.min.js');</script>
+        <script src="../js/bootstrap.min.js"></script>
+        <script src="../js/jquery.tooltip.min.js"></script>
+        <script src="../js/metro.min.js"></script>
+        <script>
+            require('./render.js');
+        </script>
+    </body>
 </html>

@@ -34,7 +34,7 @@ const getDecryptedText = (text) => {
     return undefined;
   } 
 }
-// **************END OF ENCRYPTION PART****************
+// ******************************************************
 
 let journalEntries;
 let currentEntryCount;
@@ -43,14 +43,10 @@ let encodedImage = ""; // this holds the base64 encoded attachment image of the 
 // Used to store the HTML of all the entries
 let allEntriesHTML;
 
-// from https://stackoverflow.com/a/20285053/2713263
-function encodeImage(element) {
-  var file = element.files[0];
-  var reader = new FileReader();
-  reader.onloadend = function() {
-    encodedImage = reader.result;
-  }
-  reader.readAsDataURL(file);
+// from https://stackoverflow.com/a/24526156
+function encodeImage(file) {
+  let bitmap = fs.readFileSync(file);
+  return new Buffer(bitmap).toString('base64');
 }
 
 function showData(data) {
@@ -84,7 +80,6 @@ function showData(data) {
 const onEntryClicked = (e, json) => {
   const id = e.currentTarget.id;
   const selectedEntry = json[+id];
-
   // selectedEntry.attachment, content, entryDate are the properties
   let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b></p>";
   entryHTML += "<p>" + selectedEntry.content + "</p>";
@@ -94,7 +89,7 @@ const onEntryClicked = (e, json) => {
   $("<img>", {
     "src": "data:image/png;base64," + selectedEntry.attachment,
     // added `width` , `height` properties to `img` attributes
-    "width": "250px", "height": "250px"})
+    "width": "250px"})
   .appendTo("#content");
 }
 
@@ -175,7 +170,6 @@ $('#addEntry').click(() => {
   journalEntries.en.push(newEntry);
 
   // Show the entry in #list.
-  currentEntryCount += 1;
   let html = ""
   html += "<div class='entry' id='" + currentEntryCount + "'><b>";
   html += date.toDateString() + '</b><br/><p>';
@@ -183,6 +177,13 @@ $('#addEntry').click(() => {
   html += words + '...</p></div><hr />';
   $('#list').append(html);
   allEntriesHTML += html;
+  currentEntryCount++;
+
+  // We need to rebind this handler
+  $('.entry').click((e) => {
+    onEntryClicked(e, journalEntries.en);
+  });
+  metroDialog.close('#editDialog');
 });
 
 $('#cancelEntry').click(() => {
@@ -231,7 +232,7 @@ $('#queryInput').on('keyup', (e) => {
       $("<img>", {
         "src": "data:image/png;base64," + selectedEntry.attachment,
         // added `width` , `height` properties to `img` attributes
-        "width": "250px", "height": "250px"})
+        "width": "250px"})
       .appendTo("#content");
     });
 
@@ -242,7 +243,7 @@ $('#queryInput').on('keyup', (e) => {
       // We need to rebind this handler
       $('.entry').click((e) => {
         onEntryClicked(e, journalEntries.en);
-      })
+      });
 
       // Re-enable the menu items we disabled (below)
       $('.app-bar-menu').css('display', 'block');
@@ -310,4 +311,9 @@ $('textarea').on('keyup', () => {
 $('#aboutButton').click(() => {
   metroDialog.open('#aboutDialog');
   $('.dialog-overlay').css('background', 'rgba(29, 29, 29, 0.7');
+});
+
+$('#selectFile').on('change', () => {
+  const filename = $('#selectFile')[0].files[0].path;
+  encodedImage = encodeImage(filename);
 })
