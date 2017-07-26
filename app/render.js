@@ -1,4 +1,4 @@
-/* eslint-disable-file no-undef */
+/* eslint no-undef: 0 */
 const { dialog } = require("electron").remote;
 const fs = require("fs");
 const $ = require("jquery");
