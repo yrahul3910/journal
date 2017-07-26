@@ -3,13 +3,6 @@ const fs = require('fs');
 const $ = require('jquery');
 const alertify = require('alertify.js');
 const crypto = require('crypto');
-const d3 = require('d3');
-const sentiment = require('sentiment');
-
-const colorScale = d3.scaleLinear()
-                      .domain([-5, 5])
-                      .interpolate(d3.interpolateHcl)
-                      .range([d3.rgb('#FF0000'), d3.rgb('#00FF00')]);
 
 // **********************ENCRYPTION PART*****************
 // Encryption implemented from https://stackoverflow.com/a/6953606
@@ -61,10 +54,6 @@ function showData(data) {
     html += "<div class='entry' id='" + i + "'><b>";
     html += new Date(json[i].entryDate).toDateString() + '</b><br/><p>';
     let entry = json[i].content;
-
-    // Run sentiment analysis to change color based on content
-    const sentimentScore = sentiment(entry).score;
-    $('#' + i).css('background-color', colorScale(sentimentScore));
 
     let words = entry.split(/\s+/).slice(0, 5).join(" ");
     html += words + '...</p></div><hr />';
@@ -184,10 +173,13 @@ $('#addEntry').click(() => {
     onEntryClicked(e, journalEntries.en);
   });
   metroDialog.close('#editDialog');
+
+  $('textarea').val("");
 });
 
 $('#cancelEntry').click(() => {
   metroDialog.close('#editDialog');
+  $('textarea').val("");
 })
 
 
@@ -299,13 +291,6 @@ $('#decryptJournal').click(() => {
     showData(data);
     metroDialog.close('#decryptDialog');
   }
-});
-
-$('textarea').on('keyup', () => {
-  // Use the sentiment analysis framework to change the dialog color
-  const text = $('textarea').val();
-  const sentimentScore = sentiment(text).score;
-  $('#editDialog').css('background-color', colorScale(sentimentScore));
 });
 
 $('#aboutButton').click(() => {
