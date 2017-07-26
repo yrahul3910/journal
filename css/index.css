@@ -6,6 +6,34 @@
   max-height: 87%;
 }
 
+#datepicker {
+  position: fixed !important;
+  z-index: 1000 !important; /* required to keep calendar visible when clicked */
+}
+
+.sentiment {
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+}
+
+.Happy {
+  background-color: green;
+}
+
+.Angry {
+  background-color: red;
+}
+
+.Sad {
+  background-color: yellow;
+}
+
+.Neutral {
+  background-color: gray;
+}
+
 .d-menu li a {
   color: #727272 !important;
 }

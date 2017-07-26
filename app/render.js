@@ -52,7 +52,9 @@ function showData(data) {
   let html = "";
   for (let i = 0; i < currentEntryCount; ++i) {
     html += "<div class='entry' id='" + i + "'><b>";
-    html += new Date(json[i].entryDate).toDateString() + '</b><br/><p>';
+    html += new Date(json[i].entryDate).toDateString() + '</b>' + 
+      '<span>  </span><span class="sentiment ' + (json[i].sentiment ? json[i].sentiment : 'Neutral') + 
+      '"></span><br/><p>';
     let entry = json[i].content;
 
     let words = entry.split(/\s+/).slice(0, 5).join(" ");
@@ -70,16 +72,19 @@ const onEntryClicked = (e, json) => {
   const id = e.currentTarget.id;
   const selectedEntry = json[+id];
   // selectedEntry.attachment, content, entryDate are the properties
-  let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b></p>";
+  let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" + 
+    "<span>  </span><span class='sentiment " + 
+    (selectedEntry.sentiment ? selectedEntry.sentiment : 'Neutral') + "'></span></p>";
   entryHTML += "<p>" + selectedEntry.content + "</p>";
   $('#content').html(entryHTML);
 
   // From https://stackoverflow.com/a/26332690
-  $("<img>", {
-    "src": "data:image/png;base64," + selectedEntry.attachment,
-    // added `width` , `height` properties to `img` attributes
-    "width": "250px"})
-  .appendTo("#content");
+  if (selectedEntry.attachment)
+    $("<img>", {
+      "src": "data:image/png;base64," + selectedEntry.attachment,
+      // added `width` , `height` properties to `img` attributes
+      "width": "250px"})
+    .appendTo("#content");
 }
 
 $('#open').click(() => {
@@ -154,14 +159,16 @@ $('#addEntry').click(() => {
     }
   }
 
+  let sentiment = $('select').val();
   // Add the entry to the list of entries  
-  let newEntry = { entryDate: date, content, attachment: encodedImage };
+  let newEntry = { entryDate: date, content, attachment: encodedImage, sentiment };
   journalEntries.en.push(newEntry);
 
   // Show the entry in #list.
   let html = ""
   html += "<div class='entry' id='" + currentEntryCount + "'><b>";
-  html += date.toDateString() + '</b><br/><p>';
+  html += date.toDateString() + '</b><span>  </span><span class="sentiment ' +
+    sentiment + '"></span><br/><p>';
   let words = content.split(/\s+/).slice(0, 5).join(" ");
   html += words + '...</p></div><hr />';
   $('#list').append(html);
@@ -301,4 +308,4 @@ $('#aboutButton').click(() => {
 $('#selectFile').on('change', () => {
   const filename = $('#selectFile')[0].files[0].path;
   encodedImage = encodeImage(filename);
-})
+});

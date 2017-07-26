@@ -3,6 +3,7 @@
         <link rel="stylesheet" href="../css/bootstrap.css">
         <link rel="stylesheet" href="../css/index.css">
         <link rel="stylesheet" href="../css/metro.min.css">
+        <link rel="stylesheet" href="../css/metro-icons.min.css">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     </head>
     <body>
@@ -52,8 +53,30 @@
 
         <!-- New entry dialog -->
         <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <input type="date" id="date">
-            <p></p>
+            <div class="row">
+                <div class="col" style="overflow: hidden; border-right: 0">
+                    <p style="margin-top: 0.7rem">Date</p>
+                </div>
+                <div class="col" style="overflow: hidden; border-right: 0">
+                    <div class="input-control text" data-role="datepicker" id="datepicker">
+                        <input type="text" id="date">
+                        <button class="button"><span class="mif-calendar"></span></button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col" style="overflow: hidden; border-right: 0">
+                    <p style="margin-top: 0.7rem">Choose a mood!</p>
+                </div>
+                <div class="col" style="overflow: hidden; border-right: 0">
+                    <select style="width: 83%">
+                        <option>Happy</option>
+                        <option>Sad</option>
+                        <option>Angry</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="input-control textarea">
                 <textarea rows="15" cols="50"></textarea>
             </div>
@@ -112,11 +135,18 @@
         </div>
 
         <!-- Scripts start here -->
-        <script>window.$ = window.jQuery = require('../js/jquery-3.2.1.min.js');</script>
+        <script src="../js/jquery.min.js"></script>
+        <link rel="stylesheet" href="../css/select2.min.css">
+        <script src="../js/select2.min.js"></script>
+
         <script src="../js/bootstrap.min.js"></script>
-        <script src="../js/jquery.tooltip.min.js"></script>
         <script src="../js/metro.min.js"></script>
+
+        
         <script>
+            $(()=>{
+                $('select').select2();
+            });
             require('./render.js');
         </script>
     </body>
