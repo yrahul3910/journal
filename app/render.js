@@ -4,7 +4,9 @@ const fs = require("fs");
 const $ = require("jquery");
 const alertify = require("alertify.js");
 const crypto = require("crypto");
+const owasp = require("owasp-password-strength-test");
 
+const VERSION_NUMBER = 5.0;
 // **********************ENCRYPTION PART*****************
 // Encryption implemented from https://stackoverflow.com/a/6953606
 const algorithm = "aes256";
@@ -12,12 +14,14 @@ const algorithm = "aes256";
 // openMode has either "Open File" or "New Journal"
 let pwd, openMode;
 let encryptedData;
+
 // Wrapper functions for encryption
 // Note: if emojis are to be supported later, might wanna change UTF-8 with UTF-16
 const getEncryptedText = (text) => {
   const cipher = crypto.createCipher(algorithm, pwd);
   return cipher.update(text, "utf8", "hex") + cipher.final("hex");
 };
+
 const getDecryptedText = (text) => {
   const decipher = crypto.createDecipher(algorithm, pwd);
   try {
@@ -26,6 +30,18 @@ const getDecryptedText = (text) => {
     $("#prompt").text("Wrong password. Try again.");
     return undefined;
   } 
+};
+
+const checkPwdStrength = (pwd) => {
+  owasp.config({
+    minLength: 8
+  });
+
+  let result = owasp.test(pwd);
+  if (result.errors)
+    return result.errors;
+  else
+    return [];
 };
 // ******************************************************
 
@@ -124,10 +140,13 @@ $("#save").click(() => {
   ]}, (filename) => {
     if (!filename) return;
 
+    journalEntries.version = VERSION_NUMBER;
     let data = JSON.stringify(journalEntries);
     fs.writeFile(filename, getEncryptedText(data), (err) => {
-      if (err)
+      if (err) {
         dialog.showErrorBox("Could not save file.", "We couldn't save the journal file. Make sure you have the required permisssions to do so.");
+        return;
+      }
       alertify.success("Saved successfully!");
     });
   });
@@ -259,13 +278,20 @@ $("#queryInput").blur(() => {
 });
 
 $("#confirmNewJournal").click(() => {
+  let password = $("#password").val();
   // Check passwords not empty and matching, and set pwd.
-  if (/^\s*$/.test($("#password").val())) {
+  if (/^\s*$/.test(password)) {
     alertify.error("Password cannot be empty.");
     return;
   }
-  if ($("#password").val() !== $("#confirmPassword").val()) {
+  if (password !== $("#confirmPassword").val()) {
     alertify.error("Passwords do not match.");
+    return;
+  }
+  let pwdStrength = checkPwdStrength(password);
+  if (pwdStrength) {
+    // Not secure enough.
+    alertify.error(pwdStrength[0]);
     return;
   }
   pwd = $("#password").val();
