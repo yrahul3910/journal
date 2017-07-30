@@ -9,7 +9,7 @@
     <body>
     <!-- Menu -->
         <div class="app-bar" data-role="appbar" style="margin-bottom: 10px">
-            <a class="app-bar-element branding" id="branding">Journal</a>
+            <a class="app-bar-element branding" id="branding">JournalBear</a>
             <ul class="app-bar-menu">
                 <li>
                     <a class="dropdown-toggle">File</a>
@@ -73,10 +73,16 @@
                         <option>Happy</option>
                         <option>Sad</option>
                         <option>Angry</option>
+                        <option>Neutral</option>
                     </select>
                 </div>
             </div>
-
+            <div class="row" style="padding: 20px">
+                <span>JournalBear uses Markdown for formatting. Use *asterisks* for <em>italics</em>,
+                    and **double asterisks** for <b>bold</b>. You can also use underscores instead
+                    of asterisks. If you like, you can also use HTML/CSS to format your
+                    entry!</span>
+            </div>
             <div class="input-control textarea">
                 <textarea rows="15" cols="50"></textarea>
             </div>
@@ -87,6 +93,7 @@
                     <button class="button">Choose</button>
                 </div>
             </div>
+            <button class="button" id="preview">Preview</button>
             <button class="button" id="addEntry">Add Entry</button>
             <button class="button danger" id="cancelEntry">Cancel</button>
         </div>
@@ -99,7 +106,8 @@
 
         <!-- New journal password entry dialog -->
         <div data-role="dialog" id="newJournalDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a password.</span></div>
+            <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a strong password. It's
+                recommended to use a passphrase instead, but it's optional.</span></div>
             <div class="input-control password">
                 <input type="password" id="password">
             </div>
@@ -134,6 +142,11 @@
                 consider spreading the word about it to support the software.</p>
         </div>
 
+        <!-- Preview dialog -->
+        <div data-role="dialog" id="previewDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <div id="renderedMarkdown">
+            </div>
+        </div>
         <!-- Scripts start here -->
         <script src="../js/jquery.min.js"></script>
         <link rel="stylesheet" href="../css/select2.min.css">
