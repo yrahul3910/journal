@@ -30,7 +30,7 @@ const getDecryptedText = (text) => {
     } catch(ex) {
         $("#prompt").text("Wrong password. Try again.");
         return undefined;
-    } 
+    }
 };
 
 const checkPwdStrength = (pwd) => {
@@ -69,8 +69,8 @@ function showData(data) {
     let html = "";
     for (let i = 0; i < currentEntryCount; ++i) {
         html += "<div class='entry' id='" + i + "'><b>";
-        html += new Date(json[i].entryDate).toDateString() + "</b>" + 
-      "<span>  </span><span class='sentiment " + (json[i].sentiment ? json[i].sentiment : "Neutral") + 
+        html += new Date(json[i].entryDate).toDateString() + "</b>" +
+      "<span>  </span><span class='sentiment " + (json[i].sentiment ? json[i].sentiment : "Neutral") +
       "'></span><br/><p>";
         let entry = json[i].content;
 
@@ -89,8 +89,8 @@ const onEntryClicked = (e, json) => {
     const id = e.currentTarget.id;
     const selectedEntry = json[+id];
     // selectedEntry.attachment, content, entryDate are the properties
-    let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" + 
-    "<span>  </span><span class='sentiment " + 
+    let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" +
+    "<span>  </span><span class='sentiment " +
     (selectedEntry.sentiment ? selectedEntry.sentiment : "Neutral") + "'></span></p>";
     entryHTML += "<p>" + selectedEntry.content + "</p>";
     $("#content").html(entryHTML);
@@ -126,7 +126,7 @@ $("#open").click(() => {
             openMode = "Open File";
             $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
         }
-      
+
         encryptedData = fs.readFileSync(filenames[0]).toString();
         if (!oldVersion) {
             metroDialog.open("#decryptDialog");
@@ -181,7 +181,7 @@ $("#addEntry").click(() => {
     }
 
     let sentiment = $("select").val();
-    // Add the entry to the list of entries  
+    // Add the entry to the list of entries
     let newEntry = { entryDate: date, content, attachment: encodedImage, sentiment };
     journalEntries.en.push(newEntry);
 
@@ -226,7 +226,7 @@ $("#queryInput").on("keyup", (e) => {
         $("#queryInput").val("");
 
         /* Show the entries which match the query in #list. We prompt the user
-    to click the Journal button in the menu to get back to all entries, 
+    to click the Journal button in the menu to get back to all entries,
     which we've stored in the allEntriesHTML variable. */
         $("#content").html("");
 
@@ -324,9 +324,12 @@ $("#decryptJournal").click(() => {
     pwd = $("#unlock").val();
     let data;
     if ((data = getDecryptedText(encryptedData))) {
-    // Successful
+        // Successful
         showData(data);
         metroDialog.close("#decryptDialog");
+
+        if (data.version > VERSION_NUMBER)
+            alertify.error("This journal is from a newer version. Some features may not work correctly.");
     }
 });
 
