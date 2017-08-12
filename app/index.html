@@ -24,6 +24,7 @@
                     <ul class="d-menu" data-role="dropdown">
                         <li><a id="newEntry">New Entry</a></li>
                         <li><a id="updateEntry">Update Entry</a></li>
+                        <li><a id="searchByDate">Search by Date</a></li>
                     </ul>
                 </li>
                 <li>
@@ -144,6 +145,15 @@
                 consider spreading the word about it to support the software.</p>
         </div>
 
+        <!-- Search by date dialog -->
+        <div data-role="dialog" id="searchDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <div class="input-control text" data-role="datepicker">
+                <input type="text" id="searchDate">
+                <button class="button"><span class="mif-calendar"></span></button>
+            </div>
+            <button class="button" id="searchButton">Search</button>
+        </div>
+
         <!-- Preview dialog -->
         <div data-role="dialog" id="previewDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
             <div id="renderedMarkdown">
@@ -157,7 +167,7 @@
         <script src="../js/bootstrap.min.js"></script>
         <script src="../js/metro.min.js"></script>
 
-        
+
         <script>
             $(()=>{
                 $('select').select2();

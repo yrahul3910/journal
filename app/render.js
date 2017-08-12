@@ -6,6 +6,7 @@ const alertify = require("alertify.js");
 const crypto = require("crypto");
 const owasp = require("owasp-password-strength-test");
 const marked = require("marked");
+const _ = require("lodash");
 
 const VERSION_NUMBER = 5.0;
 // **********************ENCRYPTION PART*****************
@@ -226,8 +227,8 @@ $("#queryInput").on("keyup", (e) => {
         $("#queryInput").val("");
 
         /* Show the entries which match the query in #list. We prompt the user
-    to click the Journal button in the menu to get back to all entries,
-    which we've stored in the allEntriesHTML variable. */
+        to click the Journal button in the menu to get back to all entries,
+        which we've stored in the allEntriesHTML variable. */
         $("#content").html("");
 
         let queryResults = [], html = "", resultCount = 0;
@@ -294,7 +295,7 @@ $("#confirmNewJournal").click(() => {
         return;
     }
     let pwdStrength = checkPwdStrength(password);
-    if (pwdStrength.errors) {
+    if (!_.isEqual(pwdStrength, [])) {
     // Not secure enough.
         alertify.error(pwdStrength[0]);
         return;
@@ -347,4 +348,59 @@ $("#preview").click(() => {
     metroDialog.open("#previewDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
     $("#renderedMarkdown").html(marked($("textarea").val()));
+});
+
+$("#searchByDate").click(() => {
+    metroDialog.open("#searchDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
+$("#searchButton").click(() => {
+    let entries = journalEntries.en;
+
+    for (let entry of entries) {
+        if (new Date(entry.entryDate).toDateString() ==
+            new Date($("#searchDate").val()).toDateString()) {
+
+            $("#content").html("");
+
+            let html = "";
+            html += "<div class='queryResult'><b>";
+            html += new Date(entry.entryDate).toDateString() + "</b><br/><p>";
+            let words = entry.content.split(/\s+/).slice(0, 5).join(" ");
+            html += words + "...</p></div><hr />";
+
+            $("#list").html(html);
+            $(".queryResult").click(() => {
+                let entryHTML = "<p><b>" + (new Date(entry.entryDate).toDateString()) + "</b></p>";
+                entryHTML += "<p>" + entry.content + "</p>";
+
+                $("#content").html(entryHTML);
+                $("<img>", {
+                    "src": "data:image/png;base64," + entry.attachment,
+                    // added `width` , `height` properties to `img` attributes
+                    "width": "250px"})
+                    .appendTo("#content");
+            });
+
+            alertify.delay(6000).log("Click the Journal button in the menu to return to all entries.");
+            $("#branding").click(() => {
+                $("#list").html(allEntriesHTML);
+
+                // We need to rebind this handler
+                $(".entry").click((e) => {
+                    onEntryClicked(e, journalEntries.en);
+                });
+
+                // Re-enable the menu items we disabled (below)
+                $(".app-bar-menu").css("display", "block");
+            });
+
+            // We should also prevent him from adding new entries and stuff.
+            // We'll enable that when he clicks the Journal menu button.
+            $(".app-bar-menu").css("display", "none");
+
+            break;
+        }
+    }
 });
