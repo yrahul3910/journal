@@ -60,3 +60,4 @@ typings/
 
 .vscode/
 dist/
+build/
