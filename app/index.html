@@ -54,6 +54,7 @@
 
         <!-- New entry dialog -->
         <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <div id="addEntryError"></div>
             <div class="row">
                 <div class="col" style="overflow: hidden; border-right: 0">
                     <p style="margin-top: 0.7rem">Date</p>
@@ -109,6 +110,7 @@
 
         <!-- New journal password entry dialog -->
         <div data-role="dialog" id="newJournalDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <div id="newJournalError"></div>
             <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a strong password. It's
                 recommended to use a passphrase instead, but it's optional.</span></div>
             <div class="input-control password">
@@ -139,10 +141,13 @@
         <!-- About dialog -->
         <div data-role="dialog" id="aboutDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
             <h2>About</h2>
-            <p><b>Journal 5.0</b><br/>
+            <p><b>JournalBear 5.0 Beta 1</b><br/>
             By <b>Rahul Yedida</b></p>
             <p>Journal is a free and open source software. None of your data is collected. If you like the software,
-                consider spreading the word about it to support the software.</p>
+                consider spreading the word to support it.</p>
+            <hr>
+            <b>Credits</b><br><br>
+            Bhavana KV
         </div>
 
         <!-- Search by date dialog -->

@@ -176,7 +176,8 @@ $("#addEntry").click(() => {
     // Make sure this isn't a duplicate entry.
     for (let i = 0; i < currentEntryCount; ++i) {
         if (date.getTime() === new Date(journalEntries.en[i].entryDate).getTime()) {
-            alertify.error("Multiple entries for the same date not allowed.");
+            $("#addEntryError").html(`<span style="color: red">Multiple entries
+                for the same date not allowed.</span>`);
             return;
         }
     }
@@ -287,17 +288,19 @@ $("#confirmNewJournal").click(() => {
     let password = $("#password").val();
     // Check passwords not empty and matching, and set pwd.
     if (/^\s*$/.test(password)) {
-        alertify.error("Password cannot be empty.");
+        $("#newJournalError").html(`<span style="color: red">Password cannot be empty.
+            </span>`);
         return;
     }
     if (password !== $("#confirmPassword").val()) {
-        alertify.error("Passwords do not match.");
+        $("#newJournalError").html(`<span style="color: red">Passwords do not match.
+            </span>`);
         return;
     }
     let pwdStrength = checkPwdStrength(password);
     if (!_.isEqual(pwdStrength, [])) {
     // Not secure enough.
-        alertify.error(pwdStrength[0]);
+        $("#newJournalError").html("<span style='color: red'>" + pwdStrength[0] + "</span>");
         return;
     }
     pwd = $("#password").val();
