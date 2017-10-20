@@ -205,7 +205,8 @@ $("#addEntry").click(() => {
     metroDialog.close("#editDialog");
 
     $("textarea").val("");
-    $("#selectFile").form.reset();
+    $("#selectFile").val("");
+    encodedImage = "";
 });
 
 $("#cancelEntry").click(() => {
