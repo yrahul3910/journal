@@ -93,7 +93,7 @@ const onEntryClicked = (e, json) => {
     let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" +
     "<span>  </span><span class='sentiment " +
     (selectedEntry.sentiment ? selectedEntry.sentiment : "Neutral") + "'></span></p>";
-    entryHTML += "<p>" + selectedEntry.content + "</p>";
+    entryHTML += "<p>" + marked(selectedEntry.content) + "</p>";
     $("#content").html(entryHTML);
 
     // From https://stackoverflow.com/a/26332690
@@ -107,8 +107,8 @@ const onEntryClicked = (e, json) => {
 
 $("#open").click(() => {
     dialog.showOpenDialog({ filters: [
-        { name: "Journal 4.0 Document", extensions: ["journalx"] },
-        { name: "Journal 5.0 Document", extensions: ["ejournal"]}
+        { name: "JournalBear 5.0 Document", extensions: ["ejournal"]},
+        { name: "Journal 4.0 Document", extensions: ["journalx"] }
     ]}, (filenames) => {
         if (filenames === undefined) return;
 
@@ -117,7 +117,7 @@ $("#open").click(() => {
             // TODO: Need a better way of finding version
             // Notify user of new format, ask for password.
             oldVersion = true;
-            const disclaimer = "Thank you for choosing Journal. The new version will now be " +
+            const disclaimer = "Thank you for choosing JournalBear. The new version will now be " +
           "encrypted by AES-256. Please enter a password to continue.";
             $("#encryptionNotice").text(disclaimer);
 
@@ -140,7 +140,7 @@ $("#open").click(() => {
 
 $("#save").click(() => {
     dialog.showSaveDialog({ filters: [
-        { name: "Journal 5.0 Document", extensions: ["ejournal"] }
+        { name: "JournalBear 5.0 Document", extensions: ["ejournal"] }
     ]}, (filename) => {
         if (!filename) return;
 
@@ -261,7 +261,7 @@ $("#queryInput").on("keyup", (e) => {
                 .appendTo("#content");
         });
 
-        alertify.delay(6000).log("Click the Journal button in the menu to return to all entries.");
+        alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");
         $("#branding").click(() => {
             $("#list").html(allEntriesHTML);
 
@@ -387,7 +387,7 @@ $("#searchButton").click(() => {
                     .appendTo("#content");
             });
 
-            alertify.delay(6000).log("Click the Journal button in the menu to return to all entries.");
+            alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");
             $("#branding").click(() => {
                 $("#list").html(allEntriesHTML);
 
