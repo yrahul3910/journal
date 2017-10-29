@@ -1,5 +1,6 @@
 {
   "name": "journal",
+  "repository": "https://github.com/yrahul3910/journal",
   "description": "Easy-to-use journaling application",
   "author": {
     "name": "Rahul Yedida",
@@ -8,11 +9,12 @@
   "build": {
     "appId": "com.yrahul.journal"
   },
-  "version": "5.0.0",
+  "version": "5.1.0",
   "main": "app/index.js",
   "dependencies": {
     "alertify.js": "^1.0.12",
     "d3": "^4.9.1",
+    "electron-updater": "^2.15.0",
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
     "marked": "^0.3.6",
@@ -27,7 +29,6 @@
     "start": "electron app/index.js",
     "pack": "build --dir",
     "dist": "build",
-    "dist-linux": "build -l --x64 --ia32",
-    "dist-win": "build -w --x64 --ia32"
+    "ship": "build -p always"
   }
 }

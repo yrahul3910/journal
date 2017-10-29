@@ -1,5 +1,6 @@
 /* eslint no-undef: 0 */
 const { dialog } = require("electron").remote;
+const ipcRenderer = require("electron").ipcRenderer;
 const fs = require("fs");
 const $ = require("jquery");
 const alertify = require("alertify.js");
@@ -46,6 +47,16 @@ const checkPwdStrength = (pwd) => {
         return [];
 };
 // ******************************************************
+
+// Auto updater function
+ipcRenderer.on("updateReady", (event, text) => {
+    alertify.okBtn("Quit and install now")
+        .cancelBtn("Not now")
+        .confirm("A new update is available. Reinstall to apply changes?", (ev) => {
+            ev.preventDefault();
+            ipcRenderer.send("quitAndInstall");
+        });
+});
 
 let journalEntries;
 let currentEntryCount;
