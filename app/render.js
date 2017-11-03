@@ -301,7 +301,7 @@ $("#queryInput").on("keyup", (e) => {
 
         let queryResults = [], html = "", resultCount = 0;
         for (let i = 0; i < journalEntries.en.length; ++i) {
-            if (journalEntries.en[i].content.includes(query)) {
+            if (new RegExp(query).test(journalEntries.en[i].content)) {
                 resultCount += 1;
                 queryResults.push(journalEntries.en[i]);
 
