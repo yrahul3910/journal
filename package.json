@@ -1,5 +1,5 @@
 {
-  "name": "journal",
+  "name": "JournalBear",
   "repository": "https://github.com/yrahul3910/journal",
   "description": "Easy-to-use journaling application",
   "author": {
@@ -9,7 +9,7 @@
   "build": {
     "appId": "com.yrahul.journal"
   },
-  "version": "5.1.0",
+  "version": "5.0.1",
   "main": "app/index.js",
   "dependencies": {
     "alertify.js": "^1.0.12",
