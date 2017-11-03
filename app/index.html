@@ -9,8 +9,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     </head>
     <body>
-    <!-- Menu -->
-        <div class="app-bar" data-role="appbar" style="margin-bottom: 10px">
+        <!-- Menu -->
+        <div class="app-bar" data-role="appbar">
             <a class="app-bar-element branding" id="branding">JournalBear</a>
             <ul class="app-bar-menu">
                 <li>
@@ -36,20 +36,55 @@
                     </ul>
                 </li>
             </ul>
-            <div class="input-control modern text place-right">
+            <div class="input-control modern text place-right" style="margin-right: 20px !important">
                 <input type="text" id="queryInput">
                 <span class="placeholder">Search...</span>
             </div>
         </div>
 
         <!-- Main Page starts here -->
-        <div class="container">
-            <div class="row">
+        <div class="container" style="margin-top: 10px;">
+            <div id="journal-mode" style="display: none" class="row">
                 <div id="list" class="col">
 
                 </div>
                 <div id="content" class="col">
 
+                </div>
+            </div>
+            <div id="welcome-page">
+                <div class="row">
+                    <div class="col">
+                        <div style="margin-left: 40px;">
+                            <p class="welcome-page-title">
+                                Get Started
+                            </p>
+                            <p>
+                                <a style="font-size: 16px;" target="_blank" href="https://github.com/yrahul3910/journal/issues">
+                                    Request a feature or report a bug
+                                </a>
+                            </p>
+                            <p>
+                                <a style="font-size: 16px;" target="_blank" href="https://github.com/yrahul3910/journal">
+                                    View our source code
+                                </a>
+                            </p>
+                            <p class="welcome-page-title" style="margin-top: 40px;">
+                                Help
+                            </p>
+                            <p>
+                                <a style="font-size: 16px;" target="_blank" href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">
+                                    Markdown Formatting Help
+                                </a>
+                            </p>
+                            <p>
+                                <a style="font-size: 16px" target="_blank" href="https://www.wikiwand.com/en/Advanced_Encryption_Standard">
+                                    Learn more about the encryption algorithm we use
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col"></div>
                 </div>
             </div>
         </div>

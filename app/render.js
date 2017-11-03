@@ -124,6 +124,8 @@ $("#open").click(() => {
     ]}, (filenames) => {
         if (filenames === undefined) return;
 
+        $("#welcome-page").css("display", "none");
+        $("#journal-mode").css("display", "flex");
         let oldVersion;
         if (filenames[0].endsWith("journalx")) {
             // TODO: Need a better way of finding version
@@ -377,6 +379,9 @@ $("#confirmNewJournal").click(() => {
         journalEntries.en = [];
 
         alertify.success("Journal created successfully!");
+
+        $("#welcome-page").css("display", "none");
+        $("#journal-mode").css("display", "flex");
         currentEntryCount = 0;
     }
     metroDialog.close("#newJournalDialog");
