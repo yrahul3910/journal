@@ -44,11 +44,11 @@ app.on("ready", () => {
     autoUpdater.checkForUpdatesAndNotify();
 });
 
-autoUpdater.on("update-downloaded", (info) => {
+autoUpdater.on("update-downloaded", () => {
     win.webContents.send("updateReady");
 });
 
-ipcMain.on("quitAndInstall", (event, arg) => {
+ipcMain.on("quitAndInstall", () => {
     autoUpdater.quitAndInstall();
 });
 

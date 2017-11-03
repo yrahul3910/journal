@@ -4,6 +4,8 @@
         <link rel="stylesheet" href="../css/index.css">
         <link rel="stylesheet" href="../css/metro.min.css">
         <link rel="stylesheet" href="../css/metro-icons.min.css">
+        <link rel="stylesheet" href="../css/default.css">
+        <link rel="stylesheet" href="../css/default.date.css">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     </head>
     <body>
@@ -60,10 +62,7 @@
                     <p style="margin-top: 0.7rem">Date</p>
                 </div>
                 <div class="col" style="overflow: hidden; border-right: 0">
-                    <div class="input-control text" data-role="datepicker" id="datepicker">
-                        <input type="text" id="date">
-                        <button class="button"><span class="mif-calendar"></span></button>
-                    </div>
+                    <input id="date" type="text" class="datepicker" />
                 </div>
             </div>
             <div class="row">
@@ -88,9 +87,9 @@
                     entry!</span>
             </div>
             <div class="input-control textarea">
-                <textarea rows="15" cols="50"></textarea>
+                <textarea rows="15" cols="70"></textarea>
             </div>
-            <div>
+            <div id="attachmentInput">
                 <div>Add an image (optional)</div>
                 <input style="margin-top: 10px; margin-bottom: 10px" type="file" id="selectFile" accept="image/*">
             </div>
@@ -169,11 +168,13 @@
 
         <script src="../js/bootstrap.min.js"></script>
         <script src="../js/metro.min.js"></script>
-
+        <script src="../js/picker.js"></script>
+        <script src="../js/picker.date.js"></script>
 
         <script>
             $(()=>{
                 $('select').select2();
+                $('#date').pickadate();
             });
             require('./render.js');
         </script>

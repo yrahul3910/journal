@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const owasp = require("owasp-password-strength-test");
 const marked = require("marked");
 const _ = require("lodash");
+const moment = require("moment");
 
 const VERSION_NUMBER = 5.0;
 // **********************ENCRYPTION PART*****************
@@ -49,7 +50,7 @@ const checkPwdStrength = (pwd) => {
 // ******************************************************
 
 // Auto updater function
-ipcRenderer.on("updateReady", (event, text) => {
+ipcRenderer.on("updateReady", () => {
     alertify.okBtn("Quit and install now")
         .cancelBtn("Not now")
         .confirm("A new update is available. Reinstall to apply changes?", (ev) => {
@@ -174,6 +175,12 @@ $("#newEntry").click(() => {
         return;
     }
 
+    // First undo any changes that clicking the Update Entry menu item
+    // might've done.
+    $("#addEntry").text("Add Entry");
+    $("#date").attr("disabled", false);
+    $("#attachmentInput").css("display", "block");
+
     $("#date").val(new Date().toISOString().slice(0, 10));
     metroDialog.open("#editDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
@@ -184,30 +191,56 @@ $("#addEntry").click(() => {
     let date = new Date($("#date").val());
     let content = $("textarea").val();
 
+    let isNewEntry; // is it a new entry or an updation?
+    if ($("#addEntry").text() === "Add Entry")
+        isNewEntry = true;
+    else
+        isNewEntry = false;
+
     // Make sure this isn't a duplicate entry.
-    for (let i = 0; i < currentEntryCount; ++i) {
-        if (date.getTime() === new Date(journalEntries.en[i].entryDate).getTime()) {
-            $("#addEntryError").html(`<span style="color: red">Multiple entries
+    if (isNewEntry) {
+        for (let i = 0; i < currentEntryCount; ++i) {
+            if (date.getTime() === new Date(journalEntries.en[i].entryDate).getTime()) {
+                $("#addEntryError").html(`<span style="color: red">Multiple entries
                 for the same date not allowed.</span>`);
-            return;
+                return;
+            }
         }
     }
 
     let sentiment = $("select").val();
     // Add the entry to the list of entries
     let newEntry = { entryDate: date, content, attachment: encodedImage, sentiment };
-    journalEntries.en.push(newEntry);
 
-    // Show the entry in #list.
-    let html = "";
-    html += "<div class='entry' id='" + currentEntryCount + "'><b>";
-    html += date.toDateString() + "</b><span>  </span><span class='sentiment " +
-    sentiment + "'></span><br/><p>";
-    let words = content.split(/\s+/).slice(0, 5).join(" ");
-    html += words + "...</p></div><hr />";
-    $("#list").append(html);
-    allEntriesHTML += html;
-    currentEntryCount++;
+    if (isNewEntry) {
+        journalEntries.en.push(newEntry);
+
+        // Show the entry in #list.
+        let html = "";
+        html += "<div class='entry' id='" + currentEntryCount + "'><b>";
+        html += date.toDateString() + "</b><span>  </span><span class='sentiment " +
+        sentiment + "'></span><br/><p>";
+        let words = content.split(/\s+/).slice(0, 5).join(" ");
+        html += words + "...</p></div><hr />";
+        $("#list").append(html);
+        allEntriesHTML += html;
+        currentEntryCount++;
+    } else {
+        for (let entry of journalEntries.en) {
+            // First find the entry
+            if (moment(date).isSame(new Date(entry.entryDate), "day")) {
+                // We can directly modify the entry over here.
+                entry.content = content;
+                entry.sentiment = sentiment;
+
+                // Change the HTML
+                showData(JSON.stringify(journalEntries));
+
+                // Get out of the loop now
+                break;
+            }
+        }
+    }
 
     // We need to rebind this handler
     $(".entry").click((e) => {
@@ -218,6 +251,27 @@ $("#addEntry").click(() => {
     $("textarea").val("");
     $("#selectFile").val("");
     encodedImage = "";
+});
+
+$("#updateEntry").click(() => {
+    metroDialog.open("#editDialog");
+
+    // Make required changes to fields.
+    $("#addEntry").text("Update Entry");
+    $("#date").attr("disabled", true);
+    // Disallow changes to the attachment
+    $("#attachmentInput").css("display", "none");
+
+    let dateString = $("#content :nth-child(1) :nth-child(1)").text().split("\n")[0];
+
+    let date = new Date(dateString);
+    let entry = journalEntries.en.find((entry) => {
+        return moment(date).isSame(new Date(entry.entryDate), "day");
+    });
+
+    $("#date").val(moment(date).format("YYYY-M-D"));
+    $("select").val(entry.sentiment);
+    $("textarea").val(entry.content);
 });
 
 $("#cancelEntry").click(() => {
