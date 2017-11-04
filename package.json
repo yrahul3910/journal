@@ -9,7 +9,7 @@
   "build": {
     "appId": "com.yrahul.journal"
   },
-  "version": "5.0.1",
+  "version": "5.0.2",
   "main": "app/index.js",
   "dependencies": {
     "alertify.js": "^1.0.12",
