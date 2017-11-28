@@ -61,7 +61,7 @@ ipcRenderer.on("updateReady", () => {
 
 let journalEntries;
 let currentEntryCount;
-let encodedImage = ""; // this holds the base64 encoded attachment image of the current entry
+let encodedImages = []; // this holds the base64 encoded attachment images of the current entry
 
 // Used to store the HTML of all the entries
 let allEntriesHTML;
@@ -109,12 +109,23 @@ const onEntryClicked = (e, json) => {
     $("#content").html(entryHTML);
 
     // From https://stackoverflow.com/a/26332690
-    if (selectedEntry.attachment)
-        $("<img>", {
-            "src": "data:image/png;base64," + selectedEntry.attachment,
-            // added `width` , `height` properties to `img` attributes
-            "width": "250px"})
-            .appendTo("#content");
+    if (selectedEntry.attachment) {
+        if (selectedEntry.attachment instanceof Array) {
+            for (let img of selectedEntry.attachment)
+                $("<img>", {
+                    "src": "data:image/png;base64," + img,
+                    // added `width` , `height` properties to `img` attributes
+                    "width": "250px"
+                }).appendTo("#content");
+        } else {
+            // For backward compatibility
+            $("<img>", {
+                "src": "data:image/png;base64," + selectedEntry.attachment,
+                // added `width` , `height` properties to `img` attributes
+                "width": "250px"
+            }).appendTo("#content");
+        }
+    }
 };
 
 $("#open").click(() => {
@@ -212,7 +223,7 @@ $("#addEntry").click(() => {
 
     let sentiment = $("select").val();
     // Add the entry to the list of entries
-    let newEntry = { entryDate: date, content, attachment: encodedImage, sentiment };
+    let newEntry = { entryDate: date, content, attachment: encodedImages, sentiment };
 
     if (isNewEntry) {
         journalEntries.en.push(newEntry);
@@ -252,7 +263,7 @@ $("#addEntry").click(() => {
 
     $("textarea").val("");
     $("#selectFile").val("");
-    encodedImage = "";
+    encodedImages = [];
 });
 
 $("#updateEntry").click(() => {
@@ -322,11 +333,22 @@ $("#queryInput").on("keyup", (e) => {
             entryHTML += "<p>" + selectedEntry.content + "</p>";
 
             $("#content").html(entryHTML);
-            $("<img>", {
-                "src": "data:image/png;base64," + selectedEntry.attachment,
-                // added `width` , `height` properties to `img` attributes
-                "width": "250px"})
-                .appendTo("#content");
+            if (selectedEntry.attachment instanceof Array) {
+                for (let img of selectedEntry.attachment) {
+                    $("<img>", {
+                        "src": "data:image/png;base64," + img,
+                        // added `width` , `height` properties to `img` attributes
+                        "width": "250px"
+                    }).appendTo("#content");
+                }
+            } else {
+                // For backward compatibility
+                $("<img>", {
+                    "src": "data:image/png;base64," + selectedEntry.attachment,
+                    // added `width` , `height` properties to `img` attributes
+                    "width": "250px"
+                }).appendTo("#content");
+            }
         });
 
         alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");
@@ -415,8 +437,9 @@ $("#aboutButton").click(() => {
 });
 
 $("#selectFile").on("change", () => {
-    const filename = $("#selectFile")[0].files[0].path;
-    encodedImage = encodeImage(filename);
+    for (let filename of $("#selectFile")[0].files) {
+        encodedImages.push(encodeImage(filename.path));
+    }
 });
 
 $("#preview").click(() => {
@@ -451,11 +474,22 @@ $("#searchButton").click(() => {
                 entryHTML += "<p>" + entry.content + "</p>";
 
                 $("#content").html(entryHTML);
-                $("<img>", {
-                    "src": "data:image/png;base64," + entry.attachment,
-                    // added `width` , `height` properties to `img` attributes
-                    "width": "250px"})
-                    .appendTo("#content");
+                if (entry.attachment instanceof Array) {
+                    for (let img of entry.attachment) {
+                        $("<img>", {
+                            "src": "data:image/png;base64," + img,
+                            // added `width` , `height` properties to `img` attributes
+                            "width": "250px"
+                        }).appendTo("#content");
+                    }
+                } else {
+                    // For backward compatibility
+                    $("<img>", {
+                        "src": "data:image/png;base64," + entry.attachment,
+                        // added `width` , `height` properties to `img` attributes
+                        "width": "250px"
+                    }).appendTo("#content");
+                }
             });
 
             alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");

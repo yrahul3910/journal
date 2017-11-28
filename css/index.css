@@ -91,3 +91,7 @@ input[type="text"] {
     margin-top: 15px;
     font-weight: lighter;
 }
+
+li {
+    margin-bottom: 10px;
+}
