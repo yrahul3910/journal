@@ -6,9 +6,22 @@ const $ = require("jquery");
 const alertify = require("alertify.js");
 const crypto = require("crypto");
 const owasp = require("owasp-password-strength-test");
-const marked = require("marked");
 const _ = require("lodash");
 const moment = require("moment");
+const showdown = require("showdown");
+
+const converter = new showdown.Converter({
+    literalMidWordUnderscores: true,
+    literalMidWordAsterisks: true,
+    tables: true,
+    strikethrough: true,
+    tasklists: true,
+    simpleLineBreaks: true,
+    simplifiedAutoLink: true,
+    openLinksInNewWindow: true,
+    emoji: true,
+    backslashEscapesHTMLTags: true
+});
 
 const VERSION_NUMBER = 5.0;
 // **********************ENCRYPTION PART*****************
@@ -105,7 +118,7 @@ const onEntryClicked = (e, json) => {
     let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" +
     "<span>  </span><span class='sentiment " +
     (selectedEntry.sentiment ? selectedEntry.sentiment : "Neutral") + "'></span></p>";
-    entryHTML += "<p>" + marked(selectedEntry.content) + "</p>";
+    entryHTML += "<p>" + converter.makeHtml(selectedEntry.content) + "</p>";
     $("#content").html(entryHTML);
 
     // From https://stackoverflow.com/a/26332690
@@ -422,7 +435,7 @@ $("#selectFile").on("change", () => {
 $("#preview").click(() => {
     metroDialog.open("#previewDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-    $("#renderedMarkdown").html(marked($("textarea").val()));
+    $("#renderedMarkdown").html(converter.makeHtml($("textarea").val()));
 });
 
 $("#searchByDate").click(() => {
