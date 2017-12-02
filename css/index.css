@@ -2,6 +2,10 @@ body {
     overflow-x: hidden;
 }
 
+.app-bar {
+    max-height: 50px;
+}
+
 #journal-mode .col {
   border-right: 1px solid lightgray;
   overflow-y: auto;
@@ -92,6 +96,6 @@ input[type="text"] {
     font-weight: lighter;
 }
 
-li {
+.main-page-list li {
     margin-bottom: 10px;
 }
