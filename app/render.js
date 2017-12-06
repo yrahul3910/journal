@@ -79,16 +79,9 @@ let encodedImages = []; // this holds the base64 encoded attachment images of th
 // Used to store the HTML of all the entries
 let allEntriesHTML;
 
-// from https://stackoverflow.com/a/24526156
-function encodeImage(file) {
-    let bitmap = fs.readFileSync(file);
-    return new Buffer(bitmap).toString("base64");
-}
-
 function showData(data) {
     // Clear the list
     $("#list").html("");
-
     let json = JSON.parse(data).en;
     currentEntryCount = json.length;
     journalEntries = JSON.parse(data);
@@ -126,9 +119,9 @@ const onEntryClicked = (e, json) => {
         if (selectedEntry.attachment instanceof Array) {
             for (let img of selectedEntry.attachment)
                 $("<img>", {
-                    "src": "data:image/png;base64," + img,
+                    "src": img,
                     // added `width` , `height` properties to `img` attributes
-                    "width": "250px"
+                    "style": "max-width: 250px; max-height: 250px"
                 }).appendTo("#content");
         } else {
             // For backward compatibility
@@ -451,7 +444,25 @@ $("#aboutButton").click(() => {
 
 $("#selectFile").on("change", () => {
     for (let filename of $("#selectFile")[0].files) {
-        encodedImages.push(encodeImage(filename.path));
+        // from https://stackoverflow.com/a/30903360/2713263
+        // resize the image first
+        let canvas = document.createElement("canvas");
+        let ctx = canvas.getContext("2d");
+        let maxW = 250, maxH = 250;
+
+        let img = new Image();
+        img.onload = () => {
+            let iw = img.width;
+            let ih = img.height;
+            let scale = Math.min((maxW / iw), (maxH / ih));
+            let iwScaled = iw * scale;
+            let ihScaled = ih * scale;
+            canvas.width = iwScaled;
+            canvas.height = ihScaled;
+            ctx.drawImage(img, 0, 0, iwScaled, ihScaled);
+            encodedImages.push(canvas.toDataURL());
+        };
+        img.src = filename.path;
     }
 });
 
