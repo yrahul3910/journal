@@ -119,7 +119,7 @@ const onEntryClicked = (e, json) => {
         if (selectedEntry.attachment instanceof Array) {
             for (let img of selectedEntry.attachment)
                 $("<img>", {
-                    "src": img,
+                    "src": (img.startsWith("data:image") ? "" : "data:image/png;base64,") + img,
                     // added `width` , `height` properties to `img` attributes
                     "style": "max-width: 250px; max-height: 250px"
                 }).appendTo("#content");
