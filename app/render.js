@@ -437,6 +437,11 @@ $("#decryptJournal").click(() => {
     }
 });
 
+$("#introButton").click(() => {
+    metroDialog.open("#introDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
 $("#aboutButton").click(() => {
     metroDialog.open("#aboutDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");

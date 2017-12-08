@@ -33,6 +33,7 @@
                     <a class="dropdown-toggle">Help</a>
                     <ul class="d-menu" data-role="dropdown">
                         <li><a id="aboutButton">About</a></li>
+                        <li><a id="introButton">Getting Started</a></li>
                         <li>
                             <a href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
                                 Markdown formatting help
@@ -114,6 +115,7 @@
                             </li>
                             <li>Added support for emojis, task lists, and more!</li>
                             <li>Removed restriction of adding two spaces at the end of line breaks.</li>
+                            <li>Added Getting Started section</li>
                         </ul>
                     </div>
                 </div>
@@ -221,6 +223,74 @@
                 <button class="button"><span class="mif-calendar"></span></button>
             </div>
             <button class="button" id="searchButton">Search</button>
+        </div>
+
+        <!-- Introduction dialog -->
+        <div data-role="dialog" id="introDialog" class="padding20 dialog" data-close-button="true"
+            data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true"
+            style="visibility: hidden;">
+            <h4>
+                Welcome to JournalBear!
+            </h4>
+            <p>
+                Get started with this simple tutorial.
+            </p>
+            <div class="wizard" data-role="wizard" data-buttons='{"prior": {"show": true, "title": "Back"}, "next": true}'>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-content">
+                            <h3>Starting off</h3>
+                            <h5>
+                                You can start off by going to File - New Journal. Specify a password, but
+                                remember it! There's no way to recover a lost password.
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-content">
+                            <h3>Adding daily entries</h3>
+                            <h5>
+                                You can add new entries by going to Entry - New Entry. Entries are styled
+                                by Markdown. If you don't know how it works, it's okay! Regular text is
+                                valid Markdown, and so is HTML, though I strongly suggest you don't use
+                                HTML.
+                            </h5>
+                            <h5>
+                                You can add images to your daily entry as well. Add as many as you want!
+                                Note however, that they'll be compressed. <a target="_blank" href="journalbear.wordpress.com/2017/12/08/why-your-images-are-compressed/">Here's why.</a>
+                            </h5>
+                            <h5>
+                                You can also add how you're feeling today. Is the list
+                                inadequate? <a target="_blank" href="https://github.com/yrahul3910/journal/issues">Raise an issue.</a>
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-content">
+                            <h3>More Markdown features</h3>
+                            <h5>
+                                JournalBear supports emojis, tables, code, and more Markdown features!
+                                <a target="_blank" href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
+                                    Here's a brief list of how you can add these to your entry.
+                                </a>
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-content">
+                            <h3>Getting help</h3>
+                            <h5>
+                                If you need any sort of help, you can send a message. Although the preferred
+                                method is to raise an issue on GitHub, if you're not a developer or
+                                don't have a GitHub account, you can leave a message <a target="_blank" href="https://journalbear.wordpress.com/contact/">here.</a>
+                            </h5>
+                            <h5>
+                                Feel free to leave your name as "Anonymous" if you wish :)
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Preview dialog -->
