@@ -12,7 +12,9 @@ exports.compress = (directory, func) => {
         gzip: true,
         file: filename
     }, [directory]).then(() => {
-        func();
+        func(null, filename);
+    }).catch(err => {
+        func(err);
     });
 };
 
@@ -26,6 +28,8 @@ exports.decompress = (filename, func) => {
         file: filename
     }).then(() => {
         func();
+    }).catch(err => {
+        func(err);
     });
 };
 

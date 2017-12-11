@@ -1,9 +1,13 @@
 /* eslint no-undef: 0 */
 const { dialog } = require("electron").remote;
 const fs = require("fs");
+const os = require("os");
 const $ = require("jquery");
+const async = require("async");
 const alertify = require("alertify.js");
-const {getEncryptedText, getDecryptedText, checkPwdStrength} = require("./encryption");
+const rimraf = require("rimraf");
+const archiveUtils = require("./archive");
+const {getEncryptedText, getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
 
 const _ = require("lodash");
 const moment = require("moment");
@@ -95,7 +99,7 @@ $("#open").click(() => {
     ]}, (filenames) => {
         if (filenames === undefined) return;
 
-        if (filenames[0].endWith(".ejournal"))
+        if (filenames[0].endsWith(".ejournal"))
             currentFileVersion = 5.0;
         else
             currentFileVersion = 5.1;
@@ -116,13 +120,42 @@ $("#save").click(() => {
         if (!filename) return;
 
         journalEntries.version = VERSION_NUMBER;
-        let data = JSON.stringify(journalEntries);
-        fs.writeFile(filename, getEncryptedText(data, pwd), (err) => {
-            if (err) {
-                dialog.showErrorBox("Could not save file.", "We couldn't save the journal file. Make sure you have the required permisssions to do so.");
-                return;
+        let journalDir = os.tmpdir() + "/_jbfiles";
+
+        // TODO: Need to add a function to add image files
+        async.waterfall([
+            (callback) => {
+                // If it exists, delete the journal directory
+                if (fs.existsSync(journalDir))
+                    rimraf(journalDir, (err) => {
+                        if (err) throw err;
+                        callback(null);
+                    });
+                else
+                    callback(null);
+            },
+            (callback) => {
+                // Create a fresh journal directory
+                fs.mkdir(journalDir, callback);
+            },
+            (callback) => {
+                // Write the JSON file
+                fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
+            },
+            (callback) => {
+                // Create the .tar.gz
+                archiveUtils.compress(journalDir, (err, tmpPath) => {
+                    if (err) callback(err);
+                    callback(null, tmpPath);
+                });
+            },
+            (tmpPath, callback) => {
+                // Encrypt the file
+                encryptFile(tmpPath, filename, pwd, callback);
             }
-            alertify.success("Saved successfully!");
+        ], (err, result) => {
+            if (err) console.log(err);
+            console.log("Actually worked!");
         });
     });
 });

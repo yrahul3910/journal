@@ -1,7 +1,6 @@
 /* eslint-disable no-undef */
 const crypto = require("crypto");
 const fs = require("fs");
-const crypto = require("crypto");
 const owasp = require("owasp-password-strength-test");
 
 // Encryption implemented from https://stackoverflow.com/a/6953606
