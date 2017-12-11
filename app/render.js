@@ -28,7 +28,7 @@ const converter = new showdown.Converter({
 
 const VERSION_NUMBER = 5.1;
 // openMode has either "Open File" or "New Journal"
-let openMode, encryptedData, pwd, currentFileVersion;
+let openMode, encryptedData, pwd, currentFileVersion, currentFilePath;
 
 let journalEntries;
 let currentEntryCount;
@@ -101,8 +101,10 @@ $("#open").click(() => {
 
         if (filenames[0].endsWith(".ejournal"))
             currentFileVersion = 5.0;
-        else
+        else {
+            currentFilePath = filenames[0];
             currentFileVersion = 5.1;
+        }
 
         $("#welcome-page").css("display", "none");
         $("#journal-mode").css("display", "flex");
@@ -152,11 +154,12 @@ $("#save").click(() => {
             (tmpPath, callback) => {
                 // Encrypt the file
                 encryptFile(tmpPath, filename, pwd, callback);
+            },
+            (callback) => {
+                // Display success message
+                alertify.success("Successfully saved!");
             }
-        ], (err, result) => {
-            if (err) console.log(err);
-            console.log("Actually worked!");
-        });
+        ]);
     });
 });
 
@@ -398,19 +401,44 @@ $("#cancelNewJournal").click(() => {
 });
 
 $("#decryptJournal").click(() => {
-    if (currentFileVersion > 5.0) {
-        // Handle the newer file version.
-    }
-
     pwd = $("#unlock").val();
-    let data;
-    if ((data = getDecryptedText(encryptedData, pwd))) {
-        // Successful
-        showData(data);
-        metroDialog.close("#decryptDialog");
+    if (currentFileVersion == 5.1) {
+        // Handle the newer file version.
+        let tmp = os.tmpdir();
+        console.log(tmp);
+        async.waterfall([
+            (callback) => {
+                // Decrypt the file
+                decryptFile(currentFilePath, tmp + "/_jb.tar.gz", pwd, callback);
+            },
+            (callback) => {
+                // Extract the archive
+                archiveUtils.decompress(tmp + "/_jb.tar.gz", callback);
+            },
+            (callback) => {
+                // Read the file
+                fs.readFile(tmp + "/_jbfiles/data.json", (err, data) => {
+                    if (err) callback(err);
+                    callback(null, data);
+                });
+            },
+            (data, callback) => {
+                journalEntries = data;
+                showData(data);
+                metroDialog.close("#decryptDialog");
+                callback(null);
+            }
+        ]);
+    } else {
+        let data;
+        if ((data = getDecryptedText(encryptedData, pwd))) {
+            // Successful
+            showData(data);
+            metroDialog.close("#decryptDialog");
 
-        if (data.version > VERSION_NUMBER)
-            alertify.error("This journal is from a newer version. Some features may not work correctly.");
+            if (data.version > VERSION_NUMBER)
+                alertify.error("This journal is from a newer version. Some features may not work correctly.");
+        }
     }
 });
 
