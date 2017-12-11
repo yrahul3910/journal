@@ -1,5 +1,7 @@
 /* eslint-disable no-undef */
 const crypto = require("crypto");
+const fs = require("fs");
+const crypto = require("crypto");
 const owasp = require("owasp-password-strength-test");
 
 // Encryption implemented from https://stackoverflow.com/a/6953606
@@ -32,6 +34,30 @@ exports.checkPwdStrength = (pwd) => {
         return result.errors;
     else
         return [];
+};
+
+exports.encryptFile = (path, outputPath, key, func) => {
+    let cipher = crypto.createCipher(algorithm, key);
+    let input = fs.createReadStream(path);
+    let output = fs.createWriteStream(outputPath);
+
+    input.pipe(cipher).pipe(output);
+
+    output.on("finish", () => {
+        func();
+    });
+};
+
+exports.decryptFile = (path, outputPath, key, func) => {
+    let decipher = crypto.createDecipher(algorithm, key);
+    let input = fs.createReadStream(path);
+    let output = fs.createWriteStream(outputPath);
+    try {
+        input.pipe(decipher).pipe(output);
+        func();
+    } catch(ex) {
+        func(ex);
+    }
 };
 
 module.exports = exports;
