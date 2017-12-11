@@ -1,5 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
-const { autoUpdater } = require("electron-updater");
+const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const url = require("url");
 
@@ -41,15 +40,6 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
     createWindow();
-    autoUpdater.checkForUpdatesAndNotify();
-});
-
-autoUpdater.on("update-downloaded", () => {
-    win.webContents.send("updateReady");
-});
-
-ipcMain.on("quitAndInstall", () => {
-    autoUpdater.quitAndInstall();
 });
 
 // Quit when all windows are closed.

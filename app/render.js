@@ -1,11 +1,10 @@
 /* eslint no-undef: 0 */
 const { dialog } = require("electron").remote;
-const ipcRenderer = require("electron").ipcRenderer;
 const fs = require("fs");
 const $ = require("jquery");
 const alertify = require("alertify.js");
-const crypto = require("crypto");
-const owasp = require("owasp-password-strength-test");
+const {getEncryptedText, getDecryptedText, checkPwdStrength} = require("./encryption");
+
 const _ = require("lodash");
 const moment = require("moment");
 const showdown = require("showdown");
@@ -23,54 +22,9 @@ const converter = new showdown.Converter({
     backslashEscapesHTMLTags: true
 });
 
-const VERSION_NUMBER = 5.0;
-// **********************ENCRYPTION PART*****************
-// Encryption implemented from https://stackoverflow.com/a/6953606
-const algorithm = "aes256";
-
+const VERSION_NUMBER = 5.1;
 // openMode has either "Open File" or "New Journal"
-let pwd, openMode;
-let encryptedData;
-
-// Wrapper functions for encryption
-// Note: if emojis are to be supported later, might wanna change UTF-8 with UTF-16
-const getEncryptedText = (text) => {
-    const cipher = crypto.createCipher(algorithm, pwd);
-    return cipher.update(text, "utf8", "hex") + cipher.final("hex");
-};
-
-const getDecryptedText = (text) => {
-    const decipher = crypto.createDecipher(algorithm, pwd);
-    try {
-        return decipher.update(text, "hex", "utf8") + decipher.final("utf8");
-    } catch(ex) {
-        $("#prompt").text("Wrong password. Try again.");
-        return undefined;
-    }
-};
-
-const checkPwdStrength = (pwd) => {
-    owasp.config({
-        minLength: 8
-    });
-
-    let result = owasp.test(pwd);
-    if (result.errors)
-        return result.errors;
-    else
-        return [];
-};
-// ******************************************************
-
-// Auto updater function
-ipcRenderer.on("updateReady", () => {
-    alertify.okBtn("Quit and install now")
-        .cancelBtn("Not now")
-        .confirm("A new update is available. Reinstall to apply changes?", (ev) => {
-            ev.preventDefault();
-            ipcRenderer.send("quitAndInstall");
-        });
-});
+let openMode, encryptedData, pwd, currentFileVersion;
 
 let journalEntries;
 let currentEntryCount;
@@ -136,48 +90,34 @@ const onEntryClicked = (e, json) => {
 
 $("#open").click(() => {
     dialog.showOpenDialog({ filters: [
-        { name: "JournalBear 5.0 Document", extensions: ["ejournal"]},
-        { name: "Journal 4.0 Document", extensions: ["journalx"] }
+        { name: "JournalBear 5.1 Document", extensions: ["zjournal"]},
+        { name: "JournalBear 5.0 Document", extensions: ["ejournal"]}
     ]}, (filenames) => {
         if (filenames === undefined) return;
 
+        if (filenames[0].endWith(".ejournal"))
+            currentFileVersion = 5.0;
+        else
+            currentFileVersion = 5.1;
+
         $("#welcome-page").css("display", "none");
         $("#journal-mode").css("display", "flex");
-        let oldVersion;
-        if (filenames[0].endsWith("journalx")) {
-            // TODO: Need a better way of finding version
-            // Notify user of new format, ask for password.
-            oldVersion = true;
-            const disclaimer = "Thank you for choosing JournalBear. The new version will now be " +
-          "encrypted by AES-256. Please enter a password to continue.";
-            $("#encryptionNotice").text(disclaimer);
-
-            metroDialog.open("#newJournalDialog");
-            $("#password").val("");
-            $("#confirmPassword").val("");
-            openMode = "Open File";
-            $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-        }
 
         encryptedData = fs.readFileSync(filenames[0]).toString();
-        if (!oldVersion) {
-            metroDialog.open("#decryptDialog");
-            $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-        } else {
-            showData(encryptedData); // In the old format it's not really encrypted.
-        }
+        metroDialog.open("#decryptDialog");
+        $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
     });
 });
 
 $("#save").click(() => {
     dialog.showSaveDialog({ filters: [
-        { name: "JournalBear 5.0 Document", extensions: ["ejournal"] }
+        { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
     ]}, (filename) => {
         if (!filename) return;
 
         journalEntries.version = VERSION_NUMBER;
         let data = JSON.stringify(journalEntries);
-        fs.writeFile(filename, getEncryptedText(data), (err) => {
+        fs.writeFile(filename, getEncryptedText(data, pwd), (err) => {
             if (err) {
                 dialog.showErrorBox("Could not save file.", "We couldn't save the journal file. Make sure you have the required permisssions to do so.");
                 return;
@@ -425,9 +365,13 @@ $("#cancelNewJournal").click(() => {
 });
 
 $("#decryptJournal").click(() => {
+    if (currentFileVersion > 5.0) {
+        // Handle the newer file version.
+    }
+
     pwd = $("#unlock").val();
     let data;
-    if ((data = getDecryptedText(encryptedData))) {
+    if ((data = getDecryptedText(encryptedData, pwd))) {
         // Successful
         showData(data);
         metroDialog.close("#decryptDialog");
