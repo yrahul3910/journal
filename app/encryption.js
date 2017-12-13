@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 const crypto = require("crypto");
 const fs = require("fs");
 const owasp = require("owasp-password-strength-test");
@@ -7,7 +6,6 @@ const owasp = require("owasp-password-strength-test");
 const algorithm = "aes256";
 
 // Wrapper functions for encryption
-// Note: if emojis are to be supported later, might wanna change UTF-8 with UTF-16
 exports.getEncryptedText = (text, pwd) => {
     const cipher = crypto.createCipher(algorithm, pwd);
     return cipher.update(text, "utf8", "hex") + cipher.final("hex");
@@ -18,7 +16,7 @@ exports.getDecryptedText = (text, pwd) => {
     try {
         return decipher.update(text, "hex", "utf8") + decipher.final("utf8");
     } catch(ex) {
-        $("#prompt").text("Wrong password. Try again.");
+        $("#prompt").text("Wrong password. Try again."); // eslint-disable-line no-undef
         return undefined;
     }
 };

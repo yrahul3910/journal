@@ -1,13 +1,15 @@
 /* eslint no-undef: 0 */
 const { dialog } = require("electron").remote;
 const fs = require("fs");
+const fse = require("fs-extra");
 const os = require("os");
+const path = require("path");
 const $ = require("jquery");
 const async = require("async");
 const alertify = require("alertify.js");
 const rimraf = require("rimraf");
 const archiveUtils = require("./archive");
-const {getEncryptedText, getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
+const {getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
 
 const _ = require("lodash");
 const moment = require("moment");
@@ -74,19 +76,18 @@ const onEntryClicked = (e, json) => {
 
     // From https://stackoverflow.com/a/26332690
     if (selectedEntry.attachment) {
-        if (selectedEntry.attachment instanceof Array) {
-            for (let img of selectedEntry.attachment)
-                $("<img>", {
-                    "src": (img.startsWith("data:image") ? "" : "data:image/png;base64,") + img,
-                    // added `width` , `height` properties to `img` attributes
-                    "style": "max-width: 250px; max-height: 250px"
-                }).appendTo("#content");
-        } else {
-            // For backward compatibility
+        for (let img of selectedEntry.attachment) {
+            let imgPath = img;
+            let truncatedPath = imgPath.substring(0, imgPath.lastIndexOf("/"));
+            truncatedPath = truncatedPath.substring(0, truncatedPath.lastIndexOf("/"));
+            if (!fs.existsSync(truncatedPath)) {
+                // It's not a version 5.1 path
+                if (!imgPath.startsWith("data:image"))
+                    imgPath = "data:image/png;base64," + imgPath;
+            }
+
             $("<img>", {
-                "src": "data:image/png;base64," + selectedEntry.attachment,
-                // added `width` , `height` properties to `img` attributes
-                "width": "250px"
+                "src": imgPath
             }).appendTo("#content");
         }
     }
@@ -124,7 +125,6 @@ $("#save").click(() => {
         journalEntries.version = VERSION_NUMBER;
         let journalDir = os.tmpdir() + "/_jbfiles";
 
-        // TODO: Need to add a function to add image files
         async.waterfall([
             (callback) => {
                 // If it exists, delete the journal directory
@@ -145,6 +145,13 @@ $("#save").click(() => {
                 fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
             },
             (callback) => {
+                // Add the images now
+                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
+                    fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
+                else
+                    callback(null);
+            },
+            (callback) => {
                 // Create the .tar.gz
                 archiveUtils.compress(journalDir, (err, tmpPath) => {
                     if (err) callback(err);
@@ -158,6 +165,7 @@ $("#save").click(() => {
             (callback) => {
                 // Display success message
                 alertify.success("Successfully saved!");
+                callback(null);
             }
         ]);
     });
@@ -405,7 +413,6 @@ $("#decryptJournal").click(() => {
     if (currentFileVersion == 5.1) {
         // Handle the newer file version.
         let tmp = os.tmpdir();
-        console.log(tmp);
         async.waterfall([
             (callback) => {
                 // Decrypt the file
@@ -430,6 +437,7 @@ $("#decryptJournal").click(() => {
             }
         ]);
     } else {
+        // Legacy 5.0 support
         let data;
         if ((data = getDecryptedText(encryptedData, pwd))) {
             // Successful
@@ -453,26 +461,32 @@ $("#aboutButton").click(() => {
 });
 
 $("#selectFile").on("change", () => {
-    for (let filename of $("#selectFile")[0].files) {
-        // from https://stackoverflow.com/a/30903360/2713263
-        // resize the image first
-        let canvas = document.createElement("canvas");
-        let ctx = canvas.getContext("2d");
-        let maxW = 250, maxH = 250;
+    let {files} = $("#selectFile")[0];
+    for (let i = 0; i < files.length; ++i) {
+        // Get the new filename
+        let newFilename = new Date().valueOf().toString();
+        newFilename += ("_" + i.toString() + path.extname(files[i].path));
 
-        let img = new Image();
-        img.onload = () => {
-            let iw = img.width;
-            let ih = img.height;
-            let scale = Math.min((maxW / iw), (maxH / ih));
-            let iwScaled = iw * scale;
-            let ihScaled = ih * scale;
-            canvas.width = iwScaled;
-            canvas.height = ihScaled;
-            ctx.drawImage(img, 0, 0, iwScaled, ihScaled);
-            encodedImages.push(canvas.toDataURL());
-        };
-        img.src = filename.path;
+        // Get the new path
+        let dir = os.tmpdir() + "/_jbimages";
+        if (!fs.existsSync(dir))
+            fs.mkdirSync(dir);
+
+        // Move the file to the right place
+        try {
+            fs.createReadStream(files[i].path).pipe(fs.createWriteStream(dir + "/" + newFilename));
+        } catch (ex) {
+            alertify.error("We couldn't add your attachments.");
+        }
+
+        /* This whole _jbimages folder will later be copied to the _jbfiles directory,
+        so we need to actually store a path to the image in the encodedImages (now a
+        misnomer) array. Unfortunately, we can't use relative paths, since . refers to
+        the current executable's path and not the temp path. */
+        let finalPath = os.tmpdir() + "/_jbfiles/images/" + newFilename;
+
+        // Add to the array of attachments
+        encodedImages.push(finalPath);
     }
 });
 
