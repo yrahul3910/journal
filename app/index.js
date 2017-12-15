@@ -1,4 +1,6 @@
 const { app, BrowserWindow } = require("electron");
+const rimraf = require("rimraf");
+const os = require("os");
 const path = require("path");
 const url = require("url");
 
@@ -28,9 +30,9 @@ function createWindow() {
 
     // Emitted when the window is closed.
     win.on("closed", () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
+        // Dereference the window object, usually you would store windows
+        // in an array if your app supports multi windows, this is the time
+        // when you should delete the corresponding element.
         win = null;
     });
 }
@@ -40,6 +42,16 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
     createWindow();
+
+    // Perform cleanup after the user can see the window
+    let tmp = os.tmpdir();
+    rimraf(tmp + "\\_jbimages", (err) => {
+        if (err) throw err;
+
+        rimraf(tmp + "/_jbfiles", (err) => {
+            if (err) throw err;
+        });
+    });
 });
 
 // Quit when all windows are closed.
