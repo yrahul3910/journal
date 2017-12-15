@@ -74,9 +74,11 @@ const onEntryClicked = (e, json) => {
     entryHTML += "<p>" + converter.makeHtml(selectedEntry.content) + "</p>";
     $("#content").html(entryHTML);
 
-    // From https://stackoverflow.com/a/26332690
     if (selectedEntry.attachment) {
         for (let img of selectedEntry.attachment) {
+            // Major hacky workaround to support older versions where images
+            // were in base64, but some base64 encodings didn't have the
+            // data:image/png;base64; header.
             let imgPath = img;
             let truncatedPath = imgPath.substring(0, imgPath.lastIndexOf("/"));
             truncatedPath = truncatedPath.substring(0, truncatedPath.lastIndexOf("/"));
@@ -84,6 +86,16 @@ const onEntryClicked = (e, json) => {
                 // It's not a version 5.1 path
                 if (!imgPath.startsWith("data:image"))
                     imgPath = "data:image/png;base64," + imgPath;
+            } else {
+                // More hacky code ack.
+                // Two places to check: $TMPDIR/_jbimages and $TMPDIR/_jbfiles/images
+                // Check the latter first
+                if (!fs.existsSync(imgPath)) {
+                    // We know it's in $TMPDIR/_jbimages
+                    // First get the filename
+                    let filename = imgPath.substring(imgPath.lastIndexOf("/") + 1);
+                    imgPath = `${os.tmpdir()}/_jbimages/${filename}`;
+                }
             }
 
             $("<img>", {
