@@ -74,7 +74,7 @@ const onEntryClicked = (e, json) => {
     entryHTML += "<p>" + converter.makeHtml(selectedEntry.content) + "</p>";
     $("#content").html(entryHTML);
 
-    if (selectedEntry.attachment) {
+    if (selectedEntry.attachment instanceof Array) {
         for (let img of selectedEntry.attachment) {
             // Major hacky workaround to support older versions where images
             // were in base64, but some base64 encodings didn't have the
@@ -100,6 +100,17 @@ const onEntryClicked = (e, json) => {
 
             $("<img>", {
                 "src": imgPath,
+                "style": "margin-bottom: 10px"
+            }).appendTo("#content");
+        }
+    } else {
+        if (selectedEntry.attachment) {
+            let img = selectedEntry.attachment;
+            if (!img.startsWith("data:image"))
+                img = "data:image/png;base64," + img;
+
+            $("<img>", {
+                "src": img,
                 "style": "margin-bottom: 10px"
             }).appendTo("#content");
         }

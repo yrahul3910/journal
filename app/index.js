@@ -11,7 +11,7 @@ let win;
 function createWindow() {
     // Create the browser window.
     win = new BrowserWindow({ width: 800, height: 650 });
-    win.webContents.openDevTools();
+    //win.webContents.openDevTools();
     // and load the index.html of the app.
     win.loadURL(url.format({
         pathname: path.join(__dirname, "index.html"),
@@ -50,6 +50,10 @@ app.on("ready", () => {
 
         rimraf(tmp + "/_jbfiles", (err) => {
             if (err) throw err;
+
+            rimraf(tmp + "/_jb.tar.gz", (err) => {
+                if (err) throw err;
+            });
         });
     });
 });
