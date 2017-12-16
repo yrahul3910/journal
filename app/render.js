@@ -459,7 +459,9 @@ $("#decryptJournal").click(() => {
                 metroDialog.close("#decryptDialog");
                 callback(null);
             }
-        ]);
+        ], (err) => {
+            if (err) $("#prompt").text("Wrong password. Try again.");
+        });
     } else {
         // Legacy 5.0 support
         let data;

@@ -50,8 +50,11 @@ exports.decryptFile = (path, outputPath, key, func) => {
     let input = fs.createReadStream(path);
     let output = fs.createWriteStream(outputPath);
     try {
-        input.pipe(decipher).pipe(output);
-        func();
+        input.pipe(decipher).on("error", (e) => {
+            func(e);
+        }).on("end", () => {
+            func();
+        }).pipe(output);
     } catch(ex) {
         func(ex);
     }
