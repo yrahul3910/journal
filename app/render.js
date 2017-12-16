@@ -99,7 +99,8 @@ const onEntryClicked = (e, json) => {
             }
 
             $("<img>", {
-                "src": imgPath
+                "src": imgPath,
+                "style": "margin-bottom: 10px"
             }).appendTo("#content");
         }
     }
@@ -437,7 +438,7 @@ $("#decryptJournal").click(() => {
             (callback) => {
                 // Read the file
                 fs.readFile(tmp + "/_jbfiles/data.json", (err, data) => {
-                    if (err) callback(err);
+                    if (err) throw err;
                     callback(null, data);
                 });
             },

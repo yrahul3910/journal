@@ -1,5 +1,6 @@
 const os = require("os");
-const tar = require("tar");
+const tar = require("targz");
+const fs = require("fs");
 
 /**
  * Creates an .tar.gz file containing the files in the directory
@@ -8,13 +9,12 @@ const tar = require("tar");
  */
 exports.compress = (directory, func) => {
     let filename = os.tmpdir() + "/_jb_" + new Date().valueOf() + ".tar.gz";
-    tar.create({
-        gzip: true,
-        file: filename
-    }, [directory]).then(() => {
-        func(null, filename);
-    }).catch(err => {
-        func(err);
+    tar.compress({
+        src: directory,
+        dest: filename
+    }, (err) => {
+        if (err) func(err);
+        else func(null, filename);
     });
 };
 
@@ -24,13 +24,11 @@ exports.compress = (directory, func) => {
  * @param {Function} func - The callback function
  */
 exports.decompress = (filename, func) => {
-    tar.extract({
-        file: filename
-    }).then(() => {
-        func();
-    }).catch(err => {
-        func(err);
-    });
+    fs.mkdirSync(os.tmpdir() + "/_jbfiles");
+    tar.decompress({
+        src: filename,
+        dest: os.tmpdir() + "/_jbfiles"
+    }, func);
 };
 
 module.exports = exports;
