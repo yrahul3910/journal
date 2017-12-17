@@ -153,20 +153,6 @@ $("#save").click(() => {
 
         async.waterfall([
             (callback) => {
-                // If it exists, delete the journal directory
-                if (fs.existsSync(journalDir))
-                    rimraf(journalDir, (err) => {
-                        if (err) throw err;
-                        callback(null);
-                    });
-                else
-                    callback(null);
-            },
-            (callback) => {
-                // Create a fresh journal directory
-                fs.mkdir(journalDir, callback);
-            },
-            (callback) => {
                 // Write the JSON file
                 fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
             },
@@ -462,7 +448,7 @@ $("#decryptJournal").click(() => {
                 callback(null);
             }
         ], (err) => {
-            if (err) throw err;
+            if (err) $("#prompt").text("Wrong password. Try again.");
         });
     } else {
         // Legacy 5.0 support
