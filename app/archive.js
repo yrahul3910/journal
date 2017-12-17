@@ -1,6 +1,5 @@
 const os = require("os");
 const tar = require("targz");
-const fs = require("fs");
 
 /**
  * Creates an .tar.gz file containing the files in the directory
@@ -24,10 +23,13 @@ exports.compress = (directory, func) => {
  * @param {Function} func - The callback function
  */
 exports.decompress = (filename, func) => {
-    fs.mkdirSync(os.tmpdir() + "/_jbfiles");
     tar.decompress({
         src: filename,
-        dest: os.tmpdir() + "/_jbfiles"
+        dest: os.tmpdir() + "/_jbfiles",
+        tar: {
+            fmode: parseInt(777, 8),
+            dmode: parseInt(777, 8)
+        }
     }, func);
 };
 

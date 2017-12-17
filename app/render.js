@@ -462,7 +462,7 @@ $("#decryptJournal").click(() => {
                 callback(null);
             }
         ], (err) => {
-            if (err) $("#prompt").text("Wrong password. Try again.");
+            if (err) throw err;
         });
     } else {
         // Legacy 5.0 support
