@@ -80,9 +80,9 @@ const onEntryClicked = (e, json) => {
             // were in base64, but some base64 encodings didn't have the
             // data:image/png;base64; header.
             let imgPath = img;
-            let truncatedPath = imgPath.substring(0, imgPath.lastIndexOf("/"));
-            truncatedPath = truncatedPath.substring(0, truncatedPath.lastIndexOf("/"));
-            if (!fs.existsSync(truncatedPath)) {
+
+            // base64 strings have only + and / as special characters
+            if (!imgPath.includes(".")) {
                 // It's not a version 5.1 path
                 if (!imgPath.startsWith("data:image"))
                     imgPath = "data:image/png;base64," + imgPath;
@@ -90,6 +90,8 @@ const onEntryClicked = (e, json) => {
                 // More hacky code ack.
                 // Two places to check: $TMPDIR/_jbimages and $TMPDIR/_jbfiles/images
                 // Check the latter first
+                // Replace that . with the temp directory as necessary.
+                imgPath = os.tmpdir() + imgPath.slice(1);
                 if (!fs.existsSync(imgPath)) {
                     // We know it's in $TMPDIR/_jbimages
                     // First get the filename
@@ -508,8 +510,12 @@ $("#selectFile").on("change", () => {
         /* This whole _jbimages folder will later be copied to the _jbfiles directory,
         so we need to actually store a path to the image in the encodedImages (now a
         misnomer) array. Unfortunately, we can't use relative paths, since . refers to
-        the current executable's path and not the temp path. */
-        let finalPath = os.tmpdir() + "/_jbfiles/images/" + newFilename;
+        the current executable's path and not the temp path.
+
+        Update: Fuck that, we need it to work cross-platform, store relative paths.
+        Note that . here should be replaced by os.tmpdir() and then it'll work
+        alright. */
+        let finalPath = "./_jbfiles/images/" + newFilename;
 
         // Add to the array of attachments
         encodedImages.push(finalPath);
