@@ -7,7 +7,6 @@ const path = require("path");
 const $ = require("jquery");
 const async = require("async");
 const alertify = require("alertify.js");
-const rimraf = require("rimraf");
 const archiveUtils = require("./archive");
 const {getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
 

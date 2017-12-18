@@ -28,3 +28,11 @@ The `css` and `js` folders have the files for third-party libraries used. This a
 
 ## `fonts`
 This folder contains fonts required by Metro UI CSS.
+
+# Git Hooks
+
+## `pre-commit`
+```sh
+#!/bin/sh
+eslint .
+```
