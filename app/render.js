@@ -28,6 +28,16 @@ const converter = new showdown.Converter({
 });
 
 const VERSION_NUMBER = 5.1;
+
+const sentiments = {
+    "Happy": "green",
+    "Angry": "red",
+    "Sad": "#FBCA04",
+    "Neutral": "gray",
+    "Loved": "hotpink",
+    "Excited": "lime"
+};
+
 // openMode has either "Open File" or "New Journal"
 let openMode, encryptedData, pwd, currentFileVersion, currentFilePath;
 
@@ -46,10 +56,11 @@ function showData(data) {
     journalEntries = JSON.parse(data);
     let html = "";
     for (let i = 0; i < currentEntryCount; ++i) {
+        let sentiment = (json[i].sentiment ? json[i].sentiment : "Neutral");
         html += "<div class='entry' id='" + i + "'><b>";
-        html += new Date(json[i].entryDate).toDateString() + "</b>" +
-      "<span>  </span><span class='sentiment " + (json[i].sentiment ? json[i].sentiment : "Neutral") +
-      "'></span><br/><p>";
+        html += new Date(json[i].entryDate).toDateString() + "</b>";
+        html += `<span>  </span><span class='sentiment ${sentiment}'> </span>\
+            <span style='color: ${sentiments[sentiment]}; font-size: 12px'>${sentiment}</span><br/><p>`;
         let entry = json[i].content;
 
         let words = entry.split(/\s+/).slice(0, 5).join(" ");
