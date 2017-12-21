@@ -1,5 +1,31 @@
 body {
     overflow: hidden;
+    -webkit-app-region: no-drag;
+}
+
+#titlebar {
+    -webkit-app-region: drag;
+    height: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#titlebar p {
+    -webkit-app-region: no-drag;
+    font-size: 18px;
+    width: 20px;
+    height: 20px;
+    cursor: default;
+    font-weight: bolder;
+    text-align: center;
+}
+
+#minimize:hover {
+    background-color: lightgray;
+}
+
+#close:hover {
+    background-color: red;
 }
 
 .app-bar {

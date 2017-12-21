@@ -10,7 +10,7 @@ let win;
 
 function createWindow() {
     // Create the browser window.
-    win = new BrowserWindow({ width: 800, height: 650 });
+    win = new BrowserWindow({ width: 800, height: 660, frame: false });
     //win.webContents.openDevTools();
     // and load the index.html of the app.
     win.loadURL(url.format({
@@ -18,7 +18,7 @@ function createWindow() {
         protocol: "file:",
         slashes: true,
     }));
-    win.setTitle("JournalBear 5.0");
+    win.setTitle("JournalBear");
     win.setMenu(null);
     win.setMaximizable(false);
     win.setResizable(false);

@@ -1,5 +1,6 @@
 /* eslint no-undef: 0 */
 const { dialog } = require("electron").remote;
+var window = require("electron").remote.getCurrentWindow();
 const fs = require("fs");
 const fse = require("fs-extra");
 const os = require("os");
@@ -128,6 +129,14 @@ const onEntryClicked = (e, json) => {
         }
     }
 };
+
+$("#minimize").click(() => {
+    window.minimize();
+});
+
+$("#close").click(() => {
+    window.close();
+});
 
 $("#open").click(() => {
     dialog.showOpenDialog({ filters: [
