@@ -33,7 +33,7 @@
     "postinstall": "install-app-deps",
     "start": "electron app/index.js",
     "pack": "build --dir",
-    "dist": "build --x64 --ia32",
+    "dist": "build --x64",
     "ship": "build -p always"
   }
 }

@@ -8,24 +8,31 @@ body {
     height: 20px;
     display: flex;
     justify-content: flex-end;
+    background-color: rgb(240, 240, 240);
 }
 
 #titlebar p {
     -webkit-app-region: no-drag;
     font-size: 18px;
+    color: rgb(170, 170, 170);
     width: 20px;
     height: 20px;
     cursor: default;
-    font-weight: bolder;
+    font-weight: 600;
     text-align: center;
 }
 
 #minimize:hover {
-    background-color: lightgray;
+    background-color: rgb(230, 230, 230);
+}
+
+#close {
+    font-weight: 400;
 }
 
 #close:hover {
     background-color: red;
+    color: white;
 }
 
 .app-bar {
