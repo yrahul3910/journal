@@ -83,10 +83,11 @@ const onEntryClicked = (e, json) => {
     const id = e.currentTarget.id;
     const selectedEntry = json[+id];
     // selectedEntry.attachment, content, entryDate are the properties
+    let {sentiment} = selectedEntry;
     let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" +
-    "<span>  </span><span class='sentiment " +
-    (selectedEntry.sentiment ? selectedEntry.sentiment : "Neutral") + "'></span></p>";
-    entryHTML += "<p>" + converter.makeHtml(selectedEntry.content) + "</p>";
+        "<span>  </span><span class='sentiment " + (sentiment ? sentiment : "Neutral") + "'></span>";
+    entryHTML += `<span style='color: ${sentiments[sentiment]}; font-size: 12px'> ${sentiment}</span>`;
+    entryHTML += "</p><p>" + converter.makeHtml(selectedEntry.content) + "</p>";
     $("#content").html(entryHTML);
 
     if (selectedEntry.attachment instanceof Array) {
