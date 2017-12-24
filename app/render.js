@@ -8,6 +8,7 @@ const path = require("path");
 const $ = require("jquery");
 const async = require("async");
 const alertify = require("alertify.js");
+const emojify = require("emojify.js");
 const archiveUtils = require("./archive");
 const {getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
 
@@ -24,8 +25,11 @@ const converter = new showdown.Converter({
     simpleLineBreaks: true,
     simplifiedAutoLink: true,
     openLinksInNewWindow: true,
-    emoji: true,
+    emoji: false,
     backslashEscapesHTMLTags: true
+});
+emojify.setConfig({
+    img_dir: "../emoji",
 });
 
 const VERSION_NUMBER = 5.1;
@@ -128,6 +132,7 @@ const onEntryClicked = (e, json) => {
             }).appendTo("#content");
         }
     }
+    emojify.run(document.getElementById("content"));
 };
 
 $("#minimize").click(() => {

@@ -3,6 +3,11 @@ body {
     -webkit-app-region: no-drag;
 }
 
+img.emoji {
+    width: 20px;
+    height: 20px;
+}
+
 #titlebar {
     -webkit-app-region: drag;
     height: 20px;

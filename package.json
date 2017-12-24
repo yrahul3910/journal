@@ -9,13 +9,14 @@
   "build": {
     "appId": "com.yrahul.journal"
   },
-  "version": "5.0.4",
+  "version": "5.0.5",
   "main": "app/index.js",
   "dependencies": {
     "alertify.js": "^1.0.12",
     "async": "^2.6.0",
     "d3": "^4.9.1",
     "electron-updater": "^2.15.0",
+    "emojify.js": "^1.1.0",
     "fs-extra": "^5.0.0",
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
