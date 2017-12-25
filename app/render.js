@@ -537,6 +537,7 @@ $("#preview").click(() => {
     metroDialog.open("#previewDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
     $("#renderedMarkdown").html(converter.makeHtml($("textarea").val()));
+    emojify.run(document.getElementById("renderedMarkdown"));
 });
 
 $("#searchByDate").click(() => {
