@@ -143,7 +143,7 @@ $(document).ready(() => {
         // Check if it exists
         localStorage.setItem("theme", "default");
     } else if (theme == "dark") {
-        $(".welcome-page-title, body, p, li, b").addClass("dark-theme");
+        $(".welcome-page-title, body, p, li, b, #aboutDialog, h2").addClass("dark-theme");
         document.getElementById("darkThemeEnable").checked = true;
     }
 });
@@ -158,10 +158,10 @@ $("#close").click(() => {
 
 $("#darkThemeEnable").on("change", () => {
     if ($("#darkThemeEnable").is(":checked")) {
-        $(".welcome-page-title, body, p, li, b").addClass("dark-theme");
+        $(".welcome-page-title, body, p, li, b, #aboutDialog, h2").addClass("dark-theme");
         localStorage.setItem("theme", "dark");
     } else {
-        $(".welcome-page-title, body, p, li, b").removeClass("dark-theme");
+        $(".welcome-page-title, body, p, li, b, #aboutDialog, h2").removeClass("dark-theme");
         localStorage.setItem("theme", "default");
     }
 });

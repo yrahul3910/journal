@@ -7,11 +7,15 @@ body.dark-theme {
     background-color: rgb(30, 30, 30);
 }
 
+#aboutDialog.dark-theme {
+    background-color: rgb(40, 40, 40);
+}
+
 a.dropdown-toggle::after {
     display: none !important;
 }
 
-li.dark-theme, p.dark-theme, b.dark-theme {
+li.dark-theme, p.dark-theme, b.dark-theme, h2.dark-theme {
     color: rgb(170, 170, 170);
 }
 
