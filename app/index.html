@@ -37,6 +37,9 @@
                     </ul>
                 </li>
                 <li>
+                    <a id="settingsButton">Settings</a>
+                </li>
+                <li>
                     <a class="dropdown-toggle">Help</a>
                     <ul class="d-menu" data-role="dropdown">
                         <li><a id="aboutButton">About</a></li>
@@ -76,6 +79,11 @@
                         <div style="margin-left: 40px;">
                             <p class="welcome-page-title">
                                 Get Started
+                            </p>
+                            <p>
+                                <a id="tutorial" style="font-size: 16px" href="#">
+                                    Follow our Getting Started tutorial
+                                </a>
                             </p>
                             <p>
                                 <a style="font-size: 16px;" target="_blank" href="https://github.com/yrahul3910/journal/issues">
@@ -209,7 +217,10 @@
             <p>Want to get involved? Check out our GitHub repo <a target="_blank" href="https://github.com/yrahul3910/journal">here!</a></a></p>
             <hr>
             <b>Credits</b><br><br>
-            Bhavana KV
+            <ul>
+                <li>Bhavana KV</li>
+                <li>Vaisakh M</li>
+            </ul>
         </div>
 
         <!-- Search by date dialog -->
@@ -219,6 +230,18 @@
                 <button class="button"><span class="mif-calendar"></span></button>
             </div>
             <button class="button" id="searchButton">Search</button>
+        </div>
+
+        <!-- Settings dialog -->
+        <div data-role="dialog" id="settingsDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+            <h3>Settings</h3>
+            <div class="switch">
+                Dark Theme
+                <label style="margin-left: 5px;" class="switch">
+                    <input id="darkThemeEnable" type="checkbox">
+                    <span class="check"></span>
+                </label>
+            </div>
         </div>
 
         <!-- Introduction dialog -->
@@ -248,12 +271,10 @@
                             <h5>
                                 You can add new entries by going to Entry - New Entry. Entries are styled
                                 by Markdown. If you don't know how it works, it's okay! Regular text is
-                                valid Markdown, and so is HTML, though I strongly suggest you don't use
-                                HTML.
+                                valid Markdown too!
                             </h5>
                             <h5>
                                 You can add images to your daily entry as well. Add as many as you want!
-                                Note however, that they'll be compressed. <a target="_blank" href="journalbear.wordpress.com/2017/12/08/why-your-images-are-compressed/">Here's why.</a>
                             </h5>
                             <h5>
                                 You can also add how you're feeling today. Is the list

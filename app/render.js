@@ -136,12 +136,44 @@ const onEntryClicked = (e, json) => {
     emojify.run(document.getElementById("content"));
 };
 
+$(document).ready(() => {
+    // Set the theme here
+    let theme = localStorage.getItem("theme");
+    if (!theme) {
+        // Check if it exists
+        localStorage.setItem("theme", "default");
+    } else if (theme == "dark") {
+        $(".welcome-page-title, body, p, li, b").addClass("dark-theme");
+        document.getElementById("darkThemeEnable").checked = true;
+    }
+});
+
 $("#minimize").click(() => {
     window.minimize();
 });
 
 $("#close").click(() => {
     window.close();
+});
+
+$("#darkThemeEnable").on("change", () => {
+    if ($("#darkThemeEnable").is(":checked")) {
+        $(".welcome-page-title, body, p, li, b").addClass("dark-theme");
+        localStorage.setItem("theme", "dark");
+    } else {
+        $(".welcome-page-title, body, p, li, b").removeClass("dark-theme");
+        localStorage.setItem("theme", "default");
+    }
+});
+
+$("#settingsButton").click(() => {
+    metroDialog.open("#settingsDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
+$("#tutorial").click(() => {
+    metroDialog.open("#introDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
 $("#open").click(() => {
@@ -259,7 +291,8 @@ $("#addEntry").click(() => {
         let html = "";
         html += "<div class='entry' id='" + currentEntryCount + "'><b>";
         html += date.toDateString() + "</b><span>  </span><span class='sentiment " +
-        sentiment + "'></span><br/><p>";
+            sentiment + "'></span>" + `<span style="color: ${sentiments[sentiment]}; font-size: 12px"> \
+            ${sentiment}</span><br/><p>`;
         let words = content.split(/\s+/).slice(0, 5).join(" ");
         html += words + "...</p></div><hr />";
         $("#list").append(html);
