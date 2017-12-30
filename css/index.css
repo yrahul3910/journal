@@ -1,5 +1,6 @@
 body {
     overflow: hidden;
+    transition: background-color 1.5s ease-in;
     -webkit-app-region: no-drag;
 }
 
@@ -7,16 +8,20 @@ body.dark-theme {
     background-color: rgb(30, 30, 30);
 }
 
-#aboutDialog.dark-theme {
+body.dark-theme #aboutDialog {
     background-color: rgb(40, 40, 40);
+}
+
+body.dark-theme .welcome-page-title {
+    color: rgb(132, 206, 254);
+}
+
+body.dark-theme li, body.dark-theme p, body.dark-theme b, body.dark-theme h2 {
+    color: rgb(170, 170, 170);
 }
 
 a.dropdown-toggle::after {
     display: none !important;
-}
-
-li.dark-theme, p.dark-theme, b.dark-theme, h2.dark-theme {
-    color: rgb(170, 170, 170);
 }
 
 img.emoji {
@@ -147,10 +152,6 @@ input[type="text"] {
     color: rebeccapurple;
     margin-top: 15px;
     font-weight: lighter;
-}
-
-.welcome-page-title.dark-theme {
-    color: rgb(132, 206, 254);
 }
 
 .main-page-list li {
