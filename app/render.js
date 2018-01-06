@@ -1,6 +1,8 @@
 /* eslint no-undef: 0 */
-const { dialog } = require("electron").remote;
-var window = require("electron").remote.getCurrentWindow();
+const remote = require("electron").remote;
+const { dialog, Menu, MenuItem } = remote;
+const window = remote.getCurrentWindow();
+
 const fs = require("fs");
 const fse = require("fs-extra");
 const os = require("os");
@@ -42,6 +44,28 @@ const sentiments = {
     "Loved": "hotpink",
     "Excited": "lime"
 };
+
+let globalStore = {
+    imgPath: null
+};
+const imgContextMenu = new Menu();
+imgContextMenu.append(new MenuItem({
+    label: "Save to disk",
+    click() {
+        dialog.showOpenDialog({
+            title: "Choose a folder",
+            properties: ["openDirectory"]
+        }, (paths) => {
+            if (paths) {
+                let filename = globalStore.imgPath.slice(globalStore.imgPath.lastIndexOf("/"));
+                fse.copy(globalStore.imgPath, paths[0] + filename, (err) => {
+                    if (err) alertify.error("Failed to save image");
+                    else alertify.success("Saved image successfully.");
+                });
+            }
+        });
+    }
+}));
 
 // openMode has either "Open File" or "New Journal"
 let openMode, encryptedData, pwd, currentFileVersion, currentFilePath;
@@ -134,6 +158,11 @@ const onEntryClicked = (e, json) => {
         }
     }
     emojify.run(document.getElementById("content"));
+    $("img").on("contextmenu", (e) => {
+        e.preventDefault();
+        globalStore.imgPath = e.target.getAttribute("src");
+        imgContextMenu.popup(window);
+    });
 };
 
 $(document).ready(() => {
