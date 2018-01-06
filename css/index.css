@@ -16,7 +16,7 @@ body.dark-theme .welcome-page-title {
     color: rgb(132, 206, 254);
 }
 
-body.dark-theme li, body.dark-theme p, body.dark-theme b, body.dark-theme h2 {
+body.dark-theme li, body.dark-theme p, body.dark-theme b, body.dark-theme h2, body.dark-theme code {
     color: rgb(170, 170, 170);
 }
 
