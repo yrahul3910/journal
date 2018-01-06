@@ -327,6 +327,11 @@ $("#addEntry").click(() => {
 });
 
 $("#updateEntry").click(() => {
+    if (!journalEntries) {
+        metroDialog.open("#errDialog");
+        return;
+    }
+
     metroDialog.open("#editDialog");
 
     // Make required changes to fields.
@@ -574,6 +579,11 @@ $("#preview").click(() => {
 });
 
 $("#searchByDate").click(() => {
+    if (!journalEntries) {
+        metroDialog.open("#errDialog");
+        return;
+    }
+
     metroDialog.open("#searchDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
