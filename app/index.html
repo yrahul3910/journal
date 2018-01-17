@@ -163,9 +163,17 @@
             <div class="input-control textarea">
                 <textarea rows="15" cols="70"></textarea>
             </div>
+            <div style="display: flex" id="emoji-picker">
+                <div id="emoji-list">
+
+                </div>
+                <div id="emoji-toggle">
+                    <img class="emoji" id="emoji-toggle-img" src="../emoji/smile.png" />
+                </div>
+            </div>
             <div id="attachmentInput">
-                <div>Add an image (optional)</div>
-                <input style="margin-top: 10px; margin-bottom: 10px" type="file"
+                <span>Add an image (optional)</span>
+                <input style="margin-top: 10px; margin-bottom: 10px; margin-left: 20px;" type="file"
                     id="selectFile" accept="image/*" multiple>
             </div>
             <button class="button" id="preview">Preview</button>

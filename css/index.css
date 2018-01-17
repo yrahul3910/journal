@@ -157,3 +157,23 @@ input[type="text"] {
 .main-page-list li {
     margin-bottom: 10px;
 }
+
+#emoji-list {
+    flex: 0 0 66.7%;
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #727272;
+    max-height: 100px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#emoji-toggle {
+    margin-left: 10px;
+    flex: 0 0 5%;
+}
+
+#emoji-toggle-img {
+    cursor: pointer;
+}

@@ -12,6 +12,7 @@ const async = require("async");
 const alertify = require("alertify.js");
 const emojify = require("emojify.js");
 const archiveUtils = require("./archive");
+const {injectEmojis} = require("./injectEmoji");
 const {getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
 
 const _ = require("lodash");
@@ -166,6 +167,12 @@ const onEntryClicked = (e, json) => {
 };
 
 $(document).ready(() => {
+    injectEmojis("#emoji-list");
+    $("#emoji-list").slideToggle();
+    $("#emoji-toggle-img").click(() => {
+        $("#emoji-list").slideToggle();
+    });
+
     // Set the theme here
     let theme = localStorage.getItem("theme");
     if (!theme) {
