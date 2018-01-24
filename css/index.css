@@ -4,11 +4,21 @@ body {
     -webkit-app-region: no-drag;
 }
 
+.h3 {
+    font-size: 1.17em;
+    font-weight: bold;
+}
+
+.h5 {
+    font-size: .83em;
+    font-weight: bold;
+}
+
 body.dark-theme {
     background-color: rgb(30, 30, 30);
 }
 
-body.dark-theme #aboutDialog {
+body.dark-theme .dialog {
     background-color: rgb(40, 40, 40);
 }
 
@@ -16,7 +26,10 @@ body.dark-theme .welcome-page-title {
     color: rgb(132, 206, 254);
 }
 
-body.dark-theme li, body.dark-theme p, body.dark-theme b, body.dark-theme h2, body.dark-theme code {
+body.dark-theme li, body.dark-theme p, body.dark-theme b,
+body.dark-theme h2, body.dark-theme code, body.dark-theme .dialog p,
+body.dark-theme .dialog span, body.dark-theme .switch,
+body.dark-theme input[type=file] {
     color: rgb(170, 170, 170);
 }
 
