@@ -402,6 +402,12 @@ $("#newJournal").click(() => {
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
+$("#unlock").on("keyup", (e) => {
+    if (e.keyCode === 13) {
+        $("#decryptJournal").trigger("click");
+    }
+});
+
 // Search
 $("#queryInput").on("keyup", (e) => {
     if (e.keyCode === 13) {
