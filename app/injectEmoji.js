@@ -1,14 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 
-// Disabled no-unused-vars since ESLint won't pick up that
-// we used it inside a template literal.
-const addEmoji = (name) => { // eslint-disable-line no-unused-vars
-    $("textarea").val((i, text) => { // eslint-disable-line no-undef
-        return text + `:${name}:`;
-    });
-};
-
 exports.injectEmojis = (selector) => {
     fs.readdir(path.join(__dirname, "../emoji"), (err, files) => {
         if (err) throw err;
@@ -18,7 +10,7 @@ exports.injectEmojis = (selector) => {
             html += `
                 <div class="col-md-3">
                     <img class="emoji injected-emoji" src="../emoji/${file}" \
-                        onclick="addEmoji('${emoji_name}')" />
+                        onclick="$('textarea').val((i, text) => text + ':${emoji_name}:')" />
                 </div>
             `;
         });
