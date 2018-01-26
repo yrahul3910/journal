@@ -60,6 +60,6 @@ typings/
 
 .vscode/
 dist/
-build/
+###build/
 JournalBear-*/
 electron-builder.yml

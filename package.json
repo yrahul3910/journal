@@ -7,7 +7,16 @@
     "email": "yrahul3910@gmail.com"
   },
   "build": {
-    "appId": "com.yrahul.journal"
+    "appId": "com.yrahul.journal",
+    "linux": {
+        "target": ["deb", "rpm"],
+        "icon": "./build/icons",
+        "category": "Office"
+    },
+    "mac": {
+        "target": "dir",
+        "icon": "./build/icon.icns"
+    }
   },
   "version": "5.0.5",
   "main": "app/index.js",
@@ -35,6 +44,7 @@
     "start": "electron app/index.js",
     "pack": "build --dir",
     "dist": "build --x64",
+    "dist-mac": "build --x64 -m",
     "ship": "build -p always"
   }
 }
