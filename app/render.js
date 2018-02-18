@@ -297,7 +297,7 @@ $("#newEntry").click(() => {
 // New entry dialog button click handlers
 $("#addEntry").click(() => {
     let date = new Date($("#date").val());
-    let content = $("textarea").val();
+    let content = $("#entryTextarea").val();
 
     let isNewEntry; // is it a new entry or an updation?
     if ($("#addEntry").text() === "Add Entry")
@@ -357,7 +357,7 @@ $("#addEntry").click(() => {
     });
     metroDialog.close("#editDialog");
 
-    $("textarea").val("");
+    $("#entryTextarea").val("");
     $("#selectFile").val("");
     encodedImages = [];
 });
@@ -385,12 +385,12 @@ $("#updateEntry").click(() => {
 
     $("#date").val(moment(date).format("YYYY-M-D"));
     $("select").val(entry.sentiment);
-    $("textarea").val(entry.content);
+    $("#entryTextarea").val(entry.content);
 });
 
 $("#cancelEntry").click(() => {
     metroDialog.close("#editDialog");
-    $("textarea").val("");
+    $("#entryTextarea").val("");
 });
 
 
@@ -616,7 +616,7 @@ $("#selectFile").on("change", () => {
 $("#preview").click(() => {
     metroDialog.open("#previewDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-    $("#renderedMarkdown").html(converter.makeHtml($("textarea").val()));
+    $("#renderedMarkdown").html(converter.makeHtml($("#entryTextarea").val()));
     emojify.run(document.getElementById("renderedMarkdown"));
 });
 

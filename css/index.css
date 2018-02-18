@@ -4,6 +4,10 @@ body {
     -webkit-app-region: no-drag;
 }
 
+#entryTextarea {
+    overflow-x: hidden;
+}
+
 .h3 {
     font-size: 1.17em;
     font-weight: bold;
