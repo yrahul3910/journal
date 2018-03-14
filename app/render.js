@@ -594,22 +594,22 @@ $("#selectFile").on("change", () => {
         // Move the file to the right place
         try {
             fs.createReadStream(files[i].path).pipe(fs.createWriteStream(dir + "/" + newFilename));
+
+            /* This whole _jbimages folder will later be copied to the _jbfiles directory,
+            so we need to actually store a path to the image in the encodedImages (now a
+            misnomer) array. Unfortunately, we can't use relative paths, since . refers to
+            the current executable's path and not the temp path.
+
+            Update: Fuck that, we need it to work cross-platform, store relative paths.
+            Note that . here should be replaced by os.tmpdir() and then it'll work
+            alright. */
+            let finalPath = "./_jbfiles/images/" + newFilename;
+
+            // Add to the array of attachments
+            encodedImages.push(finalPath);
         } catch (ex) {
             alertify.error("We couldn't add your attachments.");
         }
-
-        /* This whole _jbimages folder will later be copied to the _jbfiles directory,
-        so we need to actually store a path to the image in the encodedImages (now a
-        misnomer) array. Unfortunately, we can't use relative paths, since . refers to
-        the current executable's path and not the temp path.
-
-        Update: Fuck that, we need it to work cross-platform, store relative paths.
-        Note that . here should be replaced by os.tmpdir() and then it'll work
-        alright. */
-        let finalPath = "./_jbfiles/images/" + newFilename;
-
-        // Add to the array of attachments
-        encodedImages.push(finalPath);
     }
 });
 

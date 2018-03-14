@@ -22,6 +22,19 @@ body.dark-theme {
     background-color: rgb(30, 30, 30);
 }
 
+body.dark-theme .app-bar {
+    background-color: #1d1d1d;
+    transition: background-color 1.5s ease-in;
+}
+
+body.dark-theme #queryInput {
+    color: rgb(170, 170, 170);
+}
+
+body.dark-theme .app-bar a, body.dark-theme .app-bar a.dropdown-toggle::before {
+    color: rgb(170, 170, 170) !important;
+}
+
 body.dark-theme .dialog {
     background-color: rgb(40, 40, 40);
 }
