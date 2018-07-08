@@ -37,7 +37,11 @@
                     </ul>
                 </li>
                 <li>
-                    <a id="settingsButton">Settings</a>
+                    <a class="dropdown-toggle">Preferences</a>
+                    <ul class="d-menu" data-role="dropdown">
+                        <li><a id="settingsButton">Settings</a></li>
+                        <li><a id="changePassword">Change Password</a></li>
+                    </ul>
                 </li>
                 <li>
                     <a class="dropdown-toggle">Help</a>
@@ -130,7 +134,10 @@
         </div>
 
         <!-- New entry dialog -->
-        <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" 
+            data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" 
+            style="visibility: hidden;">
+
             <div id="addEntryError"></div>
             <div class="row">
                 <div class="col" style="overflow: hidden; border-right: 0">
@@ -160,11 +167,32 @@
                     and **double asterisks** for <b>bold</b></span>
             </div>
             <div class="input-control textarea">
-                <textarea id="entryTextarea" rows="15" cols="70"></textarea>
+                <textarea id="entryTextarea" rows="13" cols="100"></textarea>
             </div>
             <div style="display: flex" id="emoji-picker">
-                <div id="emoji-list">
-
+                <div id="emoji-box">
+                    <div class="tabcontrol">
+                        <ul class="tabs">
+                            <li><a href="#activity">Activity</a></li>
+                            <li><a href="#faces-reactions">Faces, Reactions</a></li>
+                            <li><a href="#food-drink">Food, Drink</a></li>
+                            <li><a href="#nature-emojis">Nature</a></li>
+                            <li><a href="#object-emojis">Objects</a></li>
+                            <li><a href="#symbols-flags">Symbols, Flags</a></li>
+                            <li><a href="#travel-emojis">Travel</a></li>
+                            <li><a href="#other-emoji">Other</a></li>
+                        </ul>
+                        <div class="frames">
+                            <div class="frame" id="activity"></div>
+                            <div class="frame" id="faces-reactions"></div>
+                            <div class="frame" id="food-drink"></div>
+                            <div class="frame" id="nature-emojis"></div>
+                            <div class="frame" id="object-emojis"></div>
+                            <div class="frame" id="symbols-flags"></div>
+                            <div class="frame" id="travel-emojis"></div>
+                            <div class="frame" id="other-emoji"></div>
+                        </div>
+                    </div>
                 </div>
                 <div id="emoji-toggle">
                     <img class="emoji" id="emoji-toggle-img" src="../emoji/smile.png" />
@@ -340,6 +368,7 @@
             $(()=>{
                 $('select').select2();
                 $('#date').pickadate();
+                $('.tabcontrol').tabcontrol();
             });
             require('./render.js');
         </script>

@@ -167,10 +167,18 @@ const onEntryClicked = (e, json) => {
 };
 
 $(document).ready(() => {
-    injectEmojis("#emoji-list");
-    $("#emoji-list").slideToggle();
+    injectEmojis("#other-emoji", "../emoji");
+    injectEmojis("#activity", "../emoji/Activity");
+    injectEmojis("#faces-reactions", "../emoji/Faces and Reactions");
+    injectEmojis("#food-drink", "../emoji/Food and Drink");
+    injectEmojis("#nature-emojis", "../emoji/Nature");
+    injectEmojis("#object-emojis", "../emoji/Objects");
+    injectEmojis("#symbols-flags", "../emoji/Symbols and Flags");
+    injectEmojis("#travel-emojis", "../emoji/Travel");
+
+    $("#emoji-box").slideToggle();
     $("#emoji-toggle-img").click(() => {
-        $("#emoji-list").slideToggle();
+        $("#emoji-box").slideToggle();
     });
 
     // Set the theme here
