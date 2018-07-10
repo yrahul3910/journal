@@ -250,6 +250,8 @@ $("#save").click(() => {
 
         journalEntries.version = VERSION_NUMBER;
         let journalDir = os.tmpdir() + "/_jbfiles";
+        fs.mkdirSync(journalDir);
+
         async.waterfall([
             (callback) => {
                 // Write the JSON file
@@ -278,7 +280,9 @@ $("#save").click(() => {
                 alertify.success("Successfully saved!");
                 callback(null);
             }
-        ]);
+        ], (err) => {
+            if (err) console.log(err);
+        });
     });
 });
 
