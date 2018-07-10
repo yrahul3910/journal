@@ -68,8 +68,7 @@ imgContextMenu.append(new MenuItem({
     }
 }));
 
-// openMode has either "Open File" or "New Journal"
-let openMode, encryptedData, pwd, currentFileVersion, currentFilePath;
+let encryptedData, pwd, currentFileVersion, currentFilePath;
 
 let journalEntries;
 let currentEntryCount;
@@ -251,7 +250,6 @@ $("#save").click(() => {
 
         journalEntries.version = VERSION_NUMBER;
         let journalDir = os.tmpdir() + "/_jbfiles";
-
         async.waterfall([
             (callback) => {
                 // Write the JSON file
@@ -403,7 +401,6 @@ $("#cancelEntry").click(() => {
 
 
 $("#newJournal").click(() => {
-    openMode = "New Journal";
     metroDialog.open("#newJournalDialog");
     $("#password").val("");
     $("#confirmPassword").val("");
@@ -511,16 +508,14 @@ $("#confirmNewJournal").click(() => {
     }
     pwd = $("#password").val();
 
-    if (openMode === "New Journal") {
-        journalEntries = { };
-        journalEntries.en = [];
+    journalEntries = { };
+    journalEntries.en = [];
 
-        alertify.success("Journal created successfully!");
+    alertify.success("Journal created successfully!");
 
-        $("#welcome-page").css("display", "none");
-        $("#journal-mode").css("display", "flex");
-        currentEntryCount = 0;
-    }
+    $("#welcome-page").css("display", "none");
+    $("#journal-mode").css("display", "flex");
+    currentEntryCount = 0;
     metroDialog.close("#newJournalDialog");
 });
 
