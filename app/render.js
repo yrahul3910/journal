@@ -1,4 +1,5 @@
 /* eslint no-undef: 0 */
+// Required for opening dialogs and context menus
 const remote = require("electron").remote;
 const { dialog, Menu, MenuItem } = remote;
 const window = remote.getCurrentWindow();
@@ -20,6 +21,8 @@ const _ = require("lodash");
 const moment = require("moment");
 const showdown = require("showdown");
 
+/* JournalBear uses Showdown to render Markdown in entries. Emojis
+are supported as well. */
 const converter = new showdown.Converter({
     literalMidWordUnderscores: true,
     literalMidWordAsterisks: true,
@@ -32,12 +35,19 @@ const converter = new showdown.Converter({
     emoji: false,
     backslashEscapesHTMLTags: true
 });
+
+/* Set the directory for emoji. Unfortunately I had to compromise between
+duplicating all the emoji into an 'all' folder or not having a decent way
+to implement tabs for emoji. */
 emojify.setConfig({
-    img_dir: "../emoji",
+    img_dir: "../emoji/all",
 });
 
+/* Remember to update this on major releases. This indicates the 
+incompatible versions to the app. */
 const VERSION_NUMBER = 5.1;
 
+// Sentiment-color maps for the circles beside entries
 const sentiments = {
     "Happy": "green",
     "Angry": "red",
@@ -47,6 +57,7 @@ const sentiments = {
     "Excited": "lime"
 };
 
+// Implementation of the context menu to save images to disk
 let globalStore = {
     imgPath: null
 };
@@ -69,15 +80,26 @@ imgContextMenu.append(new MenuItem({
     }
 }));
 
-let encryptedData, pwd, currentFileVersion, currentFilePath;
-
+// The encrypted JSON data read from a journal file
+let encryptedData;
+// The current journal's password
+let pwd;
+// The version of JournalBear used by the current file
+let currentFileVersion;
+// Path to the .zjournal file opened
+let currentFilePath;
+// The decrypted object holding the entries
 let journalEntries;
 let currentEntryCount;
-let encodedImages = []; // this holds the base64 encoded attachment images of the current entry
-
+// Holds the base64 encoded attachment images of the current entry
+let encodedImages = [];
 // Used to store the HTML of all the entries
 let allEntriesHTML;
 
+/**
+ * Shows the JSON of all entries to clean HTML in the app's left pane.
+ * @param {object} data - The JSON object 
+ */
 function showData(data) {
     // Clear the list
     $("#list").html("");
@@ -104,6 +126,11 @@ function showData(data) {
     });
 }
 
+/**
+ * Handles the click event for an entry in the left pane.
+ * @param {event} e - The event object
+ * @param {object} json - The JSON of all entries
+ */
 const onEntryClicked = (e, json) => {
     const id = e.currentTarget.id;
     const selectedEntry = json[+id];
@@ -167,6 +194,7 @@ const onEntryClicked = (e, json) => {
 };
 
 $(document).ready(() => {
+    // Add emojis to the tabs in the emoji box
     injectEmojis("#other-emoji", "../emoji");
     injectEmojis("#activity", "../emoji/Activity");
     injectEmojis("#faces-reactions", "../emoji/Faces and Reactions");
@@ -176,6 +204,7 @@ $(document).ready(() => {
     injectEmojis("#symbols-flags", "../emoji/Symbols and Flags");
     injectEmojis("#travel-emojis", "../emoji/Travel");
 
+    // Hide the emoji box
     $("#emoji-box").slideToggle();
     $("#emoji-toggle-img").click(() => {
         $("#emoji-box").slideToggle();
@@ -192,235 +221,15 @@ $(document).ready(() => {
     }
 });
 
+// -----------------------
+// Titlebar event handlers
+// -----------------------
 $("#minimize").click(() => {
     window.minimize();
 });
 
 $("#close").click(() => {
     window.close();
-});
-
-$("#darkThemeEnable").on("change", () => {
-    if ($("#darkThemeEnable").is(":checked")) {
-        $("body").addClass("dark-theme");
-        localStorage.setItem("theme", "dark");
-    } else {
-        $("body").removeClass("dark-theme");
-        localStorage.setItem("theme", "default");
-    }
-});
-
-$("#settingsButton").click(() => {
-    metroDialog.open("#settingsDialog");
-    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-});
-
-$("#tutorial").click(() => {
-    metroDialog.open("#introDialog");
-    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-});
-
-$("#open").click(() => {
-    dialog.showOpenDialog({ filters: [
-        { name: "JournalBear 5.1 Document", extensions: ["zjournal"]},
-        { name: "JournalBear 5.0 Document", extensions: ["ejournal"]}
-    ]}, (filenames) => {
-        if (filenames === undefined) return;
-
-        if (filenames[0].endsWith(".ejournal"))
-            currentFileVersion = 5.0;
-        else {
-            currentFilePath = filenames[0];
-            currentFileVersion = 5.1;
-        }
-
-        $("#welcome-page").css("display", "none");
-        $("#journal-mode").css("display", "flex");
-
-        encryptedData = fs.readFileSync(filenames[0]).toString();
-        metroDialog.open("#decryptDialog");
-        $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-    });
-});
-
-$("#save").click(() => {
-    dialog.showSaveDialog({ filters: [
-        { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
-    ]}, (filename) => {
-        if (!filename) return;
-
-        journalEntries.version = VERSION_NUMBER;
-        let journalDir = os.tmpdir() + "/_jbfiles";
-        if (fs.existsSync(journalDir))
-            rimraf.sync(journalDir);
-        fs.mkdirSync(journalDir);
-
-        async.waterfall([
-            (callback) => {
-                // Write the JSON file
-                fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
-            },
-            (callback) => {
-                // Add the images now
-                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
-                    fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
-                else
-                    callback(null);
-            },
-            (callback) => {
-                // Create the .tar.gz
-                archiveUtils.compress(journalDir, (err, tmpPath) => {
-                    if (err) callback(err);
-                    callback(null, tmpPath);
-                });
-            },
-            (tmpPath, callback) => {
-                // Encrypt the file
-                encryptFile(tmpPath, filename, pwd, callback);
-            },
-            (callback) => {
-                // Display success message
-                alertify.success("Successfully saved!");
-                callback(null);
-            }
-        ], (err) => {
-            if (err) console.log(err);
-        });
-    });
-});
-
-// New entry menu item click event handler
-$("#newEntry").click(() => {
-    if (!journalEntries) {
-        metroDialog.open("#errDialog");
-        return;
-    }
-
-    // First undo any changes that clicking the Update Entry menu item
-    // might've done.
-    $("#addEntry").text("Add Entry");
-    $("#date").attr("disabled", false);
-    $("#attachmentInput").css("display", "block");
-
-    $("#date").val(new Date().toISOString().slice(0, 10));
-    metroDialog.open("#editDialog");
-    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-});
-
-// New entry dialog button click handlers
-$("#addEntry").click(() => {
-    let date = new Date($("#date").val());
-    let content = $("#entryTextarea").val();
-
-    let isNewEntry; // is it a new entry or an updation?
-    if ($("#addEntry").text() === "Add Entry")
-        isNewEntry = true;
-    else
-        isNewEntry = false;
-
-    // Make sure this isn't a duplicate entry.
-    if (isNewEntry) {
-        for (let i = 0; i < currentEntryCount; ++i) {
-            if (date.getTime() === new Date(journalEntries.en[i].entryDate).getTime()) {
-                $("#addEntryError").html(`<span style="color: red">Multiple entries
-                for the same date not allowed.</span>`);
-                return;
-            }
-        }
-    }
-
-    let sentiment = $("select").val();
-    // Add the entry to the list of entries
-    let newEntry = { entryDate: date, content, attachment: encodedImages, sentiment };
-
-    if (isNewEntry) {
-        journalEntries.en.push(newEntry);
-
-        // Show the entry in #list.
-        let html = "";
-        html += "<div class='entry' id='" + currentEntryCount + "'><b>";
-        html += date.toDateString() + "</b><span>  </span><span class='sentiment " +
-            sentiment + "'></span>" + `<span style="color: ${sentiments[sentiment]}; font-size: 12px"> \
-            ${sentiment}</span><br/><p>`;
-        let words = content.split(/\s+/).slice(0, 5).join(" ");
-        html += words + "...</p></div><hr />";
-        $("#list").append(html);
-        allEntriesHTML += html;
-        currentEntryCount++;
-    } else {
-        for (let entry of journalEntries.en) {
-            // First find the entry
-            if (moment(date).isSame(new Date(entry.entryDate), "day")) {
-                // We can directly modify the entry over here.
-                entry.content = content;
-                entry.sentiment = sentiment;
-
-                // Change the HTML
-                showData(JSON.stringify(journalEntries));
-
-                // Get out of the loop now
-                break;
-            }
-        }
-    }
-
-    // We need to rebind this handler
-    $(".entry").click((e) => {
-        onEntryClicked(e, journalEntries.en);
-    });
-    metroDialog.close("#editDialog");
-
-    $("#entryTextarea").val("");
-    $("#selectFile").val("");
-    encodedImages = [];
-});
-
-$("#updateEntry").click(() => {
-    if (!journalEntries) {
-        metroDialog.open("#errDialog");
-        return;
-    }
-
-    metroDialog.open("#editDialog");
-
-    // Make required changes to fields.
-    $("#addEntry").text("Update Entry");
-    $("#date").attr("disabled", true);
-    // Disallow changes to the attachment
-    $("#attachmentInput").css("display", "none");
-
-    let dateString = $("#content :nth-child(1) :nth-child(1)").text().split("\n")[0];
-
-    let date = new Date(dateString);
-    let entry = journalEntries.en.find((entry) => {
-        return moment(date).isSame(new Date(entry.entryDate), "day");
-    });
-
-    $("#date").val(moment(date).format("YYYY-M-D"));
-    $("select").val(entry.sentiment);
-    $("#entryTextarea").val(entry.content);
-});
-
-$("#cancelEntry").click(() => {
-    metroDialog.close("#editDialog");
-    $("#entryTextarea").val("");
-});
-
-
-$("#newJournal").click(() => {
-    metroDialog.open("#newJournalDialog");
-    $("#encryptionNotice").html("Your journal will be encrypted. Please enter a strong " +
-        "password. It's recommended to use a passphrase instead, but it's optional.");
-    $("#confirmNewJournal").text("Create New Journal");
-    $("#password").val("");
-    $("#confirmPassword").val("");
-    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-});
-
-$("#unlock").on("keyup", (e) => {
-    if (e.keyCode === 13) {
-        $("#decryptJournal").trigger("click");
-    }
 });
 
 // Search
@@ -497,143 +306,170 @@ $("#queryInput").blur(() => {
     $("#queryInput").val("");
 });
 
-$("#confirmNewJournal").click(() => {
-    let password = $("#password").val();
-    // Check passwords not empty and matching, and set pwd.
-    if (/^\s*$/.test(password)) {
-        $("#newJournalError").html(`<span style="color: red">Password cannot be empty.
-            </span>`);
-        return;
-    }
-    if (password !== $("#confirmPassword").val()) {
-        $("#newJournalError").html(`<span style="color: red">Passwords do not match.
-            </span>`);
-        return;
-    }
-    let pwdStrength = checkPwdStrength(password);
-    if (!_.isEqual(pwdStrength, [])) {
-    // Not secure enough.
-        $("#newJournalError").html("<span style='color: red'>" + pwdStrength[0] + "</span>");
-        return;
-    }
-    pwd = $("#password").val();
-
-    if ($("#confirmNewJournal").text() == "Create New Journal") {
-        journalEntries = { };
-        journalEntries.en = [];
-
-        alertify.success("Journal created successfully!");
-
-        $("#welcome-page").css("display", "none");
-        $("#journal-mode").css("display", "flex");
-        currentEntryCount = 0;
-    }
-    alertify.success("Password changed! Please save your journal again.");
-    metroDialog.close("#newJournalDialog");
-});
-
-$("#cancelNewJournal").click(() => {
-    if (openMode === "Open File") {
-        $("#list").html("");
-        currentEntryCount = 0;
-        journalEntries = undefined;
-    }
-    metroDialog.close("#newJournalDialog");
-});
-
-$("#decryptJournal").click(() => {
-    pwd = $("#unlock").val();
-    if (currentFileVersion == 5.1) {
-        // Handle the newer file version.
-        let tmp = os.tmpdir();
-        async.waterfall([
-            (callback) => {
-                // Decrypt the file
-                decryptFile(currentFilePath, tmp + "/_jb.tar.gz", pwd, callback);
-            },
-            (callback) => {
-                // Extract the archive
-                archiveUtils.decompress(tmp + "/_jb.tar.gz", callback);
-            },
-            (callback) => {
-                // Read the file
-                fs.readFile(tmp + "/_jbfiles/data.json", (err, data) => {
-                    if (err) throw err;
-                    callback(null, data);
-                });
-            },
-            (data, callback) => {
-                journalEntries = data;
-                showData(data);
-                metroDialog.close("#decryptDialog");
-                callback(null);
-            }
-        ], (err) => {
-            if (err) $("#prompt").text("Wrong password. Try again.");
-        });
+// Toggle dark theme and save preferences
+$("#darkThemeEnable").on("change", () => {
+    if ($("#darkThemeEnable").is(":checked")) {
+        $("body").addClass("dark-theme");
+        localStorage.setItem("theme", "dark");
     } else {
-        // Legacy 5.0 support
-        let data;
-        if ((data = getDecryptedText(encryptedData, pwd))) {
-            // Successful
-            showData(data);
-            metroDialog.close("#decryptDialog");
-
-            if (data.version > VERSION_NUMBER)
-                alertify.error("This journal is from a newer version. Some features may not work correctly.");
-        }
+        $("body").removeClass("dark-theme");
+        localStorage.setItem("theme", "default");
     }
 });
 
-$("#introButton").click(() => {
+// ---------------------------------------
+// Preferences menu entries click handlers
+// ---------------------------------------
+$("#settingsButton").click(() => {
+    metroDialog.open("#settingsDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
+$("#changePassword").click(() => {
+    if (!journalEntries) {
+        alertify.error("No journal is open.");
+        return;
+    }
+
+    metroDialog.open("#newJournalDialog");
+    $("#encryptionNotice").html("Please enter a new secure password.");
+    $("#confirmNewJournal").text("Change Password");
+    $("#password").val("");
+    $("#confirmPassword").val("");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
+$("#tutorial").click(() => {
     metroDialog.open("#introDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
-$("#aboutButton").click(() => {
-    metroDialog.open("#aboutDialog");
-    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-});
+// ------------------------------
+// File menu entry click handlers
+// ------------------------------
+$("#open").click(() => {
+    dialog.showOpenDialog({ filters: [
+        { name: "JournalBear 5.1 Document", extensions: ["zjournal"]},
+        { name: "JournalBear 5.0 Document", extensions: ["ejournal"]}
+    ]}, (filenames) => {
+        if (filenames === undefined) return;
 
-$("#selectFile").on("change", () => {
-    let {files} = $("#selectFile")[0];
-    for (let i = 0; i < files.length; ++i) {
-        // Get the new filename
-        let newFilename = new Date().valueOf().toString();
-        newFilename += ("_" + i.toString() + path.extname(files[i].path));
-
-        // Get the new path
-        let dir = os.tmpdir() + "/_jbimages";
-        if (!fs.existsSync(dir))
-            fs.mkdirSync(dir);
-
-        // Move the file to the right place
-        try {
-            fs.createReadStream(files[i].path).pipe(fs.createWriteStream(dir + "/" + newFilename));
-
-            /* This whole _jbimages folder will later be copied to the _jbfiles directory,
-            so we need to actually store a path to the image in the encodedImages (now a
-            misnomer) array. Unfortunately, we can't use relative paths, since . refers to
-            the current executable's path and not the temp path.
-
-            Update: Fuck that, we need it to work cross-platform, store relative paths.
-            Note that . here should be replaced by os.tmpdir() and then it'll work
-            alright. */
-            let finalPath = "./_jbfiles/images/" + newFilename;
-
-            // Add to the array of attachments
-            encodedImages.push(finalPath);
-        } catch (ex) {
-            alertify.error("We couldn't add your attachments.");
+        if (filenames[0].endsWith(".ejournal"))
+            currentFileVersion = 5.0;
+        else {
+            currentFilePath = filenames[0];
+            currentFileVersion = 5.1;
         }
-    }
+
+        $("#welcome-page").css("display", "none");
+        $("#journal-mode").css("display", "flex");
+
+        encryptedData = fs.readFileSync(filenames[0]).toString();
+        metroDialog.open("#decryptDialog");
+        $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+    });
 });
 
-$("#preview").click(() => {
-    metroDialog.open("#previewDialog");
+$("#save").click(() => {
+    dialog.showSaveDialog({ filters: [
+        { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
+    ]}, (filename) => {
+        if (!filename) return;
+
+        journalEntries.version = VERSION_NUMBER;
+        let journalDir = os.tmpdir() + "/_jbfiles";
+        if (fs.existsSync(journalDir))
+            rimraf.sync(journalDir);
+        fs.mkdirSync(journalDir);
+
+        async.waterfall([
+            (callback) => {
+                // Write the JSON file
+                fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
+            },
+            (callback) => {
+                // Add the images now
+                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
+                    fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
+                else
+                    callback(null);
+            },
+            (callback) => {
+                // Create the .tar.gz
+                archiveUtils.compress(journalDir, (err, tmpPath) => {
+                    if (err) callback(err);
+                    callback(null, tmpPath);
+                });
+            },
+            (tmpPath, callback) => {
+                // Encrypt the file
+                encryptFile(tmpPath, filename, pwd, callback);
+            },
+            (callback) => {
+                // Display success message
+                alertify.success("Successfully saved!");
+                callback(null);
+            }
+        ], (err) => {
+            if (err) console.log(err);
+        });
+    });
+});
+
+$("#newJournal").click(() => {
+    metroDialog.open("#newJournalDialog");
+    $("#encryptionNotice").html("Your journal will be encrypted. Please enter a strong " +
+        "password. It's recommended to use a passphrase instead, but it's optional.");
+    $("#confirmNewJournal").text("Create New Journal");
+    $("#password").val("");
+    $("#confirmPassword").val("");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-    $("#renderedMarkdown").html(converter.makeHtml($("#entryTextarea").val()));
-    emojify.run(document.getElementById("renderedMarkdown"));
+});
+
+// -------------------------------
+// Entry menu entry click handlers
+// -------------------------------
+$("#newEntry").click(() => {
+    if (!journalEntries) {
+        metroDialog.open("#errDialog");
+        return;
+    }
+
+    // First undo any changes that clicking the Update Entry menu item
+    // might've done.
+    $("#addEntry").text("Add Entry");
+    $("#date").attr("disabled", false);
+    $("#attachmentInput").css("display", "block");
+
+    $("#date").val(new Date().toISOString().slice(0, 10));
+    metroDialog.open("#editDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
+$("#updateEntry").click(() => {
+    if (!journalEntries) {
+        metroDialog.open("#errDialog");
+        return;
+    }
+
+    metroDialog.open("#editDialog");
+
+    // Make required changes to fields.
+    $("#addEntry").text("Update Entry");
+    $("#date").attr("disabled", true);
+    // Disallow changes to the attachment
+    $("#attachmentInput").css("display", "none");
+
+    let dateString = $("#content :nth-child(1) :nth-child(1)").text().split("\n")[0];
+
+    let date = new Date(dateString);
+    let entry = journalEntries.en.find((entry) => {
+        return moment(date).isSame(new Date(entry.entryDate), "day");
+    });
+
+    $("#date").val(moment(date).format("YYYY-M-D"));
+    $("select").val(entry.sentiment);
+    $("#entryTextarea").val(entry.content);
 });
 
 $("#searchByDate").click(() => {
@@ -646,6 +482,7 @@ $("#searchByDate").click(() => {
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
+// Implementation of search by date: button click handler
 $("#searchButton").click(() => {
     let entries = journalEntries.en;
 
@@ -707,16 +544,233 @@ $("#searchButton").click(() => {
     }
 });
 
-$("#changePassword").click(() => {
-    if (!journalEntries) {
-        alertify.error("No journal is open.");
-        return;
+// --------------------------------------
+// New entry dialog button click handlers
+// --------------------------------------
+$("#addEntry").click(() => {
+    let date = new Date($("#date").val());
+    let content = $("#entryTextarea").val();
+
+    let isNewEntry; // is it a new entry or an updation?
+    if ($("#addEntry").text() === "Add Entry")
+        isNewEntry = true;
+    else
+        isNewEntry = false;
+
+    // Make sure this isn't a duplicate entry.
+    if (isNewEntry) {
+        for (let i = 0; i < currentEntryCount; ++i) {
+            if (date.getTime() === new Date(journalEntries.en[i].entryDate).getTime()) {
+                $("#addEntryError").html(`<span style="color: red">Multiple entries
+                for the same date not allowed.</span>`);
+                return;
+            }
+        }
     }
 
-    metroDialog.open("#newJournalDialog");
-    $("#encryptionNotice").html("Please enter a new secure password.");
-    $("#confirmNewJournal").text("Change Password");
-    $("#password").val("");
-    $("#confirmPassword").val("");
+    let sentiment = $("select").val();
+    // Add the entry to the list of entries
+    let newEntry = { entryDate: date, content, attachment: encodedImages, sentiment };
+
+    if (isNewEntry) {
+        journalEntries.en.push(newEntry);
+
+        // Show the entry in #list.
+        let html = "";
+        html += "<div class='entry' id='" + currentEntryCount + "'><b>";
+        html += date.toDateString() + "</b><span>  </span><span class='sentiment " +
+            sentiment + "'></span>" + `<span style="color: ${sentiments[sentiment]}; font-size: 12px"> \
+            ${sentiment}</span><br/><p>`;
+        let words = content.split(/\s+/).slice(0, 5).join(" ");
+        html += words + "...</p></div><hr />";
+        $("#list").append(html);
+        allEntriesHTML += html;
+        currentEntryCount++;
+    } else {
+        for (let entry of journalEntries.en) {
+            // First find the entry
+            if (moment(date).isSame(new Date(entry.entryDate), "day")) {
+                // We can directly modify the entry over here.
+                entry.content = content;
+                entry.sentiment = sentiment;
+
+                // Change the HTML
+                showData(JSON.stringify(journalEntries));
+
+                // Get out of the loop now
+                break;
+            }
+        }
+    }
+
+    // We need to rebind this handler
+    $(".entry").click((e) => {
+        onEntryClicked(e, journalEntries.en);
+    });
+    metroDialog.close("#editDialog");
+
+    $("#entryTextarea").val("");
+    $("#selectFile").val("");
+    encodedImages = [];
+});
+
+$("#cancelEntry").click(() => {
+    metroDialog.close("#editDialog");
+    $("#entryTextarea").val("");
+});
+
+// Handle Enter key on unlock dialog
+$("#unlock").on("keyup", (e) => {
+    if (e.keyCode === 13) {
+        $("#decryptJournal").trigger("click");
+    }
+});
+
+// ---------------------------------------------
+// Click handlers for confirm new journal dialog
+// ---------------------------------------------
+$("#confirmNewJournal").click(() => {
+    let password = $("#password").val();
+    // Check passwords not empty and matching, and set pwd.
+    if (/^\s*$/.test(password)) {
+        $("#newJournalError").html(`<span style="color: red">Password cannot be empty.
+            </span>`);
+        return;
+    }
+    if (password !== $("#confirmPassword").val()) {
+        $("#newJournalError").html(`<span style="color: red">Passwords do not match.
+            </span>`);
+        return;
+    }
+    let pwdStrength = checkPwdStrength(password);
+    if (!_.isEqual(pwdStrength, [])) {
+    // Not secure enough.
+        $("#newJournalError").html("<span style='color: red'>" + pwdStrength[0] + "</span>");
+        return;
+    }
+    pwd = $("#password").val();
+
+    if ($("#confirmNewJournal").text() == "Create New Journal") {
+        journalEntries = { };
+        journalEntries.en = [];
+
+        alertify.success("Journal created successfully!");
+
+        $("#welcome-page").css("display", "none");
+        $("#journal-mode").css("display", "flex");
+        currentEntryCount = 0;
+    }
+    else
+        alertify.success("Password changed! Please save your journal again.");
+    metroDialog.close("#newJournalDialog");
+});
+
+$("#cancelNewJournal").click(() => {
+    if (openMode === "Open File") {
+        $("#list").html("");
+        currentEntryCount = 0;
+        journalEntries = undefined;
+    }
+    metroDialog.close("#newJournalDialog");
+});
+
+// Handle clicking Decrypt button
+$("#decryptJournal").click(() => {
+    pwd = $("#unlock").val();
+    if (currentFileVersion == 5.1) {
+        // Handle the newer file version.
+        let tmp = os.tmpdir();
+        async.waterfall([
+            (callback) => {
+                // Decrypt the file
+                decryptFile(currentFilePath, tmp + "/_jb.tar.gz", pwd, callback);
+            },
+            (callback) => {
+                // Extract the archive
+                archiveUtils.decompress(tmp + "/_jb.tar.gz", callback);
+            },
+            (callback) => {
+                // Read the file
+                fs.readFile(tmp + "/_jbfiles/data.json", (err, data) => {
+                    if (err) throw err;
+                    callback(null, data);
+                });
+            },
+            (data, callback) => {
+                journalEntries = data;
+                showData(data);
+                metroDialog.close("#decryptDialog");
+                callback(null);
+            }
+        ], (err) => {
+            if (err) $("#prompt").text("Wrong password. Try again.");
+        });
+    } else {
+        // Legacy 5.0 support
+        let data;
+        if ((data = getDecryptedText(encryptedData, pwd))) {
+            // Successful
+            showData(data);
+            metroDialog.close("#decryptDialog");
+
+            if (data.version > VERSION_NUMBER)
+                alertify.error("This journal is from a newer version. Some features may not work correctly.");
+        }
+    }
+});
+
+// -------------------------------
+// About menu entry click handlers
+// -------------------------------
+$("#introButton").click(() => {
+    metroDialog.open("#introDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
+$("#aboutButton").click(() => {
+    metroDialog.open("#aboutDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+});
+
+// Attachment file input handler
+$("#selectFile").on("change", () => {
+    let {files} = $("#selectFile")[0];
+    for (let i = 0; i < files.length; ++i) {
+        // Get the new filename
+        let newFilename = new Date().valueOf().toString();
+        newFilename += ("_" + i.toString() + path.extname(files[i].path));
+
+        // Get the new path
+        let dir = os.tmpdir() + "/_jbimages";
+        if (!fs.existsSync(dir))
+            fs.mkdirSync(dir);
+
+        // Move the file to the right place
+        try {
+            fs.createReadStream(files[i].path).pipe(fs.createWriteStream(dir + "/" + newFilename));
+
+            /* This whole _jbimages folder will later be copied to the _jbfiles directory,
+            so we need to actually store a path to the image in the encodedImages (now a
+            misnomer) array. Unfortunately, we can't use relative paths, since . refers to
+            the current executable's path and not the temp path.
+
+            Update: Fuck that, we need it to work cross-platform, store relative paths.
+            Note that . here should be replaced by os.tmpdir() and then it'll work
+            alright. */
+            let finalPath = "./_jbfiles/images/" + newFilename;
+
+            // Add to the array of attachments
+            encodedImages.push(finalPath);
+        } catch (ex) {
+            alertify.error("We couldn't add your attachments.");
+        }
+    }
+});
+
+// Preview button click handler
+$("#preview").click(() => {
+    metroDialog.open("#previewDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+    $("#renderedMarkdown").html(converter.makeHtml($("#entryTextarea").val()));
+    emojify.run(document.getElementById("renderedMarkdown"));
 });
