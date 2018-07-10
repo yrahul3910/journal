@@ -13,6 +13,7 @@ const alertify = require("alertify.js");
 const emojify = require("emojify.js");
 const archiveUtils = require("./archive");
 const {injectEmojis} = require("./injectEmoji");
+const rimraf = require("rimraf");
 const {getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
 
 const _ = require("lodash");
@@ -250,6 +251,8 @@ $("#save").click(() => {
 
         journalEntries.version = VERSION_NUMBER;
         let journalDir = os.tmpdir() + "/_jbfiles";
+        if (fs.existsSync(journalDir))
+            rimraf.sync(journalDir);
         fs.mkdirSync(journalDir);
 
         async.waterfall([
@@ -406,6 +409,9 @@ $("#cancelEntry").click(() => {
 
 $("#newJournal").click(() => {
     metroDialog.open("#newJournalDialog");
+    $("#encryptionNotice").html("Your journal will be encrypted. Please enter a strong " +
+        "password. It's recommended to use a passphrase instead, but it's optional.");
+    $("#confirmNewJournal").text("Create New Journal");
     $("#password").val("");
     $("#confirmPassword").val("");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
@@ -512,14 +518,17 @@ $("#confirmNewJournal").click(() => {
     }
     pwd = $("#password").val();
 
-    journalEntries = { };
-    journalEntries.en = [];
+    if ($("#confirmNewJournal").text() == "Create New Journal") {
+        journalEntries = { };
+        journalEntries.en = [];
 
-    alertify.success("Journal created successfully!");
+        alertify.success("Journal created successfully!");
 
-    $("#welcome-page").css("display", "none");
-    $("#journal-mode").css("display", "flex");
-    currentEntryCount = 0;
+        $("#welcome-page").css("display", "none");
+        $("#journal-mode").css("display", "flex");
+        currentEntryCount = 0;
+    }
+    alertify.success("Password changed! Please save your journal again.");
     metroDialog.close("#newJournalDialog");
 });
 
@@ -696,4 +705,18 @@ $("#searchButton").click(() => {
             break;
         }
     }
+});
+
+$("#changePassword").click(() => {
+    if (!journalEntries) {
+        alertify.error("No journal is open.");
+        return;
+    }
+
+    metroDialog.open("#newJournalDialog");
+    $("#encryptionNotice").html("Please enter a new secure password.");
+    $("#confirmNewJournal").text("Change Password");
+    $("#password").val("");
+    $("#confirmPassword").val("");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
