@@ -45,17 +45,9 @@ app.on("ready", () => {
 
     // Perform cleanup after the user can see the window
     let tmp = os.tmpdir();
-    rimraf(tmp + "\\_jbimages", (err) => {
-        if (err) throw err;
-
-        rimraf(tmp + "/_jbfiles", (err) => {
-            if (err) throw err;
-
-            rimraf(tmp + "/_jb.tar.gz", (err) => {
-                if (err) throw err;
-            });
-        });
-    });
+    rimraf.sync(tmp + "/_jbimages");
+    rimraf.sync(tmp + "/_jbfiles");
+    rimraf.sync(tmp + "/_jb.tar.gz");
 });
 
 // Quit when all windows are closed.
