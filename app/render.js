@@ -127,6 +127,31 @@ function showData(data) {
 }
 
 /**
+ * Get the percentage of each emotion in the current journal.
+ */
+const getEmotionPercentages = () => {
+    const counts = {
+        "Happy": 0,
+        "Angry": 0,
+        "Sad": 0,
+        "Neutral": 0,
+        "Loved": 0,
+        "Excited": 0
+    };
+
+    for (let entry of journalEntries)
+        counts[entry.sentiment]++;
+    
+    // Divide counts by the sum to get fractions
+    let sum = sum(Object.values(counts));
+    Object.keys(counts).map(key => {
+        counts[key] /= sum;
+    });
+
+    return counts;
+}
+
+/**
  * Handles the click event for an entry in the left pane.
  * @param {event} e - The event object
  * @param {object} json - The JSON of all entries

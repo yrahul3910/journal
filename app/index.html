@@ -34,6 +34,7 @@
                         <li><a id="newEntry">New Entry</a></li>
                         <li><a id="updateEntry">Update Entry</a></li>
                         <li><a id="searchByDate">Search by Date</a></li>
+                        <li><a id="sentimentAnalysis">Life in Review</a></li>
                     </ul>
                 </li>
                 <li>
@@ -127,6 +128,8 @@
                         <ul class="main-page-list" style="margin-right: 35px;">
                             <li>Minor UI improvements</li>
                             <li>Bug fixes</li>
+                            <li>Emojis are now grouped</li>
+                            <li>You can now change your password</li>
                         </ul>
                     </div>
                 </div>
@@ -279,6 +282,12 @@
                     <span class="check"></span>
                 </label>
             </div>
+        </div>
+
+        <!-- Year in review (sentiment analysis) dialog -->
+        <div data-role="dialog" id="introDialog" class="padding20 dialog" data-close-button="true"
+            data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true"
+            style="visibility: hidden;">
         </div>
 
         <!-- Introduction dialog -->
