@@ -149,12 +149,12 @@ const getEmotionPercentages = () => {
     }
         
     // Divide counts by the sum to get fractions
-    console.log(Object.values(counts));
     let sum = _.sum(Object.values(counts));
     Object.keys(counts).map(key => {
         counts[key] /= sum;
+        counts[key] = Math.floor(counts[key] * 1e4) / 100;
     });
-    
+
     return counts;
 }
 
