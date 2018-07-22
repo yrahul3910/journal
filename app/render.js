@@ -15,6 +15,7 @@ const emojify = require("emojify.js");
 const archiveUtils = require("./archive");
 const {injectEmojis} = require("./injectEmoji");
 const rimraf = require("rimraf");
+const {Chart} = require("chart.js");
 const {getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
 
 const _ = require("lodash");
@@ -139,17 +140,48 @@ const getEmotionPercentages = () => {
         "Excited": 0
     };
 
-    for (let entry of journalEntries)
-        counts[entry.sentiment]++;
-    
+    for (let entry of journalEntries.en) {
+        // For old versions of the journal, the sentiment is undefined.
+        if (!entry.sentiment)
+            counts["Neutral"]++;
+        else
+            counts[entry.sentiment]++;
+    }
+        
     // Divide counts by the sum to get fractions
-    let sum = sum(Object.values(counts));
+    console.log(Object.values(counts));
+    let sum = _.sum(Object.values(counts));
     Object.keys(counts).map(key => {
         counts[key] /= sum;
     });
-
+    
     return counts;
 }
+
+$("#sentimentAnalysis").click(() => {
+    metroDialog.open("#sentimentDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+
+    percentages = getEmotionPercentages();
+    new Chart(document.getElementById("sentimentRatioChart"), {
+        type: "pie",
+        data: {
+            labels: Object.keys(percentages),
+            datasets: [{
+                label: "Percentage of emotions",
+                data: Object.values(percentages),
+                backgroundColor: [
+                    "rgba(255, 99, 132, 0.2)",
+                    "rgba(54, 162, 235, 0.2)",
+                    "rgba(255, 206, 86, 0.2)",
+                    "rgba(75, 192, 192, 0.2)",
+                    "rgba(153, 102, 255, 0.2)",
+                    "rgba(255, 159, 64, 0.2)"
+                ],
+            }]
+        }
+    });
+});
 
 /**
  * Handles the click event for an entry in the left pane.
