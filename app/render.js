@@ -55,7 +55,8 @@ const sentiments = {
     "Sad": "#FBCA04",
     "Neutral": "gray",
     "Loved": "hotpink",
-    "Excited": "lime"
+    "Excited": "lime",
+    "Unknown": "black" // only required for Statistics pie chart
 };
 
 // Implementation of the context menu to save images to disk
@@ -137,13 +138,14 @@ const getEmotionPercentages = () => {
         "Sad": 0,
         "Neutral": 0,
         "Loved": 0,
-        "Excited": 0
+        "Excited": 0,
+        "Unknown": 0
     };
 
     for (let entry of journalEntries.en) {
         // For old versions of the journal, the sentiment is undefined.
         if (!entry.sentiment)
-            counts["Neutral"]++;
+            counts["Unknown"]++;
         else
             counts[entry.sentiment]++;
     }
@@ -152,36 +154,13 @@ const getEmotionPercentages = () => {
     let sum = _.sum(Object.values(counts));
     Object.keys(counts).map(key => {
         counts[key] /= sum;
+
+        // Get a percentage rounded to 2 decimal places.
         counts[key] = Math.floor(counts[key] * 1e4) / 100;
     });
 
     return counts;
 }
-
-$("#sentimentAnalysis").click(() => {
-    metroDialog.open("#sentimentDialog");
-    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
-
-    percentages = getEmotionPercentages();
-    new Chart(document.getElementById("sentimentRatioChart"), {
-        type: "pie",
-        data: {
-            labels: Object.keys(percentages),
-            datasets: [{
-                label: "Percentage of emotions",
-                data: Object.values(percentages),
-                backgroundColor: [
-                    "rgba(255, 99, 132, 0.2)",
-                    "rgba(54, 162, 235, 0.2)",
-                    "rgba(255, 206, 86, 0.2)",
-                    "rgba(75, 192, 192, 0.2)",
-                    "rgba(153, 102, 255, 0.2)",
-                    "rgba(255, 159, 64, 0.2)"
-                ],
-            }]
-        }
-    });
-});
 
 /**
  * Handles the click event for an entry in the left pane.
@@ -599,6 +578,25 @@ $("#searchButton").click(() => {
             break;
         }
     }
+});
+
+// Statistics click handler
+$("#sentimentAnalysis").click(() => {
+    metroDialog.open("#sentimentDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+
+    percentages = getEmotionPercentages();
+    new Chart(document.getElementById("sentimentRatioChart"), {
+        type: "pie",
+        data: {
+            labels: Object.keys(percentages),
+            datasets: [{
+                label: "Percentage of emotions",
+                data: Object.values(percentages),
+                backgroundColor: Object.keys(percentages).map(key => sentiments[key]),
+            }]
+        }
+    });
 });
 
 // --------------------------------------
