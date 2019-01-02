@@ -211,3 +211,7 @@ input[type="text"] {
 #emoji-toggle-img {
     cursor: pointer;
 }
+
+select {
+    padding: 5px;
+}

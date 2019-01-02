@@ -13,10 +13,10 @@ const async = require("async");
 const alertify = require("alertify.js");
 const emojify = require("emojify.js");
 const archiveUtils = require("./archive");
-const {injectEmojis} = require("./injectEmoji");
+const { injectEmojis } = require("./injectEmoji");
 const rimraf = require("rimraf");
-const {Chart} = require("chart.js");
-const {getDecryptedText, checkPwdStrength, encryptFile, decryptFile} = require("./encryption");
+const { Chart } = require("chart.js");
+const { getDecryptedText, checkPwdStrength, encryptFile, decryptFile } = require("./encryption");
 
 const _ = require("lodash");
 const moment = require("moment");
@@ -97,6 +97,8 @@ let currentEntryCount;
 let encodedImages = [];
 // Used to store the HTML of all the entries
 let allEntriesHTML;
+// Handle to current sentiment analysis chart
+let currentChart;
 
 /**
  * Shows the JSON of all entries to clean HTML in the app's left pane.
@@ -131,7 +133,7 @@ function showData(data) {
 /**
  * Get the percentage of each emotion in the current journal.
  */
-const getEmotionPercentages = () => {
+const getEmotionPercentages = (year) => {
     let counts = {
         "Happy": 0,
         "Angry": 0,
@@ -144,12 +146,14 @@ const getEmotionPercentages = () => {
 
     for (let entry of journalEntries.en) {
         // For old versions of the journal, the sentiment is undefined.
-        if (!entry.sentiment)
-            counts["Unknown"]++;
-        else
-            counts[entry.sentiment]++;
+        if (!year || year == moment(entry.entryDate).year()) {
+            if (!entry.sentiment)
+                counts["Unknown"]++;
+            else
+                counts[entry.sentiment]++;
+        }
     }
-        
+
     // Divide counts by the sum to get fractions
     // Object.values isn't supported, so need to use the roundabout
     // method with map()
@@ -173,7 +177,7 @@ const onEntryClicked = (e, json) => {
     const id = e.currentTarget.id;
     const selectedEntry = json[+id];
     // selectedEntry.attachment, content, entryDate are the properties
-    let {sentiment} = selectedEntry;
+    let { sentiment } = selectedEntry;
     let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" +
         "<span>  </span><span class='sentiment " + (sentiment ? sentiment : "Neutral") + "'></span>";
     entryHTML += `<span style='color: ${sentiments[sentiment]}; font-size: 12px'> ${sentiment}</span>`;
@@ -386,10 +390,12 @@ $("#tutorial").click(() => {
 // File menu entry click handlers
 // ------------------------------
 $("#open").click(() => {
-    dialog.showOpenDialog({ filters: [
-        { name: "JournalBear 5.1 Document", extensions: ["zjournal"]},
-        { name: "JournalBear 5.0 Document", extensions: ["ejournal"]}
-    ]}, (filenames) => {
+    dialog.showOpenDialog({
+        filters: [
+            { name: "JournalBear 5.1 Document", extensions: ["zjournal"] },
+            { name: "JournalBear 5.0 Document", extensions: ["ejournal"] }
+        ]
+    }, (filenames) => {
         if (filenames === undefined) return;
 
         if (filenames[0].endsWith(".ejournal"))
@@ -409,9 +415,11 @@ $("#open").click(() => {
 });
 
 $("#save").click(() => {
-    dialog.showSaveDialog({ filters: [
-        { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
-    ]}, (filename) => {
+    dialog.showSaveDialog({
+        filters: [
+            { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
+        ]
+    }, (filename) => {
         if (!filename) return;
 
         journalEntries.version = VERSION_NUMBER;
@@ -587,8 +595,43 @@ $("#sentimentAnalysis").click(() => {
     metroDialog.open("#sentimentDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 
+    // Populate the select with the unique years that the user has
+    // added entries. Sort the years in descending order.
+    let entries = journalEntries.en;
+    let years = entries.map(x => moment(x.entryDate).year());
+    let uniqueYears = [...new Set(years)].sort().reverse();
+    for (let year of uniqueYears)
+        $("#sentimentYearsSelect").append(`<option>${year}</option>`);
+    
+    // Show the total entry count
+    $("#totalEntriesCount").html(entries.length);
+    
     percentages = getEmotionPercentages();
-    new Chart(document.getElementById("sentimentRatioChart"), {
+    currentChart = new Chart(document.getElementById("sentimentRatioChart"), {
+        type: "pie",
+        data: {
+            labels: Object.keys(percentages),
+            datasets: [{
+                label: "Percentage of emotions",
+                data: Object.keys(percentages).map(x => percentages[x]),
+                backgroundColor: Object.keys(percentages).map(key => sentiments[key]),
+            }]
+        }
+    });
+});
+
+$("#sentimentYearsSelect").change(e => {
+    metroDialog.open("#sentimentDialog");
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+
+    let percentages;
+    if (e.target.value == "All")
+        percentages = getEmotionPercentages();
+    else
+        percentages = getEmotionPercentages(e.target.value);
+
+    currentChart.destroy();
+    currentChart = new Chart(document.getElementById("sentimentRatioChart"), {
         type: "pie",
         data: {
             labels: Object.keys(percentages),
@@ -701,14 +744,14 @@ $("#confirmNewJournal").click(() => {
     }
     let pwdStrength = checkPwdStrength(password);
     if (!_.isEqual(pwdStrength, [])) {
-    // Not secure enough.
+        // Not secure enough.
         $("#newJournalError").html("<span style='color: red'>" + pwdStrength[0] + "</span>");
         return;
     }
     pwd = $("#password").val();
 
     if ($("#confirmNewJournal").text() == "Create New Journal") {
-        journalEntries = { };
+        journalEntries = {};
         journalEntries.en = [];
 
         alertify.success("Journal created successfully!");
@@ -791,7 +834,7 @@ $("#aboutButton").click(() => {
 
 // Attachment file input handler
 $("#selectFile").on("change", () => {
-    let {files} = $("#selectFile")[0];
+    let { files } = $("#selectFile")[0];
     for (let i = 0; i < files.length; ++i) {
         // Get the new filename
         let newFilename = new Date().valueOf().toString();

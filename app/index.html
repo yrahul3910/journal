@@ -1,391 +1,411 @@
 <html>
-    <head>
-        <link rel="stylesheet" href="../css/bootstrap.css">
-        <link rel="stylesheet" href="../css/index.css">
-        <link rel="stylesheet" href="../css/metro.min.css">
-        <link rel="stylesheet" href="../css/metro-icons.min.css">
-        <link rel="stylesheet" href="../css/default.css">
-        <link rel="stylesheet" href="../css/default.date.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    </head>
-    <body>
-        <!-- Titlebar -->
-        <div id="titlebar">
-            <p id="minimize">-</p>
-            <p id="close">x</p>
+
+<head>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/metro.min.css">
+    <link rel="stylesheet" href="../css/metro-icons.min.css">
+    <link rel="stylesheet" href="../css/default.css">
+    <link rel="stylesheet" href="../css/default.date.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+
+<body>
+    <!-- Titlebar -->
+    <div id="titlebar">
+        <p id="minimize">-</p>
+        <p id="close">x</p>
+    </div>
+    </div>
+
+    <!-- Menu -->
+    <div class="app-bar" data-role="appbar">
+        <a class="app-bar-element branding" id="branding">JournalBear</a>
+        <ul class="app-bar-menu">
+            <li>
+                <a class="dropdown-toggle">File</a>
+                <ul class="d-menu" data-role="dropdown">
+                    <li><a id="newJournal">New Journal</a></li>
+                    <li><a id="open">Open</a></li>
+                    <li><a id="save">Save</a></li>
+                </ul>
+            </li>
+            <li>
+                <a class="dropdown-toggle">Entry</a>
+                <ul class="d-menu" data-role="dropdown">
+                    <li><a id="newEntry">New Entry</a></li>
+                    <li><a id="updateEntry">Update Entry</a></li>
+                    <li><a id="searchByDate">Search by Date</a></li>
+                    <li><a id="sentimentAnalysis">Your Statistics</a></li>
+                </ul>
+            </li>
+            <li>
+                <a class="dropdown-toggle">Preferences</a>
+                <ul class="d-menu" data-role="dropdown">
+                    <li><a id="settingsButton">Settings</a></li>
+                    <li><a id="changePassword">Change Password</a></li>
+                </ul>
+            </li>
+            <li>
+                <a class="dropdown-toggle">Help</a>
+                <ul class="d-menu" data-role="dropdown">
+                    <li><a id="aboutButton">About</a></li>
+                    <li><a id="introButton">Getting Started</a></li>
+                    <li>
+                        <a href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
+                            Markdown formatting help
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://journalbear.wordpress.com/contact/" target="_blank">
+                            Contact Us
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <div class="input-control modern text place-right" style="margin-right: 20px !important">
+            <input type="text" id="queryInput">
+            <span class="placeholder">Search...</span>
+        </div>
+    </div>
+
+    <!-- Main Page starts here -->
+    <div class="container" style="margin-top: 10px;">
+        <div id="journal-mode" style="display: none" class="row">
+            <div id="list" class="col">
+
+            </div>
+            <div id="content" class="col">
+
             </div>
         </div>
-
-        <!-- Menu -->
-        <div class="app-bar" data-role="appbar">
-            <a class="app-bar-element branding" id="branding">JournalBear</a>
-            <ul class="app-bar-menu">
-                <li>
-                    <a class="dropdown-toggle">File</a>
-                    <ul class="d-menu" data-role="dropdown">
-                        <li><a id="newJournal">New Journal</a></li>
-                        <li><a id="open">Open</a></li>
-                        <li><a id="save">Save</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a class="dropdown-toggle">Entry</a>
-                    <ul class="d-menu" data-role="dropdown">
-                        <li><a id="newEntry">New Entry</a></li>
-                        <li><a id="updateEntry">Update Entry</a></li>
-                        <li><a id="searchByDate">Search by Date</a></li>
-                        <li><a id="sentimentAnalysis">Your Statistics</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a class="dropdown-toggle">Preferences</a>
-                    <ul class="d-menu" data-role="dropdown">
-                        <li><a id="settingsButton">Settings</a></li>
-                        <li><a id="changePassword">Change Password</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a class="dropdown-toggle">Help</a>
-                    <ul class="d-menu" data-role="dropdown">
-                        <li><a id="aboutButton">About</a></li>
-                        <li><a id="introButton">Getting Started</a></li>
-                        <li>
-                            <a href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
-                                Markdown formatting help
-                            </a>
-                        </li>
-                        <li>
-                            <a href="https://journalbear.wordpress.com/contact/" target="_blank">
-                                Contact Us
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-            <div class="input-control modern text place-right" style="margin-right: 20px !important">
-                <input type="text" id="queryInput">
-                <span class="placeholder">Search...</span>
-            </div>
-        </div>
-
-        <!-- Main Page starts here -->
-        <div class="container" style="margin-top: 10px;">
-            <div id="journal-mode" style="display: none" class="row">
-                <div id="list" class="col">
-
-                </div>
-                <div id="content" class="col">
-
-                </div>
-            </div>
-            <div id="welcome-page">
-                <div class="row">
-                    <div class="col" style="padding-right: 20px">
-                        <div style="margin-left: 40px;">
-                            <p class="welcome-page-title">
-                                Get Started
-                            </p>
-                            <p>
-                                <a id="tutorial" style="font-size: 16px" href="#">
-                                    Follow our Getting Started tutorial
-                                </a>
-                            </p>
-                            <p>
-                                <a style="font-size: 16px;" target="_blank" href="https://github.com/yrahul3910/journal/issues">
-                                    Request a feature or report a bug
-                                </a>
-                            </p>
-                            <p>
-                                <a style="font-size: 16px;" target="_blank" href="https://github.com/yrahul3910/journal">
-                                    View our source code
-                                </a>
-                            </p>
-                            <p>
-                                <a style="font-size: 16px;" target="_blank" href="https://journalbear.wordpress.com/contact/">
-                                    Leave us a message
-                                </a>
-                            </p>
-
-                            <p class="welcome-page-title" style="margin-top: 40px;">
-                                Help
-                            </p>
-                            <p>
-                                <a style="font-size: 16px;" target="_blank" href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
-                                    Markdown Formatting Help
-                                </a>
-                            </p>
-                            <p>
-                                <a style="font-size: 16px" target="_blank" href="https://www.wikiwand.com/en/Advanced_Encryption_Standard">
-                                    Learn more about the encryption algorithm we use
-                                </a>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="col" style="padding: 0">
+        <div id="welcome-page">
+            <div class="row">
+                <div class="col" style="padding-right: 20px">
+                    <div style="margin-left: 40px;">
                         <p class="welcome-page-title">
-                            What's New
+                            Get Started
                         </p>
-                        <ul class="main-page-list" style="margin-right: 35px;">
-                            <li>Minor UI improvements</li>
-                            <li>Bug fixes</li>
-                            <li>Emojis are now grouped</li>
-                            <li>You can now change your password</li>
-                        </ul>
+                        <p>
+                            <a id="tutorial" style="font-size: 16px" href="#">
+                                Follow our Getting Started tutorial
+                            </a>
+                        </p>
+                        <p>
+                            <a style="font-size: 16px;" target="_blank" href="https://github.com/yrahul3910/journal/issues">
+                                Request a feature or report a bug
+                            </a>
+                        </p>
+                        <p>
+                            <a style="font-size: 16px;" target="_blank" href="https://github.com/yrahul3910/journal">
+                                View our source code
+                            </a>
+                        </p>
+                        <p>
+                            <a style="font-size: 16px;" target="_blank" href="https://journalbear.wordpress.com/contact/">
+                                Leave us a message
+                            </a>
+                        </p>
+
+                        <p class="welcome-page-title" style="margin-top: 40px;">
+                            Help
+                        </p>
+                        <p>
+                            <a style="font-size: 16px;" target="_blank" href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
+                                Markdown Formatting Help
+                            </a>
+                        </p>
+                        <p>
+                            <a style="font-size: 16px" target="_blank" href="https://www.wikiwand.com/en/Advanced_Encryption_Standard">
+                                Learn more about the encryption algorithm we use
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col" style="padding: 0">
+                    <p class="welcome-page-title">
+                        What's New
+                    </p>
+                    <ul class="main-page-list" style="margin-right: 35px;">
+                        <li>Minor UI improvements</li>
+                        <li>Bug fixes</li>
+                        <li>Emojis are now grouped</li>
+                        <li>You can now change your password</li>
+                        <li>Added statistics feature in Entry menu</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New entry dialog -->
+    <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+
+        <div id="addEntryError"></div>
+        <div class="row">
+            <div class="col" style="overflow: hidden; border-right: 0">
+                <p style="margin-top: 0.7rem">Date</p>
+            </div>
+            <div class="col" style="overflow: hidden; border-right: 0">
+                <input id="date" type="text" class="datepicker" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col" style="overflow: hidden; border-right: 0">
+                <p style="margin-top: 0.7rem">Choose a mood!</p>
+            </div>
+            <div class="col" style="overflow: hidden; border-right: 0">
+                <select style="width: 83%">
+                    <option>Happy</option>
+                    <option>Sad</option>
+                    <option>Angry</option>
+                    <option>Loved</option>
+                    <option>Excited</option>
+                    <option>Neutral</option>
+                </select>
+            </div>
+        </div>
+        <div class="row" style="padding: 20px">
+            <span>JournalBear uses Markdown for formatting. Use *asterisks* for <em>italics</em>,
+                and **double asterisks** for <b>bold</b></span>
+        </div>
+        <div class="input-control textarea">
+            <textarea id="entryTextarea" rows="13" cols="100"></textarea>
+        </div>
+        <div style="display: flex" id="emoji-picker">
+            <div id="emoji-box">
+                <div class="tabcontrol">
+                    <ul class="tabs">
+                        <li><a href="#activity">Activity</a></li>
+                        <li><a href="#faces-reactions">Faces, Reactions</a></li>
+                        <li><a href="#food-drink">Food, Drink</a></li>
+                        <li><a href="#nature-emojis">Nature</a></li>
+                        <li><a href="#object-emojis">Objects</a></li>
+                        <li><a href="#symbols-flags">Symbols, Flags</a></li>
+                        <li><a href="#travel-emojis">Travel</a></li>
+                        <li><a href="#other-emoji">Other</a></li>
+                    </ul>
+                    <div class="frames">
+                        <div class="frame" id="activity"></div>
+                        <div class="frame" id="faces-reactions"></div>
+                        <div class="frame" id="food-drink"></div>
+                        <div class="frame" id="nature-emojis"></div>
+                        <div class="frame" id="object-emojis"></div>
+                        <div class="frame" id="symbols-flags"></div>
+                        <div class="frame" id="travel-emojis"></div>
+                        <div class="frame" id="other-emoji"></div>
                     </div>
                 </div>
             </div>
+            <div id="emoji-toggle">
+                <img class="emoji" id="emoji-toggle-img" src="../emoji/smile.png" />
+            </div>
         </div>
-
-        <!-- New entry dialog -->
-        <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" 
-            data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" 
-            style="visibility: hidden;">
-
-            <div id="addEntryError"></div>
-            <div class="row">
-                <div class="col" style="overflow: hidden; border-right: 0">
-                    <p style="margin-top: 0.7rem">Date</p>
-                </div>
-                <div class="col" style="overflow: hidden; border-right: 0">
-                    <input id="date" type="text" class="datepicker" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col" style="overflow: hidden; border-right: 0">
-                    <p style="margin-top: 0.7rem">Choose a mood!</p>
-                </div>
-                <div class="col" style="overflow: hidden; border-right: 0">
-                    <select style="width: 83%">
-                        <option>Happy</option>
-                        <option>Sad</option>
-                        <option>Angry</option>
-                        <option>Loved</option>
-                        <option>Excited</option>
-                        <option>Neutral</option>
-                    </select>
-                </div>
-            </div>
-            <div class="row" style="padding: 20px">
-                <span>JournalBear uses Markdown for formatting. Use *asterisks* for <em>italics</em>,
-                    and **double asterisks** for <b>bold</b></span>
-            </div>
-            <div class="input-control textarea">
-                <textarea id="entryTextarea" rows="13" cols="100"></textarea>
-            </div>
-            <div style="display: flex" id="emoji-picker">
-                <div id="emoji-box">
-                    <div class="tabcontrol">
-                        <ul class="tabs">
-                            <li><a href="#activity">Activity</a></li>
-                            <li><a href="#faces-reactions">Faces, Reactions</a></li>
-                            <li><a href="#food-drink">Food, Drink</a></li>
-                            <li><a href="#nature-emojis">Nature</a></li>
-                            <li><a href="#object-emojis">Objects</a></li>
-                            <li><a href="#symbols-flags">Symbols, Flags</a></li>
-                            <li><a href="#travel-emojis">Travel</a></li>
-                            <li><a href="#other-emoji">Other</a></li>
-                        </ul>
-                        <div class="frames">
-                            <div class="frame" id="activity"></div>
-                            <div class="frame" id="faces-reactions"></div>
-                            <div class="frame" id="food-drink"></div>
-                            <div class="frame" id="nature-emojis"></div>
-                            <div class="frame" id="object-emojis"></div>
-                            <div class="frame" id="symbols-flags"></div>
-                            <div class="frame" id="travel-emojis"></div>
-                            <div class="frame" id="other-emoji"></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="emoji-toggle">
-                    <img class="emoji" id="emoji-toggle-img" src="../emoji/smile.png" />
-                </div>
-            </div>
-            <div id="attachmentInput">
-                <span>Add an image (optional)</span>
-                <input style="margin-top: 10px; margin-bottom: 10px; margin-left: 20px;" type="file"
-                    id="selectFile" accept="image/*" multiple>
-            </div>
-            <button class="button" id="preview">Preview</button>
-            <button class="button" id="addEntry">Add Entry</button>
-            <button class="button danger" id="cancelEntry">Cancel</button>
+        <div id="attachmentInput">
+            <span>Add an image (optional)</span>
+            <input style="margin-top: 10px; margin-bottom: 10px; margin-left: 20px;" type="file" id="selectFile" accept="image/*"
+                multiple>
         </div>
+        <button class="button" id="preview">Preview</button>
+        <button class="button" id="addEntry">Add Entry</button>
+        <button class="button danger" id="cancelEntry">Cancel</button>
+    </div>
 
-        <!-- Error with new entry dialog -->
-        <div data-role="dialog" id="errDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-type="alert">
-            <h1>Could not perform action</h1>
-            <p> Please open a journal or create a new one first</p>
-        </div>
+    <!-- Error with new entry dialog -->
+    <div data-role="dialog" id="errDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-type="alert">
+        <h1>Could not perform action</h1>
+        <p> Please open a journal or create a new one first</p>
+    </div>
 
-        <!-- New journal password entry dialog -->
-        <div data-role="dialog" id="newJournalDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <div id="newJournalError"></div>
-            <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a strong password. It's
+    <!-- New journal password entry dialog -->
+    <div data-role="dialog" id="newJournalDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div id="newJournalError"></div>
+        <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a strong password. It's
                 recommended to use a passphrase instead, but it's optional.</span></div>
-            <div class="input-control password">
-                <input type="password" id="password">
-            </div>
-            <div><span>Please re-enter your password</span></div>
-            <div class="input-control password">
-                <input type="password" id="confirmPassword">
-            </div>
-            <div>
-                <button class="button" id="confirmNewJournal">Create New Journal</button>
-                <button class="button danger" id="cancelNewJournal">Cancel</button>
-            </div>
+        <div class="input-control password">
+            <input type="password" id="password">
         </div>
-
-        <!-- Decrypt dialog -->
-        <div data-role="dialog" id="decryptDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <div><span id="prompt">Please enter the password to decrypt</span></div>
-            <div class="input-control password">
-                <input type="password" id="unlock">
-            </div>
-            <div>
-                <button class="button" id="decryptJournal">Decrypt</button>
-                <button class="button danger" id="cancelDecrypt">Cancel</button>
-            </div>
+        <div><span>Please re-enter your password</span></div>
+        <div class="input-control password">
+            <input type="password" id="confirmPassword">
         </div>
+        <div>
+            <button class="button" id="confirmNewJournal">Create New Journal</button>
+            <button class="button danger" id="cancelNewJournal">Cancel</button>
+        </div>
+    </div>
 
-        <!-- About dialog -->
-        <div data-role="dialog" id="aboutDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <h2>About</h2>
-            <p><b>JournalBear 5.0</b><br/>
+    <!-- Decrypt dialog -->
+    <div data-role="dialog" id="decryptDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div><span id="prompt">Please enter the password to decrypt</span></div>
+        <div class="input-control password">
+            <input type="password" id="unlock">
+        </div>
+        <div>
+            <button class="button" id="decryptJournal">Decrypt</button>
+            <button class="button danger" id="cancelDecrypt">Cancel</button>
+        </div>
+    </div>
+
+    <!-- About dialog -->
+    <div data-role="dialog" id="aboutDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <h2>About</h2>
+        <p><b>JournalBear 5.0</b><br />
             By <b>Rahul Yedida</b></p>
-            <p>JournalBear is a free and open source software. None of your data is collected. If you like the software,
-                consider spreading the word to support it.</p>
-            <p>Want to get involved? Check out our GitHub repo <a target="_blank" href="https://github.com/yrahul3910/journal">here!</a></a></p>
-            <hr>
-            <b>Credits</b><br><br>
-            <ul>
-                <li>Bhavana KV</li>
-                <li>Vaisakh M</li>
-            </ul>
-        </div>
+        <p>JournalBear is a free and open source software. None of your data is collected. If you like the software,
+            consider spreading the word to support it.</p>
+        <p>Want to get involved? Check out our GitHub repo <a target="_blank" href="https://github.com/yrahul3910/journal">here!</a></a></p>
+        <hr>
+        <b>Credits</b><br><br>
+        <ul>
+            <li>Bhavana KV</li>
+            <li>Vaisakh M</li>
+        </ul>
+    </div>
 
-        <!-- Search by date dialog -->
-        <div data-role="dialog" id="searchDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <div class="input-control text" data-role="datepicker">
-                <input type="text" id="searchDate">
-                <button class="button"><span class="mif-calendar"></span></button>
+    <!-- Search by date dialog -->
+    <div data-role="dialog" id="searchDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div class="input-control text" data-role="datepicker">
+            <input type="text" id="searchDate">
+            <button class="button"><span class="mif-calendar"></span></button>
+        </div>
+        <button class="button" id="searchButton">Search</button>
+    </div>
+
+    <!-- Settings dialog -->
+    <div data-role="dialog" id="settingsDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <p class="h3">Settings</p>
+        <div style="margin-top: 15px;" class="switch">
+            Dark Theme
+            <label style="margin-left: 5px;" class="switch">
+                <input id="darkThemeEnable" type="checkbox">
+                <span class="check"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Statistics dialog -->
+    <div data-role="dialog" id="sentimentDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="h3 text-center">Percentage of emotions</p>
             </div>
-            <button class="button" id="searchButton">Search</button>
-        </div>
-
-        <!-- Settings dialog -->
-        <div data-role="dialog" id="settingsDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <p class="h3">Settings</p>
-            <div style="margin-top: 15px;" class="switch">
-                Dark Theme
-                <label style="margin-left: 5px;" class="switch">
-                    <input id="darkThemeEnable" type="checkbox">
-                    <span class="check"></span>
-                </label>
+            <div class="col-md-6">
+                <select id="sentimentYearsSelect" style="width: 100px">
+                    <option>All</option>
+                </select>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <canvas id="sentimentRatioChart"></canvas>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 20px">
+            <div class="col-md-6 col-md-offset-1">
+                <span class="h3">Total entry count: </span>
+                <span id="totalEntriesCount"></span>
+            </div>
+        </div>
+    </div>
 
-        <!-- Year in review (sentiment analysis) dialog -->
-        <div data-role="dialog" id="sentimentDialog" class="padding20 dialog" data-close-button="true"
-            data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true"
-            style="visibility: hidden;">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="h3 text-center">Percentage of emotions</p>
-                    <canvas id="sentimentRatioChart" width="100%" height="100%"></canvas>
+    <!-- Introduction dialog -->
+    <div data-role="dialog" id="introDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <p>
+            <strong>
+                Welcome to JournalBear!
+            </strong>
+        </p>
+        <p>
+            Get started with this simple tutorial.
+        </p>
+        <div class="wizard" data-role="wizard" data-buttons='{"prior": {"show": true, "title": "Back"}, "next": true}'>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <p class="h3">Starting off</p>
+                        <p class="h5">
+                            You can start off by going to File - New Journal. Specify a password, but
+                            remember it! There's no way to recover a lost password.
+                        </p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <p class="h3">Adding daily entries</p>
+                        <p class="h5">
+                            You can add new entries by going to Entry - New Entry. Entries are styled
+                            by Markdown. If you don't know how it works, it's okay! Regular text is
+                            valid Markdown too!
+                        </p>
+                        <p class="h5">
+                            You can add images to your daily entry as well. Add as many as you want!
+                        </p>
+                        <p class="h5">
+                            You can also add how you're feeling today. Is the list
+                            inadequate? <a target="_blank" href="https://github.com/yrahul3910/journal/issues">Raise an
+                                issue.</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <p class="h3">More Markdown features</p>
+                        <p class="h5">
+                            JournalBear supports emojis, tables, code, and more Markdown features!
+                            <a target="_blank" href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
+                                Here's a brief list of how you can add these to your entry.
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <p class="h3">Getting help</p>
+                        <p class="h5">
+                            If you need any sort of help, you can send a message. Although the preferred
+                            method is to raise an issue on GitHub, if you're not a developer or
+                            don't have a GitHub account, you can leave a message <a target="_blank" href="https://journalbear.wordpress.com/contact/">here.</a>
+                        </p>
+                        <p class="h5">
+                            Feel free to leave your name as "Anonymous" if you wish :)
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Introduction dialog -->
-        <div data-role="dialog" id="introDialog" class="padding20 dialog" data-close-button="true"
-            data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true"
-            style="visibility: hidden;">
-            <p>
-                <strong>
-                    Welcome to JournalBear!
-                </strong>
-            </p>
-            <p>
-                Get started with this simple tutorial.
-            </p>
-            <div class="wizard" data-role="wizard" data-buttons='{"prior": {"show": true, "title": "Back"}, "next": true}'>
-                <div class="steps">
-                    <div class="step">
-                        <div class="step-content">
-                            <p class="h3">Starting off</p>
-                            <p class="h5">
-                                You can start off by going to File - New Journal. Specify a password, but
-                                remember it! There's no way to recover a lost password.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-content">
-                            <p class="h3">Adding daily entries</p>
-                            <p class="h5">
-                                You can add new entries by going to Entry - New Entry. Entries are styled
-                                by Markdown. If you don't know how it works, it's okay! Regular text is
-                                valid Markdown too!
-                            </p>
-                            <p class="h5">
-                                You can add images to your daily entry as well. Add as many as you want!
-                            </p>
-                            <p class="h5">
-                                You can also add how you're feeling today. Is the list
-                                inadequate? <a target="_blank" href="https://github.com/yrahul3910/journal/issues">Raise an issue.</a>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-content">
-                            <p class="h3">More Markdown features</p>
-                            <p class="h5">
-                                JournalBear supports emojis, tables, code, and more Markdown features!
-                                <a target="_blank" href="https://journalbear.wordpress.com/2017/12/02/markdown-formatting/">
-                                    Here's a brief list of how you can add these to your entry.
-                                </a>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-content">
-                            <p class="h3">Getting help</p>
-                            <p class="h5">
-                                If you need any sort of help, you can send a message. Although the preferred
-                                method is to raise an issue on GitHub, if you're not a developer or
-                                don't have a GitHub account, you can leave a message <a target="_blank" href="https://journalbear.wordpress.com/contact/">here.</a>
-                            </p>
-                            <p class="h5">
-                                Feel free to leave your name as "Anonymous" if you wish :)
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Preview dialog -->
+    <div data-role="dialog" id="previewDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div style="max-height: 300px; overflow: scroll" id="renderedMarkdown">
         </div>
+    </div>
+    <!-- Scripts start here -->
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/metro.min.js"></script>
+    <script src="../js/picker.js"></script>
+    <script src="../js/picker.date.js"></script>
 
-        <!-- Preview dialog -->
-        <div data-role="dialog" id="previewDialog" class="padding20 dialog" data-close-button="true" data-overlay="true" data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-            <div style="max-height: 300px; overflow: scroll" id="renderedMarkdown">
-            </div>
-        </div>
-        <!-- Scripts start here -->
-        <script src="../js/jquery.min.js"></script>
-        <link rel="stylesheet" href="../css/select2.min.css">
-        <script src="../js/select2.min.js"></script>
-
-        <script src="../js/bootstrap.min.js"></script>
-        <script src="../js/metro.min.js"></script>
-        <script src="../js/picker.js"></script>
-        <script src="../js/picker.date.js"></script>
-
-        <script>
-            $(()=>{
-                $('select').select2();
-                $('#date').pickadate();
-                $('.tabcontrol').tabcontrol();
-            });
+    <script>
+        $(document).ready(() => {
+            $('#date').pickadate();
+            $('.tabcontrol').tabcontrol();
             require('./render.js');
-        </script>
-    </body>
+        });
+    </script>
+</body>
+
 </html>
