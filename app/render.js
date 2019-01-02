@@ -132,7 +132,7 @@ function showData(data) {
  * Get the percentage of each emotion in the current journal.
  */
 const getEmotionPercentages = () => {
-    const counts = {
+    let counts = {
         "Happy": 0,
         "Angry": 0,
         "Sad": 0,
@@ -151,7 +151,9 @@ const getEmotionPercentages = () => {
     }
         
     // Divide counts by the sum to get fractions
-    let sum = _.sum(Object.values(counts));
+    // Object.values isn't supported, so need to use the roundabout
+    // method with map()
+    let sum = _.sum(Object.keys(counts).map(x => counts[x]));
     Object.keys(counts).map(key => {
         counts[key] /= sum;
 
@@ -592,7 +594,7 @@ $("#sentimentAnalysis").click(() => {
             labels: Object.keys(percentages),
             datasets: [{
                 label: "Percentage of emotions",
-                data: Object.values(percentages),
+                data: Object.keys(percentages).map(x => percentages[x]),
                 backgroundColor: Object.keys(percentages).map(key => sentiments[key]),
             }]
         }
