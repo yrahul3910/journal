@@ -407,8 +407,9 @@ $("#save").click(() => {
         journalEntries.version = VERSION_NUMBER;
         let journalDir = os.tmpdir() + "/_jbfiles";
         if (fs.existsSync(journalDir))
-            rimraf.sync(journalDir);
-        fs.mkdirSync(journalDir);
+            fse.removeSync(journalDir + "/data.json");
+        else
+            fs.mkdirSync(journalDir);
 
         async.waterfall([
             (callback) => {
@@ -417,7 +418,7 @@ $("#save").click(() => {
             },
             (callback) => {
                 // Add the images now
-                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
+                if (fs.existsSync(os.tmpdir() + "/_jbimages")) 
                     fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
                 else
                     callback(null);

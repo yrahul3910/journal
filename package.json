@@ -10,8 +10,7 @@
     "appId": "com.yrahul.journal",
     "linux": {
       "target": [
-        "deb",
-        "rpm"
+        "deb"
       ],
       "icon": "./build/icons",
       "category": "Office"
@@ -21,15 +20,14 @@
       "icon": "./build/icon.icns"
     }
   },
-  "version": "5.0.5",
+  "version": "5.1.0",
   "main": "app/index.js",
   "dependencies": {
     "alertify.js": "^1.0.12",
     "async": "^2.6.0",
     "chart.js": "^2.7.2",
     "d3": "^4.9.1",
-    "electron": "^4.0.0",
-    "electron-updater": "^2.15.0",
+    "electron-updater": "2.15.0",
     "emojify.js": "^1.1.0",
     "fs-extra": "^5.0.0",
     "jquery": "^3.2.1",
@@ -41,7 +39,8 @@
     "targz": "^1.0.1"
   },
   "devDependencies": {
-    "electron-builder": "^20.38.4",
+    "electron": "2.0.4",
+    "electron-builder": "19.4.2",
     "electron-prebuilt": "^1.4.13"
   },
   "scripts": {
