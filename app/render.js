@@ -174,7 +174,7 @@ const getEmotionPercentages = (year) => {
  * @param {object} json - The JSON of all entries
  */
 const onEntryClicked = (e, json) => {
-    const id = e.currentTarget.id;
+    const id = e.currentTarget.id - 1;
     const selectedEntry = json[+id];
     // selectedEntry.attachment, content, entryDate are the properties
     let { sentiment } = selectedEntry;
@@ -184,8 +184,11 @@ const onEntryClicked = (e, json) => {
     entryHTML += "</p><p>" + converter.makeHtml(selectedEntry.content) + "</p>";
     $("#content").html(entryHTML);
 
-    if (selectedEntry.attachment instanceof Array) {
-        for (let img of selectedEntry.attachment) {
+    // Some older versions had 'Attachment' as the key.
+    let attachment = selectedEntry.attachment || selectedEntry.Attachment;
+
+    if (attachment instanceof Array) {
+        for (let img of attachment) {
             // Major hacky workaround to support older versions where images
             // were in base64, but some base64 encodings didn't have the
             // data:image/png;base64; header.
@@ -216,8 +219,8 @@ const onEntryClicked = (e, json) => {
             }).appendTo("#content");
         }
     } else {
-        if (selectedEntry.attachment) {
-            let img = selectedEntry.attachment;
+        if (attachment) {
+            let img = attachment;
             if (!img.startsWith("data:image"))
                 img = "data:image/png;base64," + img;
 
@@ -299,29 +302,7 @@ $("#queryInput").on("keyup", (e) => {
         }
         $("#list").html(html);
         $(".queryResult").click((e) => {
-            const id = e.currentTarget.id;
-            const selectedEntry = queryResults[+id];
-
-            let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b></p>";
-            entryHTML += "<p>" + selectedEntry.content + "</p>";
-
-            $("#content").html(entryHTML);
-            if (selectedEntry.attachment instanceof Array) {
-                for (let img of selectedEntry.attachment) {
-                    $("<img>", {
-                        "src": "data:image/png;base64," + img,
-                        // added `width` , `height` properties to `img` attributes
-                        "width": "250px"
-                    }).appendTo("#content");
-                }
-            } else {
-                // For backward compatibility
-                $("<img>", {
-                    "src": "data:image/png;base64," + selectedEntry.attachment,
-                    // added `width` , `height` properties to `img` attributes
-                    "width": "250px"
-                }).appendTo("#content");
-            }
+           onEntryClicked(e, queryResults);
         });
 
         alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");
