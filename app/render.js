@@ -116,7 +116,10 @@ function showData(data) {
         html += "<div class='entry' id='" + i + "'><b>";
         html += new Date(json[i].entryDate).toDateString() + "</b>";
         html += `<span>  </span><span class='sentiment ${sentiment}'> </span>\
-            <span style='color: ${sentiments[sentiment]}; font-size: 12px'>${sentiment}</span><br/><p>`;
+            <span style='color: ${sentiments[sentiment]}; font-size: 12px'>${sentiment}</span>`
+        if (json[i].nsfw)
+            html += `<span class="nsfw">NSFW</span>`;
+        html += `<br/><p>`;
         let entry = json[i].content;
 
         let words = entry.split(/\s+/).slice(0, 5).join(" ");
@@ -633,6 +636,7 @@ $("#sentimentYearsSelect").change(e => {
 $("#addEntry").click(() => {
     let date = new Date($("#date").val());
     let content = $("#entryTextarea").val();
+    let nsfw = $("p#add-nsfw-label").hasClass("active");
 
     let isNewEntry; // is it a new entry or an updation?
     if ($("#addEntry").text() === "Add Entry")
@@ -653,7 +657,7 @@ $("#addEntry").click(() => {
 
     let sentiment = $("select").val();
     // Add the entry to the list of entries
-    let newEntry = { entryDate: date, content, attachment: encodedImages, sentiment };
+    let newEntry = { entryDate: date, content, attachment: encodedImages, sentiment, nsfw };
 
     if (isNewEntry) {
         journalEntries.en.push(newEntry);
@@ -663,7 +667,10 @@ $("#addEntry").click(() => {
         html += "<div class='entry' id='" + currentEntryCount + "'><b>";
         html += date.toDateString() + "</b><span>  </span><span class='sentiment " +
             sentiment + "'></span>" + `<span style="color: ${sentiments[sentiment]}; font-size: 12px"> \
-            ${sentiment}</span><br/><p>`;
+            ${sentiment}</span>`;
+        if (nsfw)
+            html += `<span class="nsfw">NSFW</span>`;
+        html += "<br/><p>";
         let words = content.split(/\s+/).slice(0, 5).join(" ");
         html += words + "...</p></div><hr />";
         $("#list").append(html);
@@ -856,4 +863,9 @@ $("#preview").click(() => {
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
     $("#renderedMarkdown").html(converter.makeHtml($("#entryTextarea").val()));
     emojify.run(document.getElementById("renderedMarkdown"));
+});
+
+// Handle "Add NSFW Label" button click
+$("p#add-nsfw-label").click(() => {
+    $("p#add-nsfw-label").toggleClass("active");
 });

@@ -10,7 +10,8 @@
     "appId": "com.yrahul.journal",
     "linux": {
       "target": [
-        "deb"
+        "deb",
+        "rpm"
       ],
       "icon": "./build/icons",
       "category": "Office"
@@ -18,6 +19,10 @@
     "mac": {
       "target": "dir",
       "icon": "./build/icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "./build/icon.ico"
     }
   },
   "version": "5.1.0",
