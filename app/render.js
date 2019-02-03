@@ -172,23 +172,29 @@ const getEmotionPercentages = (year) => {
 }
 
 /**
- * Handles the click event for an entry in the left pane.
- * @param {event} e - The event object
- * @param {object} json - The JSON of all entries
+ * Returns the HTML code for the content of a single entry.
+ * This does NOT include images, only the header and the content
+ * text. Use getAttachmentHtml() for that HTML code.
+ * @param {object} json - The individual entry JSON
  */
-const onEntryClicked = (e, json) => {
-    const id = e.currentTarget.id;
-    const selectedEntry = json[+id];
-    // selectedEntry.attachment, content, entryDate are the properties
-    let { sentiment } = selectedEntry;
-    let entryHTML = "<p><b>" + (new Date(selectedEntry.entryDate).toDateString()) + "</b>" +
+const getContentHtml = (json) => {
+    let { sentiment, entryDate, content } = json;
+    let entryHTML = "<p><b>" + (new Date(entryDate).toDateString()) + "</b>" +
         "<span>  </span><span class='sentiment " + (sentiment ? sentiment : "Neutral") + "'></span>";
     entryHTML += `<span style='color: ${sentiments[sentiment]}; font-size: 12px'> ${sentiment}</span>`;
-    entryHTML += "</p><p>" + converter.makeHtml(selectedEntry.content) + "</p>";
-    $("#content").html(entryHTML);
+    entryHTML += "</p><p>" + converter.makeHtml(content) + "</p>";
 
-    // Some older versions had 'Attachment' as the key.
-    let attachment = selectedEntry.attachment || selectedEntry.Attachment;
+    return entryHTML;
+};
+
+/**
+ * Returns the HTML code for the attachments in an entry.
+ * @param {Array} attachment - The attachment value of the entry
+ * @param {string} baseDir - The base directory where the .json is stored
+ */
+const getAttachmentHtml = (attachment, baseDir=os.tmpdir()) => {
+    // Create the HTML element
+    let element = $("<div />");
 
     if (attachment instanceof Array) {
         for (let img of attachment) {
@@ -204,22 +210,30 @@ const onEntryClicked = (e, json) => {
                     imgPath = "data:image/png;base64," + imgPath;
             } else {
                 // More hacky code ack.
-                // Two places to check: $TMPDIR/_jbimages and $TMPDIR/_jbfiles/images
+                // Two places to check: $TMPDIR/_jbimages and baseDir/images
                 // Check the latter first
                 // Replace that . with the temp directory as necessary.
-                imgPath = os.tmpdir() + imgPath.slice(1);
+                imgPath = baseDir + imgPath.slice(1);
                 if (!fs.existsSync(imgPath)) {
                     // We know it's in $TMPDIR/_jbimages
                     // First get the filename
                     let filename = imgPath.substring(imgPath.lastIndexOf("/") + 1);
-                    imgPath = `${os.tmpdir()}/_jbimages/${filename}`;
+                    
+                    if (baseDir != os.tmpdir()) {
+                        /* In this case, we're exporting to HTML after we've added an
+                        entry. We can't reference os.tmpdir() there, because the file
+                        may be deleted. Thus, we need to copy this to baseDir/images 
+                        first. */
+                        fse.moveSync(`${os.tmpdir()}/_jbimages/${filename}`, baseDir + "/images");
+                    }
+                    imgPath = `${baseDir}/_jbimages/${filename}`;
                 }
             }
 
             $("<img>", {
                 "src": imgPath,
                 "style": "margin-bottom: 10px"
-            }).appendTo("#content");
+            }).appendTo(element);
         }
     } else {
         if (attachment) {
@@ -230,10 +244,34 @@ const onEntryClicked = (e, json) => {
             $("<img>", {
                 "src": img,
                 "style": "margin-bottom: 10px"
-            }).appendTo("#content");
+            }).appendTo(element);
         }
     }
+
+    return element;
+};
+
+/**
+ * Handles the click event for an entry in the left pane.
+ * @param {event} e - The event object
+ * @param {object} json - The JSON of all entries
+ */
+const onEntryClicked = (e, json) => {
+    const id = e.currentTarget.id;
+    const selectedEntry = json[+id];
+    // selectedEntry.attachment, content, entryDate are the properties
+    let entryHTML = getContentHtml(selectedEntry);
+    $("#content").html(entryHTML);
+
+    // Some older versions had 'Attachment' as the key.
+    let attachment = selectedEntry.attachment || selectedEntry.Attachment;
+    let attachmentElement = getAttachmentHtml(attachment);
+    $("#content").append(attachmentElement);
+
+    // Emojify the content
     emojify.run(document.getElementById("content"));
+
+    // Hook up the context menu for the images
     $("img").on("contextmenu", (e) => {
         e.preventDefault();
         globalStore.imgPath = e.target.getAttribute("src");
@@ -450,6 +488,47 @@ $("#save").click(() => {
         ], (err) => {
             if (err) console.log(err);
         });
+    });
+});
+
+$("#export").click(() => {
+    dialog.showSaveDialog({
+        filters: [
+            { name: "HTML Page", extensions: ["html"] }
+        ]
+    }, (filename) => {
+        if (!filename) return;
+
+        let journalDir = os.tmpdir() + "/_jbfiles";
+
+        // Obtain the directory to save to
+        let path = filename.split("/");
+        path.pop();
+        path = path.join("/");
+
+        // Start by moving the images
+        if (fse.existsSync(path + "/_jbimages"))
+            rimraf(path + "/_jbimages");
+        fse.moveSync(journalDir + "/images", path + "/_jbimages");
+
+        // HTML code
+        element = $("<div />");
+
+        // Create the HTML code necessary
+        for (let entry of journalEntries.en) {
+        let entry = journalEntries.en[0];
+            let entryHTML = getContentHtml(entry);
+            element.append(entryHTML);
+
+            // Some older versions had 'Attachment' as the key.
+            let attachment = entry.attachment || entry.Attachment;
+            let attachmentElement = getAttachmentHtml(attachment, path);
+            element.append(attachmentElement);
+        }
+
+        // Write out the HTML
+        let html = element.prop("outerHTML");
+        fs.writeFileSync(filename, html);
     });
 });
 
