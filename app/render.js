@@ -417,10 +417,12 @@ $("#save").click(() => {
         async.waterfall([
             (callback) => {
                 // Write the JSON file
+                $("#save-status").html("Writing data");
                 fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
             },
             (callback) => {
                 // Add the images now
+                $("#save-status").html("Adding images");
                 if (fs.existsSync(os.tmpdir() + "/_jbimages")) 
                     fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
                 else
@@ -428,6 +430,7 @@ $("#save").click(() => {
             },
             (callback) => {
                 // Create the .tar.gz
+                $("#save-status").html("Compressing");
                 archiveUtils.compress(journalDir, (err, tmpPath) => {
                     if (err) callback(err);
                     callback(null, tmpPath);
@@ -435,10 +438,12 @@ $("#save").click(() => {
             },
             (tmpPath, callback) => {
                 // Encrypt the file
+                $("#save-status").html("Encrypting");
                 encryptFile(tmpPath, filename, pwd, callback);
             },
             (callback) => {
                 // Display success message
+                $("#save-status").html("");
                 alertify.success("Successfully saved!");
                 callback(null);
             }

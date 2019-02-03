@@ -63,11 +63,16 @@ img.emoji {
     -webkit-app-region: drag;
     height: 20px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     background-color: rgb(240, 240, 240);
 }
 
-#titlebar p {
+#titlebar-control {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#titlebar-control p {
     -webkit-app-region: no-drag;
     font-size: 18px;
     color: rgb(170, 170, 170);
@@ -76,6 +81,12 @@ img.emoji {
     cursor: default;
     font-weight: 600;
     text-align: center;
+}
+
+#titlebar p#save-status {
+    margin-left: 15px;
+    color: black;
+    font-size: 16px;
 }
 
 #minimize:hover {
