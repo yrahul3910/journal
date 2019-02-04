@@ -1,7 +1,6 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/index.css">
     <link rel="stylesheet" href="../css/metro.min.css">
     <link rel="stylesheet" href="../css/metro-icons.min.css">
@@ -71,18 +70,18 @@
     </div>
 
     <!-- Main Page starts here -->
-    <div class="container" style="margin-top: 10px;">
+    <div class="flex-grid" style="margin-top: 10px;">
         <div id="journal-mode" style="display: none" class="row">
-            <div id="list" class="col">
+            <div id="list" class="cell colspan6">
 
             </div>
-            <div id="content" class="col">
+            <div id="content" class="cell colspan6">
 
             </div>
         </div>
         <div id="welcome-page">
-            <div class="row">
-                <div class="col" style="padding-right: 20px">
+            <div class="row cell-auto-size">
+                <div class="cell" style="padding-right: 20px">
                     <div style="margin-left: 40px;">
                         <p class="welcome-page-title">
                             Get Started
@@ -123,7 +122,7 @@
                         </p>
                     </div>
                 </div>
-                <div class="col" style="padding: 0">
+                <div class="cell" style="padding: 0">
                     <p class="welcome-page-title">
                         What's New
                     </p>
@@ -139,23 +138,23 @@
     </div>
 
     <!-- New entry dialog -->
-    <div data-role="dialog" id="editDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+    <div data-role="dialog" id="editDialog" class="padding20 dialog flex-grid" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
 
         <div id="addEntryError"></div>
         <div class="row">
-            <div class="col" style="overflow: hidden; border-right: 0">
+            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
                 <p style="margin-top: 0.7rem">Date</p>
             </div>
-            <div class="col" style="overflow: hidden; border-right: 0">
+            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
                 <input id="date" type="text" class="datepicker" />
             </div>
         </div>
         <div class="row">
-            <div class="col" style="overflow: hidden; border-right: 0">
+            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
                 <p style="margin-top: 0.7rem">Choose a mood!</p>
             </div>
-            <div class="col" style="overflow: hidden; border-right: 0">
+            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
                 <select id="entrySentiment" style="width: 83%">
                     <option>Happy</option>
                     <option>Sad</option>
@@ -314,7 +313,7 @@
     </div>
 
     <!-- Statistics dialog -->
-    <div data-role="dialog" id="statisticsDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+    <div data-role="dialog" id="sentimentDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
         <div class="row">
             <div class="col-md-6">
@@ -415,7 +414,6 @@
     </div>
     <!-- Scripts start here -->
     <script src="../js/jquery.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
     <script src="../js/metro.min.js"></script>
     <script src="../js/picker.js"></script>
     <script src="../js/picker.date.js"></script>

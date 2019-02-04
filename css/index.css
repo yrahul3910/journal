@@ -67,6 +67,10 @@ img.emoji {
     background-color: rgb(240, 240, 240);
 }
 
+#titlebar p {
+    margin-top: 0;
+}
+
 #titlebar-control {
     display: flex;
     justify-content: flex-end;
@@ -106,11 +110,12 @@ img.emoji {
     max-height: 50px;
 }
 
-#journal-mode .col {
+#journal-mode .cell {
   border-right: 1px solid lightgray;
   overflow-y: auto;
   overflow-x: hidden;
   height: 87%;
+  padding: 0 10px;
   max-height: 87%;
 }
 
