@@ -39,7 +39,7 @@
                 <ul class="d-menu" data-role="dropdown">
                     <li><a id="newEntry">New Entry</a></li>
                     <li><a id="updateEntry">Update Entry</a></li>
-                    <li><a id="searchByDate">Search by Date</a></li>
+                    <li><a id="search">Search</a></li>
                     <li><a id="sentimentAnalysis">Your Statistics</a></li>
                 </ul>
             </li>
@@ -68,10 +68,6 @@
                 </ul>
             </li>
         </ul>
-        <div class="input-control modern text place-right" style="margin-right: 20px !important">
-            <input type="text" id="queryInput">
-            <span class="placeholder">Search...</span>
-        </div>
     </div>
 
     <!-- Main Page starts here -->
@@ -135,6 +131,7 @@
                         <li>Added NSFW marker to entries</li>
                         <li>Progress is now shown while saving files</li>
                         <li>You can now export your entries to HTML!</li>
+                        <li>Updated search: deprecated search by date and added a more powerful search dialog</li>
                     </ul>
                 </div>
             </div>
@@ -159,7 +156,7 @@
                 <p style="margin-top: 0.7rem">Choose a mood!</p>
             </div>
             <div class="col" style="overflow: hidden; border-right: 0">
-                <select style="width: 83%">
+                <select id="entrySentiment" style="width: 83%">
                     <option>Happy</option>
                     <option>Sad</option>
                     <option>Angry</option>
@@ -272,12 +269,33 @@
         </ul>
     </div>
 
-    <!-- Search by date dialog -->
+    <!-- Search dialog -->
     <div data-role="dialog" id="searchDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <div class="input-control text" data-role="datepicker">
-            <input type="text" id="searchDate">
-            <button class="button"><span class="mif-calendar"></span></button>
+        <p class="h3">Search by attachment</p>
+        <div class="row" style="margin: 10px">
+            <label class="switch">
+                <input type="checkbox" id="hasAttachment">
+                <span class="check"></span>
+                <span class="caption">Has attachment</span>
+            </label>
+        </div>
+        <p class="h3">Search by text</p>
+        <div class="row" style="margin: 10px">
+            <div class="input-control">
+                <input type="text" id="searchQuery" placeholder="Search query" />
+            </div>
+        </div>
+        <p class="h3">Search by emotion</p>
+        <div class="row" style="margin: 10px">
+            <select id="searchSentiment" style="width: 25%">
+                <option>Happy</option>
+                <option>Sad</option>
+                <option>Angry</option>
+                <option>Loved</option>
+                <option>Excited</option>
+                <option>Neutral</option>
+            </select>
         </div>
         <button class="button" id="searchButton">Search</button>
     </div>
@@ -296,7 +314,7 @@
     </div>
 
     <!-- Statistics dialog -->
-    <div data-role="dialog" id="sentimentDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+    <div data-role="dialog" id="statisticsDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
         <div class="row">
             <div class="col-md-6">

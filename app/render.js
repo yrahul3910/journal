@@ -192,7 +192,7 @@ const getContentHtml = (json) => {
  * @param {Array} attachment - The attachment value of the entry
  * @param {string} baseDir - The base directory where the .json is stored
  */
-const getAttachmentHtml = (attachment, baseDir=os.tmpdir()) => {
+const getAttachmentHtml = (attachment, baseDir = os.tmpdir()) => {
     // Create the HTML element
     let element = $("<div />");
 
@@ -218,7 +218,7 @@ const getAttachmentHtml = (attachment, baseDir=os.tmpdir()) => {
                     // We know it's in $TMPDIR/_jbimages
                     // First get the filename
                     let filename = imgPath.substring(imgPath.lastIndexOf("/") + 1);
-                    
+
                     if (baseDir != os.tmpdir()) {
                         /* In this case, we're exporting to HTML after we've added an
                         entry. We can't reference os.tmpdir() there, because the file
@@ -318,59 +318,6 @@ $("#close").click(() => {
     window.close();
 });
 
-// Search
-$("#queryInput").on("keyup", (e) => {
-    if (e.keyCode === 13) {
-        let query = $("#queryInput").val();
-        $("#queryInput").val("");
-
-        /* Show the entries which match the query in #list. We prompt the user
-        to click the Journal button in the menu to get back to all entries,
-        which we've stored in the allEntriesHTML variable. */
-        $("#content").html("");
-
-        let queryResults = [], html = "", resultCount = 0;
-        for (let i = 0; i < journalEntries.en.length; ++i) {
-            if (new RegExp(query).test(journalEntries.en[i].content)) {
-                queryResults.push(journalEntries.en[i]);
-
-                html += "<div class='queryResult' id='" + resultCount + "'><b>";
-                html += new Date(journalEntries.en[i].entryDate).toDateString() + "</b><br/><p>";
-                let words = journalEntries.en[i].content.split(/\s+/).slice(0, 5).join(" ");
-                html += words + "...</p></div><hr />";
-
-                resultCount += 1;
-            }
-        }
-        $("#list").html(html);
-        $(".queryResult").click((e) => {
-           onEntryClicked(e, queryResults);
-        });
-
-        alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");
-        $("#branding").click(() => {
-            $("#list").html(allEntriesHTML);
-
-            // We need to rebind this handler
-            $(".entry").click((e) => {
-                onEntryClicked(e, journalEntries.en);
-            });
-
-            // Re-enable the menu items we disabled (below)
-            $(".app-bar-menu").css("display", "block");
-        });
-
-        // We should also prevent him from adding new entries and stuff.
-        // We'll enable that when he clicks the Journal menu button.
-        $(".app-bar-menu").css("display", "none");
-    }
-});
-
-$("#queryInput").blur(() => {
-    // Triggered when it loses focus
-    $("#queryInput").val("");
-});
-
 // Toggle dark theme and save preferences
 $("#darkThemeEnable").on("change", () => {
     if ($("#darkThemeEnable").is(":checked")) {
@@ -461,7 +408,7 @@ $("#save").click(() => {
             (callback) => {
                 // Add the images now
                 $("#save-status").html("Adding images (2/4)");
-                if (fs.existsSync(os.tmpdir() + "/_jbimages")) 
+                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
                     fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
                 else
                     callback(null);
@@ -516,7 +463,7 @@ $("#export").click(() => {
 
         // Create the HTML code necessary
         for (let entry of journalEntries.en) {
-        let entry = journalEntries.en[0];
+            let entry = journalEntries.en[0];
             let entryHTML = getContentHtml(entry);
             element.append(entryHTML);
 
@@ -588,76 +535,62 @@ $("#updateEntry").click(() => {
     $("#entryTextarea").val(entry.content);
 });
 
-$("#searchByDate").click(() => {
-    if (!journalEntries) {
-        metroDialog.open("#errDialog");
-        return;
-    }
-
+// Search click handler
+$("#search").click(() => {
     metroDialog.open("#searchDialog");
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
-// Implementation of search by date: button click handler
+// Search button click handler
 $("#searchButton").click(() => {
-    let entries = journalEntries.en;
+    let hasAttachment = $("#hasAttachment").prop("checked");
+    let query = $("#searchQuery").val();
+    let sentiment = $("#searchSentiment").val();
 
-    for (let entry of entries) {
-        if (new Date(entry.entryDate).toDateString() ==
-            new Date($("#searchDate").val()).toDateString()) {
+    metroDialog.close("#searchDialog");
 
-            $("#content").html("");
+    /* Show the entries which match the query in #list. We prompt the user
+    to click the Journal button in the menu to get back to all entries,
+    which we've stored in the allEntriesHTML variable. */
+    $("#content").html("");
 
-            let html = "";
-            html += "<div class='queryResult'><b>";
-            html += new Date(entry.entryDate).toDateString() + "</b><br/><p>";
-            let words = entry.content.split(/\s+/).slice(0, 5).join(" ");
+    let queryResults = [], html = "", resultCount = 0;
+    for (let i = 0; i < journalEntries.en.length; ++i) {
+        let entry = journalEntries.en[i];
+        if (new RegExp(query).test(entry.content) && 
+            (entry.sentiment == sentiment) &&
+            ((entry.attachment || entry.Attachment) == hasAttachment)) {
+            queryResults.push(journalEntries.en[i]);
+
+            html += "<div class='queryResult' id='" + resultCount + "'><b>";
+            html += new Date(journalEntries.en[i].entryDate).toDateString() + "</b><br/><p>";
+            let words = journalEntries.en[i].content.split(/\s+/).slice(0, 5).join(" ");
             html += words + "...</p></div><hr />";
 
-            $("#list").html(html);
-            $(".queryResult").click(() => {
-                let entryHTML = "<p><b>" + (new Date(entry.entryDate).toDateString()) + "</b></p>";
-                entryHTML += "<p>" + entry.content + "</p>";
-
-                $("#content").html(entryHTML);
-                if (entry.attachment instanceof Array) {
-                    for (let img of entry.attachment) {
-                        $("<img>", {
-                            "src": "data:image/png;base64," + img,
-                            // added `width` , `height` properties to `img` attributes
-                            "width": "250px"
-                        }).appendTo("#content");
-                    }
-                } else {
-                    // For backward compatibility
-                    $("<img>", {
-                        "src": "data:image/png;base64," + entry.attachment,
-                        // added `width` , `height` properties to `img` attributes
-                        "width": "250px"
-                    }).appendTo("#content");
-                }
-            });
-
-            alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");
-            $("#branding").click(() => {
-                $("#list").html(allEntriesHTML);
-
-                // We need to rebind this handler
-                $(".entry").click((e) => {
-                    onEntryClicked(e, journalEntries.en);
-                });
-
-                // Re-enable the menu items we disabled (below)
-                $(".app-bar-menu").css("display", "block");
-            });
-
-            // We should also prevent him from adding new entries and stuff.
-            // We'll enable that when he clicks the Journal menu button.
-            $(".app-bar-menu").css("display", "none");
-
-            break;
+            resultCount += 1;
         }
     }
+    $("#list").html(html);
+    $(".queryResult").click((e) => {
+        onEntryClicked(e, queryResults);
+    });
+
+    alertify.delay(6000).log("Click the JournalBear button in the menu to return to all entries.");
+    $("#branding").click(() => {
+        $("#list").html(allEntriesHTML);
+
+        // We need to rebind this handler
+        $(".entry").click((e) => {
+            onEntryClicked(e, journalEntries.en);
+        });
+
+        // Re-enable the menu items we disabled (below)
+        $(".app-bar-menu").css("display", "block");
+    });
+
+    // We should also prevent him from adding new entries and stuff.
+    // We'll enable that when he clicks the Journal menu button.
+    $(".app-bar-menu").css("display", "none");
 });
 
 // Statistics click handler
@@ -672,10 +605,10 @@ $("#sentimentAnalysis").click(() => {
     let uniqueYears = [...new Set(years)].sort().reverse();
     for (let year of uniqueYears)
         $("#sentimentYearsSelect").append(`<option>${year}</option>`);
-    
+
     // Show the total entry count
     $("#totalEntriesCount").html(entries.length);
-    
+
     percentages = getEmotionPercentages();
     currentChart = new Chart(document.getElementById("sentimentRatioChart"), {
         type: "pie",
@@ -739,7 +672,7 @@ $("#addEntry").click(() => {
         }
     }
 
-    let sentiment = $("select").val();
+    let sentiment = $("#entrySentiment").val();
     // Add the entry to the list of entries
     let newEntry = { entryDate: date, content, attachment: encodedImages, sentiment, nsfw };
 
