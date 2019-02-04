@@ -455,12 +455,12 @@ $("#save").click(() => {
         async.waterfall([
             (callback) => {
                 // Write the JSON file
-                $("#save-status").html("Writing data");
+                $("#save-status").html("Writing data (1/4)");
                 fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
             },
             (callback) => {
                 // Add the images now
-                $("#save-status").html("Adding images");
+                $("#save-status").html("Adding images (2/4)");
                 if (fs.existsSync(os.tmpdir() + "/_jbimages")) 
                     fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
                 else
@@ -468,7 +468,7 @@ $("#save").click(() => {
             },
             (callback) => {
                 // Create the .tar.gz
-                $("#save-status").html("Compressing");
+                $("#save-status").html("Compressing (3/4)");
                 archiveUtils.compress(journalDir, (err, tmpPath) => {
                     if (err) callback(err);
                     callback(null, tmpPath);
@@ -476,7 +476,7 @@ $("#save").click(() => {
             },
             (tmpPath, callback) => {
                 // Encrypt the file
-                $("#save-status").html("Encrypting");
+                $("#save-status").html("Encrypting (4/4)");
                 encryptFile(tmpPath, filename, pwd, callback);
             },
             (callback) => {
@@ -857,14 +857,17 @@ $("#decryptJournal").click(() => {
         async.waterfall([
             (callback) => {
                 // Decrypt the file
+                $("#save-status").html("Decrypting file (1/3)");
                 decryptFile(currentFilePath, tmp + "/_jb.tar.gz", pwd, callback);
             },
             (callback) => {
                 // Extract the archive
+                $("#save-status").html("Decompressing contents (2/3)");
                 archiveUtils.decompress(tmp + "/_jb.tar.gz", callback);
             },
             (callback) => {
                 // Read the file
+                $("#save-status").html("Reading contents (3/3)");
                 fs.readFile(tmp + "/_jbfiles/data.json", (err, data) => {
                     if (err) throw err;
                     callback(null, data);
@@ -874,10 +877,16 @@ $("#decryptJournal").click(() => {
                 journalEntries = data;
                 showData(data);
                 metroDialog.close("#decryptDialog");
+                $("#save-status").html("");
                 callback(null);
             }
         ], (err) => {
-            if (err) $("#prompt").text("Wrong password. Try again.");
+            if (err) {
+                $("#prompt").text("Wrong password. Try again.");
+                setInterval(() => {
+                    $("#prompt").text("");
+                }, 3000);
+            }
         });
     } else {
         // Legacy 5.0 support
