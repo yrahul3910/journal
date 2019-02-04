@@ -1,5 +1,5 @@
 # JournalBear
-A cross-platform journal application written in JS and Electron, with AES-256 encryption. Uses [Bootstrap 4](http://getbootstrap.com/), [Metro UI CSS](https://metroui.org.ua/), [jQuery](https://jquery.com/), and [pickadate](https://github.com/amsul/pickadate.js). Uses emoji images from [emojify.js](https://github.com/emojione/emojify.js), which are stored in the `emoji` directory.
+A cross-platform journal application written in JS and Electron, with AES-256 encryption. Uses [Metro UI CSS](https://metroui.org.ua/), [jQuery](https://jquery.com/), and [pickadate](https://github.com/amsul/pickadate.js). Uses emoji images from [emojify.js](https://github.com/emojione/emojify.js), which are stored in the `emoji` directory.
 
 # Deploying
 The repo is configured with `electron-builder`. Run `npm run dist` to create a built executable for your platform.
@@ -20,7 +20,7 @@ The `app` folder is the core source code.
 
 ## `css` and `js`
 The `css` and `js` folders have the files for third-party libraries used. This avoids the need for the user to have an Internet connection.
-* Bootstrap and Metro UI CSS provide the styling for the page.
+* Metro UI CSS provides the styling for the page.
 * `default.css`, `default.date.css`, `picker.js`, and `picker.date.js` are the `pickadate.js` datepicker library used in the Add Entry dialog.
 * jQuery is used for event handling and DOM manipulation.
 * `index.css` contains custom styling used in the app.
