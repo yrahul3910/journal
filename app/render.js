@@ -303,6 +303,7 @@ $(document).ready(() => {
         localStorage.setItem("theme", "default");
     } else if (theme == "dark") {
         $("body").addClass("dark-theme");
+        $("button:not(.alert)").addClass("dark");
         document.getElementById("darkThemeEnable").checked = true;
     }
 });
@@ -322,6 +323,7 @@ $("#close").click(() => {
 $("#darkThemeEnable").on("change", () => {
     if ($("#darkThemeEnable").is(":checked")) {
         $("body").addClass("dark-theme");
+        $("button:not(.alert)").addClass("dark");
         localStorage.setItem("theme", "dark");
     } else {
         $("body").removeClass("dark-theme");

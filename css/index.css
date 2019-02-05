@@ -38,6 +38,7 @@ body.dark-theme #queryInput {
 
 body.dark-theme .appbar a, body.dark-theme .appbar a.dropdown-toggle::before {
     color: rgb(170, 170, 170) !important;
+    border-color: unset !important;
 }
 
 body.dark-theme .dialog {
@@ -51,8 +52,13 @@ body.dark-theme .welcome-page-title {
 body.dark-theme li, body.dark-theme p, body.dark-theme b,
 body.dark-theme h2, body.dark-theme code, body.dark-theme .dialog p,
 body.dark-theme .dialog span, body.dark-theme .switch,
-body.dark-theme input[type=file] {
+body.dark-theme input[type=file], body.dark-theme .dialog-title {
     color: rgb(170, 170, 170);
+}
+
+body.dark-theme .switch input[type="checkbox"]:checked~.check {
+    background: green !important;
+    border-color: rgb(170, 170, 170) !important;
 }
 
 a.dropdown-toggle::after {
