@@ -291,9 +291,9 @@ $(document).ready(() => {
     injectEmojis("#travel-emojis", "../emoji/Travel");
 
     // Hide the emoji box
-    $("#emoji-box").slideToggle();
+    $("#emoji-picker").slideToggle();
     $("#emoji-toggle-img").click(() => {
-        $("#emoji-box").slideToggle();
+        $("#emoji-picker").slideToggle();
     });
 
     // Set the theme here

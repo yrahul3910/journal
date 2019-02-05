@@ -201,6 +201,9 @@
                                 <div id="other-emoji"></div>
                             </div>
                         </div>
+                        <div id="emoji-toggle">
+                            <img class="emoji" id="emoji-toggle-img" src="../emoji/smile.png" />
+                        </div>
                     </div>
                 </section>
                 <section>
@@ -342,22 +345,22 @@
         <div class="dialog-content">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="h3 text-center">Percentage of emotions</p>
+                    <p class="text-center">Percentage of emotions</p>
                 </div>
                 <div class="col-md-6">
-                    <select id="sentimentYearsSelect" style="width: 100px">
+                    <select id="sentimentYearsSelect" style="width: 100px; margin-left: 10px;">
                         <option>All</option>
                     </select>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-10 col-md-offset-1">
-                    <canvas id="sentimentRatioChart"></canvas>
+                    <canvas id="sentimentRatioChart" height="250px"></canvas>
                 </div>
             </div>
             <div class="row" style="margin-top: 20px">
                 <div class="col-md-6 col-md-offset-1">
-                    <span class="h3">Total entry count: </span>
+                    <span>Total entry count: </span>
                     <span id="totalEntriesCount"></span>
                 </div>
             </div>
