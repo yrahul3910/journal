@@ -333,7 +333,7 @@ $("#darkThemeEnable").on("change", () => {
 // Preferences menu entries click handlers
 // ---------------------------------------
 $("#settingsButton").click(() => {
-    metroDialog.open("#settingsDialog");
+    Metro.dialog.open(document.getElementById("settingsDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
@@ -343,7 +343,7 @@ $("#changePassword").click(() => {
         return;
     }
 
-    metroDialog.open("#newJournalDialog");
+    Metro.dialog.open(document.getElementById("newJournalDialog"));
     $("#encryptionNotice").html("Please enter a new secure password.");
     $("#confirmNewJournal").text("Change Password");
     $("#password").val("");
@@ -352,7 +352,7 @@ $("#changePassword").click(() => {
 });
 
 $("#tutorial").click(() => {
-    metroDialog.open("#introDialog");
+    Metro.dialog.open(document.getElementById("introDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
@@ -379,7 +379,7 @@ $("#open").click(() => {
         $("#journal-mode").css("display", "flex");
 
         encryptedData = fs.readFileSync(filenames[0]).toString();
-        metroDialog.open("#decryptDialog");
+        Metro.dialog.open(document.getElementById("decryptDialog"));
         $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
     });
 });
@@ -480,7 +480,7 @@ $("#export").click(() => {
 });
 
 $("#newJournal").click(() => {
-    metroDialog.open("#newJournalDialog");
+    Metro.dialog.open(document.getElementById("newJournalDialog"));
     $("#encryptionNotice").html("Your journal will be encrypted. Please enter a strong " +
         "password. It's recommended to use a passphrase instead, but it's optional.");
     $("#confirmNewJournal").text("Create New Journal");
@@ -494,7 +494,7 @@ $("#newJournal").click(() => {
 // -------------------------------
 $("#newEntry").click(() => {
     if (!journalEntries) {
-        metroDialog.open("#errDialog");
+        Metro.dialog.open(document.getElementById("errDialog"));
         return;
     }
 
@@ -505,17 +505,17 @@ $("#newEntry").click(() => {
     $("#attachmentInput").css("display", "block");
 
     $("#date").val(new Date().toISOString().slice(0, 10));
-    metroDialog.open("#editDialog");
+    Metro.dialog.open(document.getElementById("editDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
 $("#updateEntry").click(() => {
     if (!journalEntries) {
-        metroDialog.open("#errDialog");
+        Metro.dialog.open(document.getElementById("errDialog"));
         return;
     }
 
-    metroDialog.open("#editDialog");
+    Metro.dialog.open(document.getElementById("editDialog"));
 
     // Make required changes to fields.
     $("#addEntry").text("Update Entry");
@@ -537,7 +537,7 @@ $("#updateEntry").click(() => {
 
 // Search click handler
 $("#search").click(() => {
-    metroDialog.open("#searchDialog");
+    Metro.dialog.open(document.getElementById("searchDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
@@ -547,7 +547,7 @@ $("#searchButton").click(() => {
     let query = $("#searchQuery").val();
     let sentiment = $("#searchSentiment").val();
 
-    metroDialog.close("#searchDialog");
+    Metro.dialog.close(document.getElementById("searchDialog"));
 
     /* Show the entries which match the query in #list. We prompt the user
     to click the Journal button in the menu to get back to all entries,
@@ -595,7 +595,7 @@ $("#searchButton").click(() => {
 
 // Statistics click handler
 $("#sentimentAnalysis").click(() => {
-    metroDialog.open("#sentimentDialog");
+    Metro.dialog.open(document.getElementById("sentimentDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 
     // Populate the select with the unique years that the user has
@@ -624,7 +624,7 @@ $("#sentimentAnalysis").click(() => {
 });
 
 $("#sentimentYearsSelect").change(e => {
-    metroDialog.open("#sentimentDialog");
+    Metro.dialog.open(document.getElementById("sentimentDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 
     let percentages;
@@ -714,7 +714,7 @@ $("#addEntry").click(() => {
     $(".entry").click((e) => {
         onEntryClicked(e, journalEntries.en);
     });
-    metroDialog.close("#editDialog");
+    Metro.dialog.close(document.getElementById("editDialog"));
 
     $("#entryTextarea").val("");
     $("#selectFile").val("");
@@ -722,7 +722,7 @@ $("#addEntry").click(() => {
 });
 
 $("#cancelEntry").click(() => {
-    metroDialog.close("#editDialog");
+    Metro.dialog.close(document.getElementById("editDialog"));
     $("#entryTextarea").val("");
 });
 
@@ -769,16 +769,11 @@ $("#confirmNewJournal").click(() => {
     }
     else
         alertify.success("Password changed! Please save your journal again.");
-    metroDialog.close("#newJournalDialog");
+    Metro.dialog.close(document.getElementById("newJournalDialog"));
 });
 
 $("#cancelNewJournal").click(() => {
-    if (openMode === "Open File") {
-        $("#list").html("");
-        currentEntryCount = 0;
-        journalEntries = undefined;
-    }
-    metroDialog.close("#newJournalDialog");
+    Metro.dialog.close(document.getElementById("newJournalDialog"));
 });
 
 // Handle clicking Decrypt button
@@ -809,7 +804,7 @@ $("#decryptJournal").click(() => {
             (data, callback) => {
                 journalEntries = data;
                 showData(data);
-                metroDialog.close("#decryptDialog");
+                Metro.dialog.close(document.getElementById("decryptDialog"));
                 $("#save-status").html("");
                 callback(null);
             }
@@ -827,7 +822,7 @@ $("#decryptJournal").click(() => {
         if ((data = getDecryptedText(encryptedData, pwd))) {
             // Successful
             showData(data);
-            metroDialog.close("#decryptDialog");
+            Metro.dialog.close(document.getElementById("decryptDialog"));
 
             if (data.version > VERSION_NUMBER)
                 alertify.error("This journal is from a newer version. Some features may not work correctly.");
@@ -839,12 +834,12 @@ $("#decryptJournal").click(() => {
 // About menu entry click handlers
 // -------------------------------
 $("#introButton").click(() => {
-    metroDialog.open("#introDialog");
+    Metro.dialog.open(document.getElementById("introDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
 $("#aboutButton").click(() => {
-    metroDialog.open("#aboutDialog");
+    Metro.dialog.open(document.getElementById("aboutDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
@@ -885,7 +880,7 @@ $("#selectFile").on("change", () => {
 
 // Preview button click handler
 $("#preview").click(() => {
-    metroDialog.open("#previewDialog");
+    Metro.dialog.open(document.getElementById("previewDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
     $("#renderedMarkdown").html(converter.makeHtml($("#entryTextarea").val()));
     emojify.run(document.getElementById("renderedMarkdown"));

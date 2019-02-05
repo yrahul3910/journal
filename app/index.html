@@ -21,11 +21,11 @@
     </div>
 
     <!-- Menu -->
-    <div class="app-bar" data-role="appbar">
-        <a class="app-bar-element branding" id="branding">JournalBear</a>
+    <div data-role="appbar" data-expand-point="md">
+        <a class="brand" id="branding">JournalBear</a>
         <ul class="app-bar-menu">
             <li>
-                <a class="dropdown-toggle">File</a>
+                <a class="app-bar-item dropdown-toggle">File</a>
                 <ul class="d-menu" data-role="dropdown">
                     <li><a id="newJournal">New Journal</a></li>
                     <li><a id="open">Open</a></li>
@@ -139,24 +139,173 @@
     </div>
 
     <!-- New entry dialog -->
-    <div data-role="dialog" id="editDialog" class="padding20 dialog flex-grid" data-close-button="true" data-overlay="true"
+    <div data-role="dialog" id="editDialog" class="dialog" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-
-        <div id="addEntryError"></div>
-        <div class="row">
-            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                <p style="margin-top: 0.7rem">Date</p>
-            </div>
-            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                <input id="date" type="text" class="datepicker" />
+        <div class="dialog-title">New Entry</div>
+        <div class="dialog-content">
+            <div id="addEntryError"></div>
+            <div data-role="wizard">
+                <section>
+                    <div class="page-content flex-grid">
+                        <div class="row">
+                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
+                                <p style="margin-top: 0.7rem">Date</p>
+                            </div>
+                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
+                                <input id="date" type="text" class="datepicker" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
+                                <p style="margin-top: 0.7rem">Choose a mood!</p>
+                            </div>
+                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
+                                <select id="entrySentiment" style="width: 83%">
+                                    <option>Happy</option>
+                                    <option>Sad</option>
+                                    <option>Angry</option>
+                                    <option>Loved</option>
+                                    <option>Excited</option>
+                                    <option>Neutral</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <div class="page-content flex-grid">
+                        <div class="row" style="padding: 10px">
+                            <span>JournalBear uses Markdown for formatting. Use *asterisks* for <em>italics</em>,
+                                and **double asterisks** for <b>bold</b></span>
+                        </div>
+                        <textarea id="entryTextarea" rows="13" style="margin-bottom: 10px"></textarea>
+                        <div style="display: flex" id="emoji-picker" style="margin-top: 10px;">
+                            <ul class="tabs" data-role="materialtabs" style="max-width: 470px">
+                                <li><a href="#activity">Activity</a></li>
+                                <li><a href="#faces-reactions">Faces, Reactions</a></li>
+                                <li><a href="#food-drink">Food, Drink</a></li>
+                                <li><a href="#nature-emojis">Nature</a></li>
+                                <li><a href="#object-emojis">Objects</a></li>
+                                <li><a href="#symbols-flags">Symbols, Flags</a></li>
+                                <li><a href="#travel-emojis">Travel</a></li>
+                                <li><a href="#other-emoji">Other</a></li>
+                            </ul>
+                            <div class="targets">
+                                <div id="activity"></div>
+                                <div id="faces-reactions"></div>
+                                <div id="food-drink"></div>
+                                <div id="nature-emojis"></div>
+                                <div id="object-emojis"></div>
+                                <div id="symbols-flags"></div>
+                                <div id="travel-emojis"></div>
+                                <div id="other-emoji"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <div class="page-content flex-grid">
+                        <div id="attachmentInput">
+                            <input type="file" data-role="file" data-mode="drop" id="selectFile" accept="image/*">
+                        </div>
+                        <p id="add-nsfw-label">NSFW</p>
+                    </div>
+                </section>
             </div>
         </div>
-        <div class="row">
-            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                <p style="margin-top: 0.7rem">Choose a mood!</p>
+        <div class="dialog-actions">
+            <button class="button" id="preview">Preview</button>
+            <button class="button" id="addEntry">Add Entry</button>
+            <button class="button alert" id="cancelEntry">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Error with new entry dialog -->
+    <div data-role="dialog" id="errDialog" class="dialog" data-close-button="true" data-overlay="true" data-type="alert">
+        <div class="dialog-title">Could not perform action</div>
+        <p>Please open a journal or create a new one first</p>
+    </div>
+
+    <!-- New journal password entry dialog -->
+    <div data-role="dialog" id="newJournalDialog" class="dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div class="dialog-title">New Journal</div>
+        <div class="dialog-content">
+            <div id="newJournalError"></div>
+            <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a strong password. It's
+                    recommended to use a passphrase instead, but it's optional.</span></div>
+            <div class="input-control password">
+                <input type="password" id="password">
             </div>
-            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                <select id="entrySentiment" style="width: 83%">
+            <div><span>Please re-enter your password</span></div>
+            <div class="input-control password">
+                <input type="password" id="confirmPassword">
+            </div>
+        </div>
+        <div class="dialog-actions">
+            <button class="button" id="confirmNewJournal">Create New Journal</button>
+            <button class="button alert" id="cancelNewJournal">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Decrypt dialog -->
+    <div data-role="dialog" id="decryptDialog" class="dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div class="dialog-title">Decrypt Journal</div>
+        <div class="dialog-content">
+            <div><span id="prompt">Please enter the password to decrypt</span></div>
+            <div class="input-control password">
+                <input type="password" id="unlock">
+            </div>
+        </div>
+        <div class="dialog-actions">
+            <button class="button" id="decryptJournal">Decrypt</button>
+            <button class="button alert" id="cancelDecrypt">Cancel</button>
+        </div>
+    </div>
+
+    <!-- About dialog -->
+    <div data-role="dialog" id="aboutDialog" class="dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div class="dialog-title">About</div>
+        <div class="dialog-content">
+            <p><b>JournalBear 5.1</b><br />
+                By <b>Rahul Yedida</b></p>
+            <p>JournalBear is a free and open source software. None of your data is collected. If you like the
+                software,
+                consider spreading the word to support it.</p>
+            <p>Want to get involved? Check out our GitHub repo <a target="_blank" href="https://github.com/yrahul3910/journal">here!</a></a></p>
+            <hr>
+            <b>Credits</b><br><br>
+            <ul>
+                <li>Bhavana KV</li>
+                <li>Vaisakh M</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Search dialog -->
+    <div data-role="dialog" id="searchDialog" class="dialog" data-close-button="true" data-overlay="true"
+        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
+        <div class="dialog-title">Search</div>
+        <div class="dialog-content">
+            <p class="h3">Search by attachment</p>
+            <div class="row" style="margin: 10px">
+                <label class="switch">
+                    <input type="checkbox" id="hasAttachment">
+                    <span class="check"></span>
+                    <span class="caption">Has attachment</span>
+                </label>
+            </div>
+            <p class="h3">Search by text</p>
+            <div class="row" style="margin: 10px">
+                <div class="input-control">
+                    <input type="text" id="searchQuery" placeholder="Search query" />
+                </div>
+            </div>
+            <p class="h3">Search by emotion</p>
+            <div class="row" style="margin: 10px">
+                <select id="searchSentiment" style="width: 25%">
                     <option>Happy</option>
                     <option>Sad</option>
                     <option>Angry</option>
@@ -166,203 +315,72 @@
                 </select>
             </div>
         </div>
-        <div class="row" style="padding: 20px">
-            <span>JournalBear uses Markdown for formatting. Use *asterisks* for <em>italics</em>,
-                and **double asterisks** for <b>bold</b></span>
+        <div class="dialog-actions">
+            <button class="button" id="searchButton">Search</button>
         </div>
-        <div class="input-control textarea">
-            <textarea id="entryTextarea" rows="13" cols="100"></textarea>
-        </div>
-        <div style="display: flex" id="emoji-picker">
-            <div id="emoji-box">
-                <div class="tabcontrol">
-                    <ul class="tabs">
-                        <li><a href="#activity">Activity</a></li>
-                        <li><a href="#faces-reactions">Faces, Reactions</a></li>
-                        <li><a href="#food-drink">Food, Drink</a></li>
-                        <li><a href="#nature-emojis">Nature</a></li>
-                        <li><a href="#object-emojis">Objects</a></li>
-                        <li><a href="#symbols-flags">Symbols, Flags</a></li>
-                        <li><a href="#travel-emojis">Travel</a></li>
-                        <li><a href="#other-emoji">Other</a></li>
-                    </ul>
-                    <div class="frames">
-                        <div class="frame" id="activity"></div>
-                        <div class="frame" id="faces-reactions"></div>
-                        <div class="frame" id="food-drink"></div>
-                        <div class="frame" id="nature-emojis"></div>
-                        <div class="frame" id="object-emojis"></div>
-                        <div class="frame" id="symbols-flags"></div>
-                        <div class="frame" id="travel-emojis"></div>
-                        <div class="frame" id="other-emoji"></div>
-                    </div>
-                </div>
-            </div>
-            <div id="emoji-toggle">
-                <img class="emoji" id="emoji-toggle-img" src="../emoji/smile.png" />
-            </div>
-        </div>
-        <div id="attachmentInput">
-            <span>Add an image (optional)</span>
-            <input style="margin-top: 10px; margin-bottom: 10px; margin-left: 20px;" type="file" id="selectFile" accept="image/*"
-                multiple>
-        </div>
-        <p id="add-nsfw-label">NSFW</p>
-        <button class="button" id="preview">Preview</button>
-        <button class="button" id="addEntry">Add Entry</button>
-        <button class="button danger" id="cancelEntry">Cancel</button>
-    </div>
-
-    <!-- Error with new entry dialog -->
-    <div data-role="dialog" id="errDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
-        data-type="alert">
-        <h1>Could not perform action</h1>
-        <p> Please open a journal or create a new one first</p>
-    </div>
-
-    <!-- New journal password entry dialog -->
-    <div data-role="dialog" id="newJournalDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
-        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <div id="newJournalError"></div>
-        <div><span id="encryptionNotice">Your journal will be encrypted. Please enter a strong password. It's
-                recommended to use a passphrase instead, but it's optional.</span></div>
-        <div class="input-control password">
-            <input type="password" id="password">
-        </div>
-        <div><span>Please re-enter your password</span></div>
-        <div class="input-control password">
-            <input type="password" id="confirmPassword">
-        </div>
-        <div>
-            <button class="button" id="confirmNewJournal">Create New Journal</button>
-            <button class="button danger" id="cancelNewJournal">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Decrypt dialog -->
-    <div data-role="dialog" id="decryptDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
-        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <div><span id="prompt">Please enter the password to decrypt</span></div>
-        <div class="input-control password">
-            <input type="password" id="unlock">
-        </div>
-        <div>
-            <button class="button" id="decryptJournal">Decrypt</button>
-            <button class="button danger" id="cancelDecrypt">Cancel</button>
-        </div>
-    </div>
-
-    <!-- About dialog -->
-    <div data-role="dialog" id="aboutDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
-        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <h2>About</h2>
-        <p><b>JournalBear 5.1</b><br />
-            By <b>Rahul Yedida</b></p>
-        <p>JournalBear is a free and open source software. None of your data is collected. If you like the software,
-            consider spreading the word to support it.</p>
-        <p>Want to get involved? Check out our GitHub repo <a target="_blank" href="https://github.com/yrahul3910/journal">here!</a></a></p>
-        <hr>
-        <b>Credits</b><br><br>
-        <ul>
-            <li>Bhavana KV</li>
-            <li>Vaisakh M</li>
-        </ul>
-    </div>
-
-    <!-- Search dialog -->
-    <div data-role="dialog" id="searchDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
-        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <p class="h3">Search by attachment</p>
-        <div class="row" style="margin: 10px">
-            <label class="switch">
-                <input type="checkbox" id="hasAttachment">
-                <span class="check"></span>
-                <span class="caption">Has attachment</span>
-            </label>
-        </div>
-        <p class="h3">Search by text</p>
-        <div class="row" style="margin: 10px">
-            <div class="input-control">
-                <input type="text" id="searchQuery" placeholder="Search query" />
-            </div>
-        </div>
-        <p class="h3">Search by emotion</p>
-        <div class="row" style="margin: 10px">
-            <select id="searchSentiment" style="width: 25%">
-                <option>Happy</option>
-                <option>Sad</option>
-                <option>Angry</option>
-                <option>Loved</option>
-                <option>Excited</option>
-                <option>Neutral</option>
-            </select>
-        </div>
-        <button class="button" id="searchButton">Search</button>
     </div>
 
     <!-- Settings dialog -->
-    <div data-role="dialog" id="settingsDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+    <div data-role="dialog" id="settingsDialog" class="dialog" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <p class="h3">Settings</p>
-        <div style="margin-top: 15px;" class="switch">
-            Dark Theme
-            <label style="margin-left: 5px;" class="switch">
-                <input id="darkThemeEnable" type="checkbox">
-                <span class="check"></span>
-            </label>
+        <div class="dialog-title">Settings</div>
+        <div class="dialog-content">
+            <div style="margin-top: 15px;" class="switch">
+                Dark Theme
+                <label style="margin-left: 5px;" class="switch">
+                    <input id="darkThemeEnable" type="checkbox">
+                    <span class="check"></span>
+                </label>
+            </div>
         </div>
     </div>
 
     <!-- Statistics dialog -->
-    <div data-role="dialog" id="sentimentDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+    <div data-role="dialog" id="sentimentDialog" class="dialog" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <div class="row">
-            <div class="col-md-6">
-                <p class="h3 text-center">Percentage of emotions</p>
+        <div class="dialog-title">Statistics</div>
+        <div class="dialog-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="h3 text-center">Percentage of emotions</p>
+                </div>
+                <div class="col-md-6">
+                    <select id="sentimentYearsSelect" style="width: 100px">
+                        <option>All</option>
+                    </select>
+                </div>
             </div>
-            <div class="col-md-6">
-                <select id="sentimentYearsSelect" style="width: 100px">
-                    <option>All</option>
-                </select>
+            <div class="row">
+                <div class="col-md-10 col-md-offset-1">
+                    <canvas id="sentimentRatioChart"></canvas>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-10 col-md-offset-1">
-                <canvas id="sentimentRatioChart"></canvas>
-            </div>
-        </div>
-        <div class="row" style="margin-top: 20px">
-            <div class="col-md-6 col-md-offset-1">
-                <span class="h3">Total entry count: </span>
-                <span id="totalEntriesCount"></span>
+            <div class="row" style="margin-top: 20px">
+                <div class="col-md-6 col-md-offset-1">
+                    <span class="h3">Total entry count: </span>
+                    <span id="totalEntriesCount"></span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Introduction dialog -->
-    <div data-role="dialog" id="introDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
-        data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
-        <p>
-            <strong>
-                Welcome to JournalBear!
-            </strong>
-        </p>
-        <p>
-            Get started with this simple tutorial.
-        </p>
-        <div class="wizard" data-role="wizard" data-buttons='{"prior": {"show": true, "title": "Back"}, "next": true}'>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-content">
+    <div data-role="dialog" id="introDialog" class="dialog" data-overlay="true" data-overlay-color="#1d1d1d"
+        data-overlay-click-close="true" style="visibility: hidden;">
+        <div class="dialog-title">Welcome to JournalBear!</div>
+        <div class="dialog-content">
+            <div data-role="wizard">
+                <section>
+                    <div class="page-content">
                         <p class="h3">Starting off</p>
                         <p class="h5">
                             You can start off by going to File - New Journal. Specify a password, but
                             remember it! There's no way to recover a lost password.
                         </p>
                     </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
+                </section>
+                <section>
+                    <div class="page-content">
                         <p class="h3">Adding daily entries</p>
                         <p class="h5">
                             You can add new entries by going to Entry - New Entry. Entries are styled
@@ -378,9 +396,9 @@
                                 issue.</a>
                         </p>
                     </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
+                </section>
+                <section>
+                    <div class="page-content">
                         <p class="h3">More Markdown features</p>
                         <p class="h5">
                             JournalBear supports emojis, tables, code, and more Markdown features!
@@ -389,9 +407,9 @@
                             </a>
                         </p>
                     </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
+                </section>
+                <section>
+                    <div class="page-content">
                         <p class="h3">Getting help</p>
                         <p class="h5">
                             If you need any sort of help, you can send a message. Although the preferred
@@ -402,13 +420,14 @@
                             Feel free to leave your name as "Anonymous" if you wish :)
                         </p>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
+        <div class="dialog-actions"></div>
     </div>
 
     <!-- Preview dialog -->
-    <div data-role="dialog" id="previewDialog" class="padding20 dialog" data-close-button="true" data-overlay="true"
+    <div data-role="dialog" id="previewDialog" class="dialog" data-close-button="true" data-overlay="true"
         data-overlay-color="#1d1d1d" data-overlay-click-close="true" style="visibility: hidden;">
         <div style="max-height: 300px; overflow: scroll" id="renderedMarkdown">
         </div>
@@ -422,7 +441,7 @@
     <script>
         $(document).ready(() => {
             $('#date').pickadate();
-            $('.tabcontrol').tabcontrol();
+            //$('.tabcontrol').tabcontrol();
             require('./render.js');
         });
     </script>
