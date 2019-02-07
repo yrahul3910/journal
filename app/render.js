@@ -46,7 +46,7 @@ emojify.setConfig({
 
 /* Remember to update this on major releases. This indicates the 
 incompatible versions to the app. */
-const VERSION_NUMBER = 5.1;
+const VERSION_NUMBER = 6.0;
 
 // Sentiment-color maps for the circles beside entries
 const sentiments = {
@@ -327,6 +327,7 @@ $("#darkThemeEnable").on("change", () => {
         localStorage.setItem("theme", "dark");
     } else {
         $("body").removeClass("dark-theme");
+        $("button:not(.alert)").removeClass("dark");
         localStorage.setItem("theme", "default");
     }
 });
