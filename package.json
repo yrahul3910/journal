@@ -10,7 +10,6 @@
     "appId": "com.yrahul.journal",
     "linux": {
       "target": [
-        "deb",
         "rpm"
       ],
       "icon": "./build/icons",
@@ -44,7 +43,7 @@
     "targz": "^1.0.1"
   },
   "devDependencies": {
-    "electron": "2.0.4",
+    "electron": "2.0.13",
     "electron-builder": "19.4.2",
     "electron-prebuilt": "^1.4.13"
   },
