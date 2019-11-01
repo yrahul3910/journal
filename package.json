@@ -34,7 +34,7 @@
     "electron-updater": "2.15.0",
     "emojify.js": "^1.1.0",
     "fs-extra": "^5.0.0",
-    "jquery": "^3.2.1",
+    "jquery": "^3.4.0",
     "lodash": "^4.17.13",
     "moment": "^2.21.0",
     "owasp-password-strength-test": "^1.3.0",
