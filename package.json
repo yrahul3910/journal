@@ -31,7 +31,7 @@
     "async": "^2.6.0",
     "chart.js": "^2.7.2",
     "d3": "^4.9.1",
-    "electron-updater": "2.15.0",
+    "electron-updater": "^5.2.1",
     "emojify.js": "^1.1.0",
     "fs-extra": "^5.0.0",
     "jquery": "^3.4.0",
@@ -43,16 +43,15 @@
     "targz": "^1.0.1"
   },
   "devDependencies": {
-    "electron": "2.0.13",
-    "electron-builder": "19.4.2",
-    "electron-prebuilt": "^1.4.13"
+    "electron": "^20.2.0",
+    "electron-builder": "^23.3.3"
   },
   "scripts": {
     "postinstall": "install-app-deps",
     "start": "electron app/index.js",
     "pack": "build --dir",
-    "dist": "build --x64",
-    "dist-mac": "build --x64 -m",
+    "dist": "electron-builder --x64",
+    "dist-mac": "electron-builder --x64 -m",
     "ship": "build -p always"
   }
 }
