@@ -281,6 +281,54 @@ const onEntryClicked = (e, json) => {
     });
 };
 
+// Theme management
+const applyTheme = (isDark) => {
+    console.log("[THEME] Applying theme:", isDark ? "dark" : "light");
+    if (isDark) {
+        $("body").addClass("dark-theme");
+    } else {
+        $("body").removeClass("dark-theme");
+    }
+};
+
+const initTheme = () => {
+    console.log("[THEME] Initializing theme");
+    let savedTheme = localStorage.getItem("theme");
+    
+    // Check if user has a saved preference
+    if (savedTheme === "dark" || savedTheme === "light") {
+        console.log("[THEME] Using saved preference:", savedTheme);
+        applyTheme(savedTheme === "dark");
+        document.getElementById("darkThemeEnable").checked = savedTheme === "dark";
+    } else {
+        // Use system theme
+        console.log("[THEME] Using system theme");
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(systemPrefersDark);
+        document.getElementById("darkThemeEnable").checked = systemPrefersDark;
+        localStorage.setItem("theme", systemPrefersDark ? "dark" : "light");
+    }
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        console.log("[THEME] System theme changed to:", e.matches ? "dark" : "light");
+        // Only auto-switch if user hasn't explicitly set a preference recently
+        const savedTheme = localStorage.getItem("theme");
+        const lastThemeChange = localStorage.getItem("lastThemeChange");
+        const now = Date.now();
+        
+        // If user changed theme in the last 5 minutes, don't auto-switch
+        if (lastThemeChange && (now - parseInt(lastThemeChange)) < 5 * 60 * 1000) {
+            console.log("[THEME] Ignoring system change due to recent user preference");
+            return;
+        }
+        
+        applyTheme(e.matches);
+        document.getElementById("darkThemeEnable").checked = e.matches;
+        localStorage.setItem("theme", e.matches ? "dark" : "light");
+    });
+};
+
 $(document).ready(() => {
     // Add emojis to the tabs in the emoji box
     injectEmojis("#other-emoji", "../emoji");
@@ -298,16 +346,8 @@ $(document).ready(() => {
         $("#emoji-picker").slideToggle();
     });
 
-    // Set the theme here
-    let theme = localStorage.getItem("theme");
-    if (!theme) {
-        // Check if it exists
-        localStorage.setItem("theme", "default");
-    } else if (theme == "dark") {
-        $("body").addClass("dark-theme");
-        $("button:not(.alert)").addClass("dark");
-        document.getElementById("darkThemeEnable").checked = true;
-    }
+    // Initialize theme
+    initTheme();
 });
 
 // -----------------------
@@ -331,15 +371,12 @@ $("#close").click(() => {
 
 // Toggle dark theme and save preferences
 $("#darkThemeEnable").on("change", () => {
-    if ($("#darkThemeEnable").is(":checked")) {
-        $("body").addClass("dark-theme");
-        $("button:not(.alert)").addClass("dark");
-        localStorage.setItem("theme", "dark");
-    } else {
-        $("body").removeClass("dark-theme");
-        $("button:not(.alert)").removeClass("dark");
-        localStorage.setItem("theme", "default");
-    }
+    const isDark = $("#darkThemeEnable").is(":checked");
+    console.log("[THEME] User toggled theme to:", isDark ? "dark" : "light");
+    
+    applyTheme(isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    localStorage.setItem("lastThemeChange", Date.now().toString());
 });
 
 // ---------------------------------------
