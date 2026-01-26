@@ -52,10 +52,10 @@
     "postinstall": "electron-builder install-app-deps",
     "start": "electron app/index.js",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --x64",
-    "dist-mac": "electron-builder --x64 -m",
-    "dist-linux": "electron-builder --x64 -l",
-    "dist-win": "electron-builder --x64 -w",
+    "dist": "electron-builder",
+    "dist-mac": "electron-builder -m",
+    "dist-linux": "electron-builder -l",
+    "dist-win": "electron-builder -w",
     "ship": "electron-builder -p always"
   }
 }
