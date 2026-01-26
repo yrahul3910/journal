@@ -320,6 +320,72 @@ body.dark-theme ::-webkit-scrollbar-thumb:hover {
     background: #64748b;
 }
 
+/* Year Sections */
+.year-section {
+    margin-bottom: 24px;
+}
+
+.year-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--surface-light);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: 12px;
+    border: 1px solid var(--border-light);
+}
+
+.year-header:hover {
+    background-color: #f1f5f9;
+}
+
+body.dark-theme .year-header {
+    background-color: var(--surface-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-theme .year-header:hover {
+    background-color: #334155;
+}
+
+.year-toggle {
+    font-size: 12px;
+    color: #64748b;
+    transition: transform 0.2s ease;
+}
+
+.year-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-light);
+    flex: 1;
+}
+
+body.dark-theme .year-title {
+    color: var(--text-dark);
+}
+
+.year-count {
+    font-size: 13px;
+    color: #64748b;
+    background-color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+body.dark-theme .year-count {
+    background-color: #0f172a;
+    color: #94a3b8;
+}
+
+.year-content {
+    padding-left: 8px;
+}
+
 /* Entries List */
 #list .entry, #list .queryResult {
     background-color: white;

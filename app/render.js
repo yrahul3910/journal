@@ -112,26 +112,67 @@ function showData(data) {
     let json = JSON.parse(data).en;
     currentEntryCount = json.length;
     journalEntries = JSON.parse(data);
+    
+    // Group entries by year
+    const entriesByYear = {};
+    json.forEach((entry, index) => {
+        const year = moment(entry.entryDate).year();
+        if (!entriesByYear[year]) {
+            entriesByYear[year] = [];
+        }
+        entriesByYear[year].push({ entry, index });
+    });
+    
+    // Sort years in descending order
+    const years = Object.keys(entriesByYear).sort((a, b) => b - a);
+    
     let html = "";
-    for (let i = 0; i < currentEntryCount; ++i) {
-        let sentiment = (json[i].sentiment ? json[i].sentiment : "Neutral");
-        html += "<div class='entry' id='" + i + "'><b>";
-        html += new Date(json[i].entryDate).toDateString() + "</b>";
-        html += `<span>  </span><span class='sentiment ${sentiment}'> </span>\
-            <span style='color: ${sentiments[sentiment]}; font-size: 12px'>${sentiment}</span>`
-        if (json[i].nsfw)
-            html += `<span class="nsfw">NSFW</span>`;
-        html += `<br/><p>`;
-        let entry = json[i].content;
-
-        let words = entry.split(/\s+/).slice(0, 5).join(" ");
-        html += words + "...</p></div><hr />";
-    }
+    years.forEach(year => {
+        const yearEntries = entriesByYear[year];
+        const entryCount = yearEntries.length;
+        
+        // Year header (collapsible)
+        html += `<div class="year-section">`;
+        html += `<div class="year-header" data-year="${year}">`;
+        html += `<span class="year-toggle">▼</span>`;
+        html += `<span class="year-title">${year}</span>`;
+        html += `<span class="year-count">${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}</span>`;
+        html += `</div>`;
+        html += `<div class="year-content" data-year-content="${year}">`;
+        
+        // Add entries for this year
+        yearEntries.forEach(({ entry, index }) => {
+            let sentiment = (entry.sentiment ? entry.sentiment : "Neutral");
+            html += "<div class='entry' id='" + index + "'><b>";
+            html += new Date(entry.entryDate).toDateString() + "</b>";
+            html += `<span>  </span><span class='sentiment ${sentiment}'> </span>\
+                <span style='color: ${sentiments[sentiment]}; font-size: 12px'>${sentiment}</span>`;
+            if (entry.nsfw)
+                html += `<span class="nsfw">NSFW</span>`;
+            html += `<br/><p>`;
+            let words = entry.content.split(/\s+/).slice(0, 5).join(" ");
+            html += words + "...</p></div>";
+        });
+        
+        html += `</div></div>`; // Close year-content and year-section
+    });
+    
     $("#list").html(html);
     allEntriesHTML = html;
 
+    // Bind click handlers for entries
     $(".entry").click((e) => {
         onEntryClicked(e, json);
+    });
+    
+    // Bind click handlers for year headers (toggle collapse)
+    $(".year-header").click((e) => {
+        const year = $(e.currentTarget).data("year");
+        const yearContent = $(`[data-year-content="${year}"]`);
+        const toggle = $(e.currentTarget).find(".year-toggle");
+        
+        yearContent.slideToggle(200);
+        toggle.text(toggle.text() === "▼" ? "▶" : "▼");
     });
 }
 
