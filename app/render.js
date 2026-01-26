@@ -1,6 +1,6 @@
 /* eslint no-undef: 0 */
 // Required for opening dialogs and context menus
-const remote = require("electron").remote;
+const remote = require("@electron/remote");
 const { dialog, Menu, MenuItem } = remote;
 const window = remote.getCurrentWindow();
 
@@ -14,9 +14,12 @@ const alertify = require("alertify.js");
 const emojify = require("emojify.js");
 const archiveUtils = require("./archive");
 const { injectEmojis } = require("./injectEmoji");
-const rimraf = require("rimraf");
-const { Chart } = require("chart.js");
+const { rimraf } = require("rimraf");
+const { Chart, ArcElement, PieController, Tooltip, Legend } = require("chart.js");
 const { getDecryptedText, checkPwdStrength, encryptFile, decryptFile } = require("./encryption");
+
+// Register Chart.js components
+Chart.register(ArcElement, PieController, Tooltip, Legend);
 
 const _ = require("lodash");
 const moment = require("moment");
@@ -66,19 +69,18 @@ let globalStore = {
 const imgContextMenu = new Menu();
 imgContextMenu.append(new MenuItem({
     label: "Save to disk",
-    click() {
-        dialog.showOpenDialog({
+    async click() {
+        const result = await dialog.showOpenDialog({
             title: "Choose a folder",
             properties: ["openDirectory"]
-        }, (paths) => {
-            if (paths) {
-                let filename = globalStore.imgPath.slice(globalStore.imgPath.lastIndexOf("/"));
-                fse.copy(globalStore.imgPath, paths[0] + filename, (err) => {
-                    if (err) alertify.error("Failed to save image");
-                    else alertify.success("Saved image successfully.");
-                });
-            }
         });
+        if (!result.canceled && result.filePaths) {
+            let filename = globalStore.imgPath.slice(globalStore.imgPath.lastIndexOf("/"));
+            fse.copy(globalStore.imgPath, result.filePaths[0] + filename, (err) => {
+                if (err) alertify.error("Failed to save image");
+                else alertify.success("Saved image successfully.");
+            });
+        }
     }
 }));
 
@@ -362,124 +364,130 @@ $("#tutorial").click(() => {
 // ------------------------------
 // File menu entry click handlers
 // ------------------------------
-$("#open").click(() => {
-    dialog.showOpenDialog({
+$("#open").click(async () => {
+    const result = await dialog.showOpenDialog({
         filters: [
             { name: "JournalBear 5.1 Document", extensions: ["zjournal"] },
             { name: "JournalBear 5.0 Document", extensions: ["ejournal"] }
         ]
-    }, (filenames) => {
-        if (filenames === undefined) return;
-
-        if (filenames[0].endsWith(".ejournal"))
-            currentFileVersion = 5.0;
-        else {
-            currentFilePath = filenames[0];
-            currentFileVersion = 5.1;
-        }
-
-        $("#welcome-page").css("display", "none");
-        $("#journal-mode").css("display", "flex");
-
-        encryptedData = fs.readFileSync(filenames[0]).toString();
-        Metro.dialog.open(document.getElementById("decryptDialog"));
-        $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
     });
+    
+    if (result.canceled || !result.filePaths) return;
+    
+    const filenames = result.filePaths;
+
+    if (filenames[0].endsWith(".ejournal"))
+        currentFileVersion = 5.0;
+    else {
+        currentFilePath = filenames[0];
+        currentFileVersion = 5.1;
+    }
+
+    $("#welcome-page").css("display", "none");
+    $("#journal-mode").css("display", "flex");
+
+    encryptedData = fs.readFileSync(filenames[0]).toString();
+    Metro.dialog.open(document.getElementById("decryptDialog"));
+    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
-$("#save").click(() => {
-    dialog.showSaveDialog({
+$("#save").click(async () => {
+    const result = await dialog.showSaveDialog({
         filters: [
             { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
         ]
-    }, (filename) => {
-        if (!filename) return;
+    });
+    
+    if (result.canceled || !result.filePath) return;
+    
+    const filename = result.filePath;
 
-        journalEntries.version = VERSION_NUMBER;
-        let journalDir = os.tmpdir() + "/_jbfiles";
-        if (fs.existsSync(journalDir))
-            fse.removeSync(journalDir + "/data.json");
-        else
-            fs.mkdirSync(journalDir);
+    journalEntries.version = VERSION_NUMBER;
+    let journalDir = os.tmpdir() + "/_jbfiles";
+    if (fs.existsSync(journalDir))
+        fse.removeSync(journalDir + "/data.json");
+    else
+        fs.mkdirSync(journalDir);
 
-        async.waterfall([
-            (callback) => {
-                // Write the JSON file
-                $("#save-status").html("Writing data (1/4)");
-                fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
-            },
-            (callback) => {
-                // Add the images now
-                $("#save-status").html("Adding images (2/4)");
-                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
-                    fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
-                else
-                    callback(null);
-            },
-            (callback) => {
-                // Create the .tar.gz
-                $("#save-status").html("Compressing (3/4)");
-                archiveUtils.compress(journalDir, (err, tmpPath) => {
-                    if (err) callback(err);
-                    callback(null, tmpPath);
-                });
-            },
-            (tmpPath, callback) => {
-                // Encrypt the file
-                $("#save-status").html("Encrypting (4/4)");
-                encryptFile(tmpPath, filename, pwd, callback);
-            },
-            (callback) => {
-                // Display success message
-                $("#save-status").html("");
-                alertify.success("Successfully saved!");
+    async.waterfall([
+        (callback) => {
+            // Write the JSON file
+            $("#save-status").html("Writing data (1/4)");
+            fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
+        },
+        (callback) => {
+            // Add the images now
+            $("#save-status").html("Adding images (2/4)");
+            if (fs.existsSync(os.tmpdir() + "/_jbimages"))
+                fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
+            else
                 callback(null);
-            }
-        ], (err) => {
-            if (err) console.log(err);
-        });
+        },
+        (callback) => {
+            // Create the .tar.gz
+            $("#save-status").html("Compressing (3/4)");
+            archiveUtils.compress(journalDir, (err, tmpPath) => {
+                if (err) callback(err);
+                callback(null, tmpPath);
+            });
+        },
+        (tmpPath, callback) => {
+            // Encrypt the file
+            $("#save-status").html("Encrypting (4/4)");
+            encryptFile(tmpPath, filename, pwd, callback);
+        },
+        (callback) => {
+            // Display success message
+            $("#save-status").html("");
+            alertify.success("Successfully saved!");
+            callback(null);
+        }
+    ], (err) => {
+        if (err) console.log(err);
     });
 });
 
-$("#export").click(() => {
-    dialog.showSaveDialog({
+$("#export").click(async () => {
+    const result = await dialog.showSaveDialog({
         filters: [
             { name: "HTML Page", extensions: ["html"] }
         ]
-    }, (filename) => {
-        if (!filename) return;
-
-        let journalDir = os.tmpdir() + "/_jbfiles";
-
-        // Obtain the directory to save to
-        let path = filename.split("/");
-        path.pop();
-        path = path.join("/");
-
-        // Start by moving the images
-        if (fse.existsSync(path + "/_jbimages"))
-            rimraf(path + "/_jbimages");
-        fse.moveSync(journalDir + "/images", path + "/_jbimages");
-
-        // HTML code
-        element = $("<div />");
-
-        // Create the HTML code necessary
-        for (let entry of journalEntries.en) {
-            let entry = journalEntries.en[0];
-            let entryHTML = getContentHtml(entry);
-            element.append(entryHTML);
-
-            // Some older versions had 'Attachment' as the key.
-            let attachment = entry.attachment || entry.Attachment;
-            let attachmentElement = getAttachmentHtml(attachment, path);
-            element.append(attachmentElement);
-        }
-
-        // Write out the HTML
-        let html = element.prop("outerHTML");
-        fs.writeFileSync(filename, html);
     });
+    
+    if (result.canceled || !result.filePath) return;
+    
+    const filename = result.filePath;
+
+    let journalDir = os.tmpdir() + "/_jbfiles";
+
+    // Obtain the directory to save to
+    let path = filename.split("/");
+    path.pop();
+    path = path.join("/");
+
+    // Start by moving the images
+    if (fse.existsSync(path + "/_jbimages"))
+        rimraf.sync(path + "/_jbimages");
+    fse.moveSync(journalDir + "/images", path + "/_jbimages");
+
+    // HTML code
+    element = $("<div />");
+
+    // Create the HTML code necessary
+    for (let entry of journalEntries.en) {
+        let entry = journalEntries.en[0];
+        let entryHTML = getContentHtml(entry);
+        element.append(entryHTML);
+
+        // Some older versions had 'Attachment' as the key.
+        let attachment = entry.attachment || entry.Attachment;
+        let attachmentElement = getAttachmentHtml(attachment, path);
+        element.append(attachmentElement);
+    }
+
+    // Write out the HTML
+    let html = element.prop("outerHTML");
+    fs.writeFileSync(filename, html);
 });
 
 $("#newJournal").click(() => {

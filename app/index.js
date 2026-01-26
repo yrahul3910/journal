@@ -1,5 +1,5 @@
 const { app, BrowserWindow } = require("electron");
-const rimraf = require("rimraf");
+const { rimraf } = require("rimraf");
 const os = require("os");
 const path = require("path");
 const url = require("url");
@@ -10,8 +10,23 @@ let win;
 
 function createWindow() {
     // Create the browser window.
-    win = new BrowserWindow({ width: 800, height: 660, frame: false, icon: __dirname + "/../build/logo.png" });
+    win = new BrowserWindow({ 
+        width: 800, 
+        height: 660, 
+        frame: false, 
+        icon: __dirname + "/../build/logo.png",
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            enableRemoteModule: true
+        }
+    });
     //win.webContents.openDevTools();
+    
+    // Enable @electron/remote
+    require("@electron/remote/main").initialize();
+    require("@electron/remote/main").enable(win.webContents);
+    
     // and load the index.html of the app.
     win.loadURL(url.format({
         pathname: path.join(__dirname, "index.html"),
@@ -23,9 +38,9 @@ function createWindow() {
     win.setMaximizable(false);
     win.setResizable(false);
 
-    win.webContents.on("new-window", (e, url) => {
-        e.preventDefault();
+    win.webContents.setWindowOpenHandler(({ url }) => {
         require("electron").shell.openExternal(url);
+        return { action: "deny" };
     });
 
     // Emitted when the window is closed.
