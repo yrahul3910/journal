@@ -129,13 +129,17 @@ div[data-role="appbar"] {
     color: white;
 }
 
+#journal-mode {
+  height: calc(100vh - 90px);
+}
+
 #journal-mode .cell {
   border-right: 1px solid lightgray;
   overflow-y: auto;
   overflow-x: hidden;
-  height: 87%;
+  height: 100%;
   padding: 0 20px !important;
-  max-height: 87%;
+  max-height: 100%;
 }
 
 #datepicker {

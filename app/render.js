@@ -1,29 +1,29 @@
 /* eslint no-undef: 0 */
 // Required for opening dialogs and context menus
-const remote = require("@electron/remote");
+import remote from "@electron/remote";
 const { dialog, Menu, MenuItem } = remote;
 const window = remote.getCurrentWindow();
 
-const fs = require("fs");
-const fse = require("fs-extra");
-const os = require("os");
-const path = require("path");
-const $ = require("jquery");
-const async = require("async");
-const alertify = require("alertify.js");
-const emojify = require("emojify.js");
-const archiveUtils = require("./archive");
-const { injectEmojis } = require("./injectEmoji");
-const { rimraf } = require("rimraf");
-const { Chart, ArcElement, PieController, Tooltip, Legend } = require("chart.js");
-const { getDecryptedText, checkPwdStrength, encryptFile, decryptFile } = require("./encryption");
+import fs from "fs";
+import fse from "fs-extra";
+import os from "os";
+import path from "path";
+import $ from "jquery";
+import async from "async";
+import alertify from "alertify.js";
+import emojify from "emojify.js";
+import * as archiveUtils from "./archive.js";
+import { injectEmojis } from "./injectEmoji.js";
+import { rimraf } from "rimraf";
+import { Chart, ArcElement, PieController, Tooltip, Legend } from "chart.js";
+import { getDecryptedText, checkPwdStrength, encryptFile, decryptFile } from "./encryption.js";
 
 // Register Chart.js components
 Chart.register(ArcElement, PieController, Tooltip, Legend);
 
-const _ = require("lodash");
-const moment = require("moment");
-const showdown = require("showdown");
+import _ from "lodash";
+import moment from "moment";
+import showdown from "showdown";
 
 /* JournalBear uses Showdown to render Markdown in entries. Emojis
 are supported as well. */
@@ -365,129 +365,202 @@ $("#tutorial").click(() => {
 // File menu entry click handlers
 // ------------------------------
 $("#open").click(async () => {
-    const result = await dialog.showOpenDialog({
-        filters: [
-            { name: "JournalBear 5.1 Document", extensions: ["zjournal"] },
-            { name: "JournalBear 5.0 Document", extensions: ["ejournal"] }
-        ]
-    });
-    
-    if (result.canceled || !result.filePaths) return;
-    
-    const filenames = result.filePaths;
+    console.log("[OPEN] File open dialog clicked");
+    try {
+        const result = await dialog.showOpenDialog({
+            filters: [
+                { name: "JournalBear 5.1 Document", extensions: ["zjournal"] },
+                { name: "JournalBear 5.0 Document", extensions: ["ejournal"] }
+            ]
+        });
+        
+        console.log("[OPEN] Dialog result:", result);
+        
+        if (result.canceled || !result.filePaths) {
+            console.log("[OPEN] Dialog canceled or no file selected");
+            return;
+        }
+        
+        const filenames = result.filePaths;
+        console.log("[OPEN] Selected file:", filenames[0]);
 
-    if (filenames[0].endsWith(".ejournal"))
-        currentFileVersion = 5.0;
-    else {
-        currentFilePath = filenames[0];
-        currentFileVersion = 5.1;
+        if (filenames[0].endsWith(".ejournal")) {
+            console.log("[OPEN] Detected version 5.0 file");
+            currentFileVersion = 5.0;
+        } else {
+            console.log("[OPEN] Detected version 5.1 file");
+            currentFilePath = filenames[0];
+            currentFileVersion = 5.1;
+        }
+
+        $("#welcome-page").css("display", "none");
+        $("#journal-mode").css("display", "flex");
+
+        console.log("[OPEN] Reading file...");
+        encryptedData = fs.readFileSync(filenames[0]).toString();
+        console.log("[OPEN] File read successfully, length:", encryptedData.length);
+        
+        Metro.dialog.open(document.getElementById("decryptDialog"));
+        $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+        console.log("[OPEN] Decrypt dialog opened");
+    } catch (error) {
+        console.error("[OPEN] Error in file open:", error);
+        alertify.error("Failed to open file: " + error.message);
     }
-
-    $("#welcome-page").css("display", "none");
-    $("#journal-mode").css("display", "flex");
-
-    encryptedData = fs.readFileSync(filenames[0]).toString();
-    Metro.dialog.open(document.getElementById("decryptDialog"));
-    $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
 $("#save").click(async () => {
-    const result = await dialog.showSaveDialog({
-        filters: [
-            { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
-        ]
-    });
-    
-    if (result.canceled || !result.filePath) return;
-    
-    const filename = result.filePath;
-
-    journalEntries.version = VERSION_NUMBER;
-    let journalDir = os.tmpdir() + "/_jbfiles";
-    if (fs.existsSync(journalDir))
-        fse.removeSync(journalDir + "/data.json");
-    else
-        fs.mkdirSync(journalDir);
-
-    async.waterfall([
-        (callback) => {
-            // Write the JSON file
-            $("#save-status").html("Writing data (1/4)");
-            fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
-        },
-        (callback) => {
-            // Add the images now
-            $("#save-status").html("Adding images (2/4)");
-            if (fs.existsSync(os.tmpdir() + "/_jbimages"))
-                fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
-            else
-                callback(null);
-        },
-        (callback) => {
-            // Create the .tar.gz
-            $("#save-status").html("Compressing (3/4)");
-            archiveUtils.compress(journalDir, (err, tmpPath) => {
-                if (err) callback(err);
-                callback(null, tmpPath);
-            });
-        },
-        (tmpPath, callback) => {
-            // Encrypt the file
-            $("#save-status").html("Encrypting (4/4)");
-            encryptFile(tmpPath, filename, pwd, callback);
-        },
-        (callback) => {
-            // Display success message
-            $("#save-status").html("");
-            alertify.success("Successfully saved!");
-            callback(null);
+    console.log("[SAVE] Save button clicked");
+    try {
+        const result = await dialog.showSaveDialog({
+            filters: [
+                { name: "JournalBear 5.1 Document", extensions: ["zjournal"] }
+            ]
+        });
+        
+        console.log("[SAVE] Dialog result:", result);
+        
+        if (result.canceled || !result.filePath) {
+            console.log("[SAVE] Save canceled");
+            return;
         }
-    ], (err) => {
-        if (err) console.log(err);
-    });
+        
+        const filename = result.filePath;
+        console.log("[SAVE] Save path:", filename);
+
+        journalEntries.version = VERSION_NUMBER;
+        let journalDir = os.tmpdir() + "/_jbfiles";
+        console.log("[SAVE] Journal directory:", journalDir);
+        
+        if (fs.existsSync(journalDir))
+            fse.removeSync(journalDir + "/data.json");
+        else
+            fs.mkdirSync(journalDir);
+
+        async.waterfall([
+            (callback) => {
+                // Write the JSON file
+                console.log("[SAVE] Step 1: Writing data...");
+                $("#save-status").html("Writing data (1/4)");
+                fs.writeFile(journalDir + "/data.json", JSON.stringify(journalEntries), callback);
+            },
+            (callback) => {
+                // Add the images now
+                console.log("[SAVE] Step 2: Adding images...");
+                $("#save-status").html("Adding images (2/4)");
+                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
+                    fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
+                else
+                    callback(null);
+            },
+            (callback) => {
+                // Create the .tar.gz
+                console.log("[SAVE] Step 3: Compressing...");
+                $("#save-status").html("Compressing (3/4)");
+                archiveUtils.compress(journalDir, (err, tmpPath) => {
+                    if (err) {
+                        console.error("[SAVE] Compression error:", err);
+                        callback(err);
+                    } else {
+                        console.log("[SAVE] Compressed to:", tmpPath);
+                        callback(null, tmpPath);
+                    }
+                });
+            },
+            (tmpPath, callback) => {
+                // Encrypt the file
+                console.log("[SAVE] Step 4: Encrypting...");
+                $("#save-status").html("Encrypting (4/4)");
+                encryptFile(tmpPath, filename, pwd, callback);
+            },
+            (callback) => {
+                // Display success message
+                console.log("[SAVE] Save complete!");
+                $("#save-status").html("");
+                alertify.success("Successfully saved!");
+                callback(null);
+            }
+        ], (err) => {
+            if (err) {
+                console.error("[SAVE] Error in waterfall:", err);
+                alertify.error("Failed to save: " + err.message);
+            }
+        });
+    } catch (error) {
+        console.error("[SAVE] Error in save:", error);
+        alertify.error("Failed to save file: " + error.message);
+    }
 });
 
 $("#export").click(async () => {
-    const result = await dialog.showSaveDialog({
-        filters: [
-            { name: "HTML Page", extensions: ["html"] }
-        ]
-    });
-    
-    if (result.canceled || !result.filePath) return;
-    
-    const filename = result.filePath;
+    console.log("[EXPORT] Export button clicked");
+    try {
+        const result = await dialog.showSaveDialog({
+            filters: [
+                { name: "HTML Page", extensions: ["html"] }
+            ]
+        });
+        
+        if (result.canceled || !result.filePath) {
+            console.log("[EXPORT] Export canceled");
+            return;
+        }
+        
+        const filename = result.filePath;
+        console.log("[EXPORT] Export to:", filename);
 
-    let journalDir = os.tmpdir() + "/_jbfiles";
+        let journalDir = os.tmpdir() + "/_jbfiles";
+        console.log("[EXPORT] Journal directory:", journalDir);
 
-    // Obtain the directory to save to
-    let path = filename.split("/");
-    path.pop();
-    path = path.join("/");
+        // Obtain the directory to save to
+        let exportPath = filename.split("/");
+        exportPath.pop();
+        exportPath = exportPath.join("/");
+        console.log("[EXPORT] Export directory:", exportPath);
 
-    // Start by moving the images
-    if (fse.existsSync(path + "/_jbimages"))
-        rimraf.sync(path + "/_jbimages");
-    fse.moveSync(journalDir + "/images", path + "/_jbimages");
+        // Start by moving the images if they exist
+        const imagesSourcePath = journalDir + "/images";
+        const imagesDestPath = exportPath + "/_jbimages";
+        
+        console.log("[EXPORT] Checking for images at:", imagesSourcePath);
+        
+        if (fse.existsSync(imagesDestPath)) {
+            console.log("[EXPORT] Removing existing images directory");
+            rimraf.sync(imagesDestPath);
+        }
+        
+        if (fse.existsSync(imagesSourcePath)) {
+            console.log("[EXPORT] Moving images from", imagesSourcePath, "to", imagesDestPath);
+            fse.copySync(imagesSourcePath, imagesDestPath);
+        } else {
+            console.log("[EXPORT] No images directory found, skipping");
+        }
 
-    // HTML code
-    element = $("<div />");
+        // HTML code
+        let element = $("<div />");
 
-    // Create the HTML code necessary
-    for (let entry of journalEntries.en) {
-        let entry = journalEntries.en[0];
-        let entryHTML = getContentHtml(entry);
-        element.append(entryHTML);
+        // Create the HTML code necessary
+        console.log("[EXPORT] Creating HTML for", journalEntries.en.length, "entries");
+        for (let entry of journalEntries.en) {
+            let entryHTML = getContentHtml(entry);
+            element.append(entryHTML);
 
-        // Some older versions had 'Attachment' as the key.
-        let attachment = entry.attachment || entry.Attachment;
-        let attachmentElement = getAttachmentHtml(attachment, path);
-        element.append(attachmentElement);
+            // Some older versions had 'Attachment' as the key.
+            let attachment = entry.attachment || entry.Attachment;
+            let attachmentElement = getAttachmentHtml(attachment, exportPath);
+            element.append(attachmentElement);
+        }
+
+        // Write out the HTML
+        let html = element.prop("outerHTML");
+        console.log("[EXPORT] Writing HTML file, length:", html.length);
+        fs.writeFileSync(filename, html);
+        console.log("[EXPORT] Export complete!");
+        alertify.success("Successfully exported!");
+    } catch (error) {
+        console.error("[EXPORT] Export error:", error);
+        alertify.error("Failed to export: " + error.message);
     }
-
-    // Write out the HTML
-    let html = element.prop("outerHTML");
-    fs.writeFileSync(filename, html);
 });
 
 $("#newJournal").click(() => {
@@ -521,8 +594,27 @@ $("#newEntry").click(() => {
 });
 
 $("#updateEntry").click(() => {
+    console.log("[UPDATE] Update entry clicked");
     if (!journalEntries) {
         Metro.dialog.open(document.getElementById("errDialog"));
+        return;
+    }
+
+    let dateString = $("#content :nth-child(1) :nth-child(1)").text().split("\n")[0];
+    console.log("[UPDATE] Date string from content:", dateString);
+
+    let date = new Date(dateString);
+    console.log("[UPDATE] Parsed date:", date);
+    
+    let entry = journalEntries.en.find((entry) => {
+        return moment(date).isSame(new Date(entry.entryDate), "day");
+    });
+    
+    console.log("[UPDATE] Found entry:", entry);
+
+    if (!entry) {
+        console.error("[UPDATE] Could not find entry for date:", date);
+        alertify.error("Could not find the entry to update. Please select an entry first.");
         return;
     }
 
@@ -534,15 +626,8 @@ $("#updateEntry").click(() => {
     // Disallow changes to the attachment
     $("#attachmentInput").css("display", "none");
 
-    let dateString = $("#content :nth-child(1) :nth-child(1)").text().split("\n")[0];
-
-    let date = new Date(dateString);
-    let entry = journalEntries.en.find((entry) => {
-        return moment(date).isSame(new Date(entry.entryDate), "day");
-    });
-
     $("#date").val(moment(date).format("YYYY-M-D"));
-    $("select").val(entry.sentiment);
+    $("#entrySentiment").val(entry.sentiment);
     $("#entryTextarea").val(entry.content);
 });
 
@@ -554,9 +639,12 @@ $("#search").click(() => {
 
 // Search button click handler
 $("#searchButton").click(() => {
+    console.log("[SEARCH] Search button clicked");
     let hasAttachment = $("#hasAttachment").prop("checked");
     let query = $("#searchQuery").val();
     let sentiment = $("#searchSentiment").val();
+    
+    console.log("[SEARCH] Search params:", { hasAttachment, query, sentiment });
 
     Metro.dialog.close(document.getElementById("searchDialog"));
 
@@ -568,9 +656,41 @@ $("#searchButton").click(() => {
     let queryResults = [], html = "", resultCount = 0;
     for (let i = 0; i < journalEntries.en.length; ++i) {
         let entry = journalEntries.en[i];
-        if (new RegExp(query).test(entry.content) && 
-            (entry.sentiment == sentiment) &&
-            ((entry.attachment || entry.Attachment) == hasAttachment)) {
+        
+        // Check each condition - only apply if user specified it
+        let contentMatches = true;
+        if (query && query.trim() !== "") {
+            contentMatches = new RegExp(query, 'i').test(entry.content); // case insensitive
+        }
+        
+        let sentimentMatches = true;
+        if (sentiment && sentiment.trim() !== "") {
+            sentimentMatches = entry.sentiment == sentiment;
+        }
+        
+        let attachmentMatches = true;
+        if (hasAttachment) {
+            // Only filter by attachment if checkbox is checked
+            let attachment = entry.attachment || entry.Attachment;
+            console.log("[SEARCH] Entry", i, "attachment:", attachment, "type:", typeof attachment, "is array:", Array.isArray(attachment));
+            
+            // Check if attachment exists AND is not empty
+            let hasAttachmentInEntry = false;
+            if (attachment) {
+                if (Array.isArray(attachment)) {
+                    hasAttachmentInEntry = attachment.length > 0;
+                } else {
+                    hasAttachmentInEntry = true; // Non-array truthy value means has attachment
+                }
+            }
+            
+            attachmentMatches = hasAttachmentInEntry;
+            console.log("[SEARCH] Entry", i, "hasAttachmentInEntry:", hasAttachmentInEntry);
+        }
+        
+        console.log("[SEARCH] Entry", i, ":", { contentMatches, sentimentMatches, attachmentMatches });
+        
+        if (contentMatches && sentimentMatches && attachmentMatches) {
             queryResults.push(journalEntries.en[i]);
 
             html += "<div class='queryResult' id='" + resultCount + "'><b>";
@@ -581,6 +701,8 @@ $("#searchButton").click(() => {
             resultCount += 1;
         }
     }
+    
+    console.log("[SEARCH] Found", resultCount, "results");
     $("#list").html(html);
     $(".queryResult").click((e) => {
         onEntryClicked(e, queryResults);
@@ -606,6 +728,7 @@ $("#searchButton").click(() => {
 
 // Statistics click handler
 $("#sentimentAnalysis").click(() => {
+    console.log("[STATS] Statistics button clicked");
     Metro.dialog.open(document.getElementById("sentimentDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 
@@ -614,13 +737,19 @@ $("#sentimentAnalysis").click(() => {
     let entries = journalEntries.en;
     let years = entries.map(x => moment(x.entryDate).year());
     let uniqueYears = [...new Set(years)].sort().reverse();
+    
+    // Clear existing options first (except "All")
+    $("#sentimentYearsSelect option:not(:first)").remove();
+    
     for (let year of uniqueYears)
         $("#sentimentYearsSelect").append(`<option>${year}</option>`);
 
     // Show the total entry count
     $("#totalEntriesCount").html(entries.length);
 
-    percentages = getEmotionPercentages();
+    let percentages = getEmotionPercentages();
+    console.log("[STATS] Emotion percentages:", percentages);
+    
     currentChart = new Chart(document.getElementById("sentimentRatioChart"), {
         type: "pie",
         data: {
@@ -789,38 +918,55 @@ $("#cancelNewJournal").click(() => {
 
 // Handle clicking Decrypt button
 $("#decryptJournal").click(() => {
+    console.log("[DECRYPT] Decrypt button clicked");
     pwd = $("#unlock").val();
+    console.log("[DECRYPT] Password length:", pwd.length);
+    console.log("[DECRYPT] Current file version:", currentFileVersion);
+    
     if (currentFileVersion == 5.1) {
         // Handle the newer file version.
         let tmp = os.tmpdir();
+        console.log("[DECRYPT] Temp directory:", tmp);
+        console.log("[DECRYPT] Current file path:", currentFilePath);
+        
         async.waterfall([
             (callback) => {
                 // Decrypt the file
+                console.log("[DECRYPT] Step 1: Decrypting file...");
                 $("#save-status").html("Decrypting file (1/3)");
                 decryptFile(currentFilePath, tmp + "/_jb.tar.gz", pwd, callback);
             },
             (callback) => {
                 // Extract the archive
+                console.log("[DECRYPT] Step 2: Decompressing...");
                 $("#save-status").html("Decompressing contents (2/3)");
                 archiveUtils.decompress(tmp + "/_jb.tar.gz", callback);
             },
             (callback) => {
                 // Read the file
+                console.log("[DECRYPT] Step 3: Reading contents...");
                 $("#save-status").html("Reading contents (3/3)");
                 fs.readFile(tmp + "/_jbfiles/data.json", (err, data) => {
-                    if (err) throw err;
+                    if (err) {
+                        console.error("[DECRYPT] Error reading data.json:", err);
+                        throw err;
+                    }
+                    console.log("[DECRYPT] Data read successfully, length:", data.length);
                     callback(null, data);
                 });
             },
             (data, callback) => {
+                console.log("[DECRYPT] Step 4: Showing data...");
                 journalEntries = data;
                 showData(data);
                 Metro.dialog.close(document.getElementById("decryptDialog"));
                 $("#save-status").html("");
+                console.log("[DECRYPT] Decryption complete!");
                 callback(null);
             }
         ], (err) => {
             if (err) {
+                console.error("[DECRYPT] Error in waterfall:", err);
                 $("#prompt").text("Wrong password. Try again.");
                 setInterval(() => {
                     $("#prompt").text("");
@@ -829,14 +975,18 @@ $("#decryptJournal").click(() => {
         });
     } else {
         // Legacy 5.0 support
+        console.log("[DECRYPT] Processing legacy 5.0 file");
         let data;
         if ((data = getDecryptedText(encryptedData, pwd))) {
             // Successful
+            console.log("[DECRYPT] Legacy decryption successful");
             showData(data);
             Metro.dialog.close(document.getElementById("decryptDialog"));
 
             if (data.version > VERSION_NUMBER)
                 alertify.error("This journal is from a newer version. Some features may not work correctly.");
+        } else {
+            console.log("[DECRYPT] Legacy decryption failed");
         }
     }
 });

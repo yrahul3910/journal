@@ -1,14 +1,21 @@
-const { app, BrowserWindow } = require("electron");
-const { rimraf } = require("rimraf");
-const os = require("os");
-const path = require("path");
-const url = require("url");
+import { app, BrowserWindow } from "electron";
+import { rimraf } from "rimraf";
+import os from "os";
+import path from "path";
+import url from "url";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import { initialize, enable } from "@electron/remote/main/index.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Keep a global reference of the window object, if you don"t, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 
 function createWindow() {
+    console.log("[MAIN] Creating window...");
     // Create the browser window.
     win = new BrowserWindow({ 
         width: 800, 
@@ -21,15 +28,18 @@ function createWindow() {
             enableRemoteModule: true
         }
     });
-    //win.webContents.openDevTools();
+    win.webContents.openDevTools();
     
     // Enable @electron/remote
-    require("@electron/remote/main").initialize();
-    require("@electron/remote/main").enable(win.webContents);
+    console.log("[MAIN] Initializing remote module...");
+    initialize();
+    enable(win.webContents);
     
     // and load the index.html of the app.
+    const indexPath = path.join(__dirname, "index.html");
+    console.log("[MAIN] Loading index.html from:", indexPath);
     win.loadURL(url.format({
-        pathname: path.join(__dirname, "index.html"),
+        pathname: indexPath,
         protocol: "file:",
         slashes: true,
     }));
@@ -38,13 +48,16 @@ function createWindow() {
     win.setMaximizable(false);
     win.setResizable(false);
 
-    win.webContents.setWindowOpenHandler(({ url }) => {
-        require("electron").shell.openExternal(url);
+    win.webContents.setWindowOpenHandler(async ({ url: externalUrl }) => {
+        console.log("[MAIN] Opening external URL:", externalUrl);
+        const { shell } = await import("electron");
+        shell.openExternal(externalUrl);
         return { action: "deny" };
     });
 
     // Emitted when the window is closed.
     win.on("closed", () => {
+        console.log("[MAIN] Window closed");
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
@@ -56,13 +69,20 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
+    console.log("[MAIN] App ready");
     createWindow();
 
     // Perform cleanup after the user can see the window
     let tmp = os.tmpdir();
-    rimraf.sync(tmp + "/_jbimages");
-    rimraf.sync(tmp + "/_jbfiles");
-    rimraf.sync(tmp + "/_jb.tar.gz");
+    console.log("[MAIN] Cleaning up temp directory:", tmp);
+    try {
+        rimraf.sync(tmp + "/_jbimages");
+        rimraf.sync(tmp + "/_jbfiles");
+        rimraf.sync(tmp + "/_jb.tar.gz");
+        console.log("[MAIN] Cleanup complete");
+    } catch (err) {
+        console.error("[MAIN] Cleanup error:", err);
+    }
 });
 
 // Quit when all windows are closed.
