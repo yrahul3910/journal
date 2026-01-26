@@ -448,10 +448,14 @@ $("#save").click(async () => {
                 // Add the images now
                 console.log("[SAVE] Step 2: Adding images...");
                 $("#save-status").html("Adding images (2/4)");
-                if (fs.existsSync(os.tmpdir() + "/_jbimages"))
-                    fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images", callback);
-                else
+                if (fs.existsSync(os.tmpdir() + "/_jbimages")) {
+                    // fs-extra's copy returns a promise in newer versions, wrap it for callback
+                    fse.copy(os.tmpdir() + "/_jbimages", journalDir + "/images")
+                        .then(() => callback(null))
+                        .catch(callback);
+                } else {
                     callback(null);
+                }
             },
             (callback) => {
                 // Create the .tar.gz
@@ -1006,20 +1010,49 @@ $("#aboutButton").click(() => {
 
 // Attachment file input handler
 $("#selectFile").on("change", () => {
+    console.log("[ATTACHMENT] File input changed");
     let { files } = $("#selectFile")[0];
+    console.log("[ATTACHMENT] Number of files:", files.length);
+    
     for (let i = 0; i < files.length; ++i) {
+        console.log("[ATTACHMENT] Processing file", i, ":", files[i].name);
+        console.log("[ATTACHMENT] File object:", files[i]);
+        console.log("[ATTACHMENT] File path property:", files[i].path);
+        
+        // Get the file extension from the name
+        let ext = path.extname(files[i].name);
+        console.log("[ATTACHMENT] Extension:", ext);
+        
         // Get the new filename
         let newFilename = new Date().valueOf().toString();
-        newFilename += ("_" + i.toString() + path.extname(files[i].path));
+        newFilename += ("_" + i.toString() + ext);
+        console.log("[ATTACHMENT] New filename:", newFilename);
 
         // Get the new path
         let dir = os.tmpdir() + "/_jbimages";
-        if (!fs.existsSync(dir))
+        if (!fs.existsSync(dir)) {
+            console.log("[ATTACHMENT] Creating directory:", dir);
             fs.mkdirSync(dir);
+        }
 
         // Move the file to the right place
         try {
-            fs.createReadStream(files[i].path).pipe(fs.createWriteStream(dir + "/" + newFilename));
+            // In Electron, we can use the path property if available, otherwise we need to handle it differently
+            if (files[i].path) {
+                // Electron with nodeIntegration provides the path
+                console.log("[ATTACHMENT] Using file.path:", files[i].path);
+                fs.createReadStream(files[i].path).pipe(fs.createWriteStream(dir + "/" + newFilename));
+            } else {
+                // Fallback: read the file as buffer and write it
+                console.log("[ATTACHMENT] Using FileReader fallback");
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const buffer = Buffer.from(e.target.result);
+                    fs.writeFileSync(dir + "/" + newFilename, buffer);
+                    console.log("[ATTACHMENT] File written via FileReader:", newFilename);
+                };
+                reader.readAsArrayBuffer(files[i]);
+            }
 
             /* This whole _jbimages folder will later be copied to the _jbfiles directory,
             so we need to actually store a path to the image in the encodedImages (now a
@@ -1033,7 +1066,10 @@ $("#selectFile").on("change", () => {
 
             // Add to the array of attachments
             encodedImages.push(finalPath);
+            console.log("[ATTACHMENT] Added to encodedImages:", finalPath);
+            console.log("[ATTACHMENT] Total attachments:", encodedImages.length);
         } catch (ex) {
+            console.error("[ATTACHMENT] Error adding attachment:", ex);
             alertify.error("We couldn't add your attachments.");
         }
     }
