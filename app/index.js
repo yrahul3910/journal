@@ -18,8 +18,10 @@ function createWindow() {
     console.log("[MAIN] Creating window...");
     // Create the browser window.
     win = new BrowserWindow({ 
-        width: 800, 
-        height: 660, 
+        width: 1000, 
+        height: 700,
+        minWidth: 800,
+        minHeight: 600,
         frame: false, 
         icon: __dirname + "/../build/logo.png",
         webPreferences: {
@@ -28,7 +30,6 @@ function createWindow() {
             enableRemoteModule: true
         }
     });
-    win.webContents.openDevTools();
     
     // Enable @electron/remote
     console.log("[MAIN] Initializing remote module...");
@@ -45,8 +46,8 @@ function createWindow() {
     }));
     win.setTitle("JournalBear");
     win.setMenu(null);
-    win.setMaximizable(false);
-    win.setResizable(false);
+    win.setMaximizable(true);
+    win.setResizable(true);
 
     win.webContents.setWindowOpenHandler(async ({ url: externalUrl }) => {
         console.log("[MAIN] Opening external URL:", externalUrl);

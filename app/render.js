@@ -317,6 +317,14 @@ $("#minimize").click(() => {
     window.minimize();
 });
 
+$("#maximize").click(() => {
+    if (window.isMaximized()) {
+        window.unmaximize();
+    } else {
+        window.maximize();
+    }
+});
+
 $("#close").click(() => {
     window.close();
 });

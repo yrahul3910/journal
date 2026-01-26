@@ -66,7 +66,9 @@ a.dropdown-toggle::after {
 }
 
 img {
-    max-width: 90%;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
 }
 
 img.emoji {
@@ -116,7 +118,7 @@ div[data-role="appbar"] {
     font-size: 16px;
 }
 
-#minimize:hover {
+#minimize:hover, #maximize:hover {
     background-color: rgb(230, 230, 230);
 }
 
@@ -131,6 +133,7 @@ div[data-role="appbar"] {
 
 #journal-mode {
   height: calc(100vh - 90px);
+  width: 100%;
 }
 
 #journal-mode .cell {
@@ -140,6 +143,25 @@ div[data-role="appbar"] {
   height: 100%;
   padding: 0 20px !important;
   max-height: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+#content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px 0;
+}
+
+#content p, #content div {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+#list .entry, #list .queryResult {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 #datepicker {
@@ -188,6 +210,7 @@ div[data-role="appbar"] {
 
 .dialog {
   width: 600px !important;
+  max-width: 90vw !important;
 }
 
 .modern {
@@ -215,8 +238,9 @@ input[type="text"], input[type="password"] {
 
 #welcome-page {
     margin-left: -15px;
-    width: 100vw;
+    width: 100%;
     height: calc(100vh - 50px);
+    overflow-y: auto;
 }
 
 .welcome-page-title {
