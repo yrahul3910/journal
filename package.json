@@ -49,11 +49,13 @@
     "electron-builder": "^26.5.0"
   },
   "scripts": {
-    "postinstall": "install-app-deps",
+    "postinstall": "electron-builder install-app-deps",
     "start": "electron app/index.js",
-    "pack": "build --dir",
+    "pack": "electron-builder --dir",
     "dist": "electron-builder --x64",
     "dist-mac": "electron-builder --x64 -m",
-    "ship": "build -p always"
+    "dist-linux": "electron-builder --x64 -l",
+    "dist-win": "electron-builder --x64 -w",
+    "ship": "electron-builder -p always"
   }
 }
