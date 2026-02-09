@@ -211,8 +211,22 @@
                 <!-- Attachments and NSFW -->
                 <div class="form-row">
                     <div class="form-field" id="attachmentInput">
-                        <label for="selectFile">Add photos</label>
-                        <input type="file" data-role="file" data-mode="drop" id="selectFile" accept="image/*" multiple>
+                        <label>Add photos</label>
+                        <div class="file-drop-zone" id="fileDropZone">
+                            <input type="file" id="selectFile" accept="image/*" multiple style="display: none;">
+                            <div class="drop-zone-content">
+                                <svg class="drop-zone-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <p class="drop-zone-text">
+                                    <span class="drop-zone-highlight">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="drop-zone-hint">PNG, JPG, WEBP, AVIF, APNG, GIF</p>
+                            </div>
+                            <div class="file-list" id="fileList"></div>
+                        </div>
                     </div>
                     <div class="form-field nsfw-field">
                         <label>&nbsp;</label>

@@ -48,6 +48,7 @@ function createWindow() {
     win.setMenu(null);
     win.setMaximizable(true);
     win.setResizable(true);
+    win.openDevTools();
 
     win.webContents.setWindowOpenHandler(async ({ url: externalUrl }) => {
         console.log("[MAIN] Opening external URL:", externalUrl);

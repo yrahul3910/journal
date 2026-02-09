@@ -951,15 +951,21 @@ $("#addEntry").click(() => {
     $("#entryTextarea").val("");
     $("#selectFile").val("");
     $("#add-nsfw-label").removeClass("active");
-    $("#addEntryError").hide()
+    $("#addEntryError").hide();
     encodedImages = [];
+    selectedFiles = [];
+    updateFileList();
 });
 
 $("#cancelEntry").click(() => {
     Metro.dialog.close(document.getElementById("editDialog"));
     $("#entryTextarea").val("");
     $("#add-nsfw-label").removeClass("active");
-    $("#addEntryError").hide()
+    $("#addEntryError").hide();
+    $("#selectFile").val("");
+    encodedImages = [];
+    selectedFiles = [];
+    updateFileList();
 });
 
 // Handle Enter key on unlock dialog
@@ -1100,21 +1106,20 @@ $("#aboutButton").click(() => {
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
 });
 
-// Attachment file input handler
-$("#selectFile").on("change", () => {
-    console.log("[ATTACHMENT] File input changed");
-    let { files } = $("#selectFile")[0];
-    console.log("[ATTACHMENT] Number of files:", files.length);
-    
+// Custom file drop zone handlers
+let selectedFiles = [];
+
+const processFiles = (files) => {
+    console.log("[ATTACHMENT] Processing files, count:", files.length);
+
     for (let i = 0; i < files.length; ++i) {
-        console.log("[ATTACHMENT] Processing file", i, ":", files[i].name);
-        console.log("[ATTACHMENT] File object:", files[i]);
-        console.log("[ATTACHMENT] File path property:", files[i].path);
-        
+        const file = files[i];
+        console.log("[ATTACHMENT] Processing file", i, ":", file.name);
+
         // Get the file extension from the name
-        let ext = path.extname(files[i].name);
+        let ext = path.extname(file.name);
         console.log("[ATTACHMENT] Extension:", ext);
-        
+
         // Get the new filename
         let newFilename = new Date().valueOf().toString();
         newFilename += ("_" + i.toString() + ext);
@@ -1129,13 +1134,10 @@ $("#selectFile").on("change", () => {
 
         // Move the file to the right place
         try {
-            // In Electron, we can use the path property if available, otherwise we need to handle it differently
-            if (files[i].path) {
-                // Electron with nodeIntegration provides the path
-                console.log("[ATTACHMENT] Using file.path:", files[i].path);
-                fs.createReadStream(files[i].path).pipe(fs.createWriteStream(dir + "/" + newFilename));
+            if (file.path) {
+                console.log("[ATTACHMENT] Using file.path:", file.path);
+                fs.createReadStream(file.path).pipe(fs.createWriteStream(dir + "/" + newFilename));
             } else {
-                // Fallback: read the file as buffer and write it
                 console.log("[ATTACHMENT] Using FileReader fallback");
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -1143,27 +1145,95 @@ $("#selectFile").on("change", () => {
                     fs.writeFileSync(dir + "/" + newFilename, buffer);
                     console.log("[ATTACHMENT] File written via FileReader:", newFilename);
                 };
-                reader.readAsArrayBuffer(files[i]);
+                reader.readAsArrayBuffer(file);
             }
 
-            /* This whole _jbimages folder will later be copied to the _jbfiles directory,
-            so we need to actually store a path to the image in the encodedImages (now a
-            misnomer) array. Unfortunately, we can't use relative paths, since . refers to
-            the current executable's path and not the temp path.
-
-            Update: Fuck that, we need it to work cross-platform, store relative paths.
-            Note that . here should be replaced by os.tmpdir() and then it'll work
-            alright. */
             let finalPath = "./_jbfiles/images/" + newFilename;
-
-            // Add to the array of attachments
             encodedImages.push(finalPath);
+            selectedFiles.push({ name: file.name, path: finalPath });
+
             console.log("[ATTACHMENT] Added to encodedImages:", finalPath);
             console.log("[ATTACHMENT] Total attachments:", encodedImages.length);
         } catch (ex) {
             console.error("[ATTACHMENT] Error adding attachment:", ex);
             alertify.error("We couldn't add your attachments.");
         }
+    }
+
+    updateFileList();
+};
+
+const updateFileList = () => {
+    const fileList = $("#fileList");
+    const dropZoneContent = $(".drop-zone-content");
+    fileList.empty();
+
+    if (selectedFiles.length === 0) {
+        dropZoneContent.show();
+        return;
+    }
+
+    dropZoneContent.hide();
+
+    selectedFiles.forEach((file, index) => {
+        const fileItem = $(`
+            <div class="file-item">
+                <span class="file-item-name">${file.name}</span>
+                <button type="button" class="file-item-remove" data-index="${index}">&times;</button>
+            </div>
+        `);
+        fileList.append(fileItem);
+    });
+
+    // Add remove handlers
+    $(".file-item-remove").on("click", function(e) {
+        e.stopPropagation();
+        const index = parseInt($(this).data("index"));
+        selectedFiles.splice(index, 1);
+        encodedImages.splice(index, 1);
+        updateFileList();
+    });
+};
+
+// Click to upload
+$("#fileDropZone").on("click", (e) => {
+    // Don't trigger if clicking on file input itself or remove buttons
+    if ($(e.target).is("#selectFile") || $(e.target).hasClass("file-item-remove")) {
+        return;
+    }
+    e.stopPropagation();
+    $("#selectFile")[0].click(); // Use native click instead of jQuery trigger
+});
+
+// File input change
+$("#selectFile").on("change", (e) => {
+    const files = e.target.files;
+    if (files.length > 0) {
+        processFiles(files);
+    }
+});
+
+// Drag and drop handlers
+$("#fileDropZone").on("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    $("#fileDropZone").addClass("drag-over");
+});
+
+$("#fileDropZone").on("dragleave", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    $("#fileDropZone").removeClass("drag-over");
+});
+
+$("#fileDropZone").on("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    $("#fileDropZone").removeClass("drag-over");
+
+    const files = e.originalEvent.dataTransfer.files;
+    if (files.length > 0) {
+        processFiles(files);
     }
 });
 
