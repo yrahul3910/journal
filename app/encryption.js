@@ -2,18 +2,15 @@ import crypto from "crypto";
 import fs from "fs";
 import owasp from "owasp-password-strength-test";
 
-// Encryption algorithm - using aes-256-cbc for modern Node.js
 const algorithm = "aes-256-cbc";
 const SALT_LENGTH = 16;
 const IV_LENGTH = 16;
 const KEY_LENGTH = 32;
 
-// Helper function to derive key from password
 const deriveKey = (password, salt) => {
     return crypto.pbkdf2Sync(password, salt, 100000, KEY_LENGTH, "sha256");
 };
 
-// Wrapper functions for encryption (updated for modern crypto API)
 export const getEncryptedText = (text, pwd) => {
     const salt = crypto.randomBytes(SALT_LENGTH);
     const iv = crypto.randomBytes(IV_LENGTH);

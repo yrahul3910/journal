@@ -145,76 +145,82 @@
         <div class="dialog-title">New Entry</div>
         <div class="dialog-content">
             <div id="addEntryError"></div>
-            <div data-role="wizard">
-                <section>
-                    <div class="page-content flex-grid">
-                        <div class="row">
-                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                                <p style="margin-top: 0.7rem">Date</p>
-                            </div>
-                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                                <input id="date" type="text" class="datepicker" />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                                <p style="margin-top: 0.7rem">Choose a mood!</p>
-                            </div>
-                            <div class="cell colspan6" style="overflow: hidden; border-right: 0">
-                                <select id="entrySentiment" style="width: 83%">
-                                    <option>Happy</option>
-                                    <option>Sad</option>
-                                    <option>Angry</option>
-                                    <option>Loved</option>
-                                    <option>Excited</option>
-                                    <option>Neutral</option>
-                                </select>
-                            </div>
-                        </div>
+
+            <!-- Single form layout -->
+            <div class="entry-form">
+                <!-- Date and Mood Row -->
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="date">Date</label>
+                        <input id="date" type="text" class="datepicker" />
                     </div>
-                </section>
-                <section>
-                    <div class="page-content flex-grid">
-                        <div class="row" style="padding: 10px">
-                            <span>JournalBear uses Markdown for formatting. Use *asterisks* for <em>italics</em>,
-                                and **double asterisks** for <b>bold</b></span>
-                        </div>
-                        <textarea id="entryTextarea" rows="13" style="margin-bottom: 10px"></textarea>
-                        <div style="display: flex" id="emoji-picker" style="margin-top: 10px;">
-                            <ul class="tabs" data-role="materialtabs" style="max-width: 470px">
-                                <li><a href="#activity">Activity</a></li>
-                                <li><a href="#faces-reactions">Faces, Reactions</a></li>
-                                <li><a href="#food-drink">Food, Drink</a></li>
-                                <li><a href="#nature-emojis">Nature</a></li>
-                                <li><a href="#object-emojis">Objects</a></li>
-                                <li><a href="#symbols-flags">Symbols, Flags</a></li>
-                                <li><a href="#travel-emojis">Travel</a></li>
-                                <li><a href="#other-emoji">Other</a></li>
-                            </ul>
-                            <div class="targets">
-                                <div id="activity"></div>
-                                <div id="faces-reactions"></div>
-                                <div id="food-drink"></div>
-                                <div id="nature-emojis"></div>
-                                <div id="object-emojis"></div>
-                                <div id="symbols-flags"></div>
-                                <div id="travel-emojis"></div>
-                                <div id="other-emoji"></div>
-                            </div>
-                        </div>
-                        <div id="emoji-toggle">
-                            <img class="emoji" id="emoji-toggle-img" src="../emoji/smile.png" />
-                        </div>
+                    <div class="form-field">
+                        <label for="entrySentiment">How are you feeling?</label>
+                        <select id="entrySentiment">
+                            <option>Happy</option>
+                            <option>Sad</option>
+                            <option>Angry</option>
+                            <option>Loved</option>
+                            <option>Excited</option>
+                            <option>Neutral</option>
+                        </select>
                     </div>
-                </section>
-                <section>
-                    <div class="page-content flex-grid">
-                        <div id="attachmentInput">
-                            <input type="file" data-role="file" data-mode="drop" id="selectFile" accept="image/*">
-                        </div>
-                        <p id="add-nsfw-label">NSFW</p>
+                </div>
+
+                <!-- Entry Text -->
+                <div class="form-field">
+                    <label for="entryTextarea">Your entry</label>
+                    <div class="textarea-hint">
+                        Supports Markdown: *italic*, **bold**, [link](url)
                     </div>
-                </section>
+                    <textarea id="entryTextarea" rows="12" placeholder="What's on your mind?"></textarea>
+                </div>
+
+                <!-- Emoji Picker Toggle -->
+                <div class="emoji-toggle-wrapper">
+                    <button type="button" id="emoji-toggle-btn" class="secondary-button">
+                        <img class="emoji" src="../emoji/smile.png" style="width: 18px; height: 18px; vertical-align: middle;" />
+                        Add Emoji
+                    </button>
+                </div>
+
+                <!-- Emoji Picker (Hidden by default) -->
+                <div id="emoji-picker" class="emoji-picker-container" style="display: none;">
+                    <ul class="tabs" data-role="materialtabs">
+                        <li><a href="#activity">Activity</a></li>
+                        <li><a href="#faces-reactions">Faces</a></li>
+                        <li><a href="#food-drink">Food</a></li>
+                        <li><a href="#nature-emojis">Nature</a></li>
+                        <li><a href="#object-emojis">Objects</a></li>
+                        <li><a href="#symbols-flags">Symbols</a></li>
+                        <li><a href="#travel-emojis">Travel</a></li>
+                        <li><a href="#other-emoji">Other</a></li>
+                    </ul>
+                    <div class="targets">
+                        <div id="activity"></div>
+                        <div id="faces-reactions"></div>
+                        <div id="food-drink"></div>
+                        <div id="nature-emojis"></div>
+                        <div id="object-emojis"></div>
+                        <div id="symbols-flags"></div>
+                        <div id="travel-emojis"></div>
+                        <div id="other-emoji"></div>
+                    </div>
+                </div>
+
+                <!-- Attachments and NSFW -->
+                <div class="form-row">
+                    <div class="form-field" id="attachmentInput">
+                        <label for="selectFile">Add photos</label>
+                        <input type="file" data-role="file" data-mode="drop" id="selectFile" accept="image/*" multiple>
+                    </div>
+                    <div class="form-field nsfw-field">
+                        <label>&nbsp;</label>
+                        <button type="button" id="add-nsfw-label" class="nsfw-toggle">
+                            Mark as NSFW
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="dialog-actions">

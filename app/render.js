@@ -381,10 +381,10 @@ $(document).ready(() => {
     injectEmojis("#symbols-flags", "../emoji/Symbols and Flags");
     injectEmojis("#travel-emojis", "../emoji/Travel");
 
-    // Hide the emoji box
-    $("#emoji-picker").slideToggle();
-    $("#emoji-toggle-img").click(() => {
-        $("#emoji-picker").slideToggle();
+    // Emoji picker toggle
+    $("#emoji-toggle-btn").click((e) => {
+        e.preventDefault();
+        $("#emoji-picker").slideToggle(200);
     });
 
     // Initialize theme
@@ -681,6 +681,7 @@ $("#newEntry").click(() => {
     $("#date").val(new Date().toISOString().slice(0, 10));
     Metro.dialog.open(document.getElementById("editDialog"));
     $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+    $("#addEntryError").hide();
 });
 
 $("#updateEntry").click(() => {
@@ -883,7 +884,7 @@ $("#sentimentYearsSelect").change(e => {
 $("#addEntry").click(() => {
     let date = new Date($("#date").val());
     let content = $("#entryTextarea").val();
-    let nsfw = $("p#add-nsfw-label").hasClass("active");
+    let nsfw = $("#add-nsfw-label").hasClass("active");
 
     let isNewEntry; // is it a new entry or an updation?
     if ($("#addEntry").text() === "Add Entry")
@@ -897,6 +898,7 @@ $("#addEntry").click(() => {
             if (date.getTime() === new Date(journalEntries.en[i].entryDate).getTime()) {
                 $("#addEntryError").html(`<span style="color: red">Multiple entries
                 for the same date not allowed.</span>`);
+                $("#addEntryError").show();
                 return;
             }
         }
@@ -948,12 +950,16 @@ $("#addEntry").click(() => {
 
     $("#entryTextarea").val("");
     $("#selectFile").val("");
+    $("#add-nsfw-label").removeClass("active");
+    $("#addEntryError").hide()
     encodedImages = [];
 });
 
 $("#cancelEntry").click(() => {
     Metro.dialog.close(document.getElementById("editDialog"));
     $("#entryTextarea").val("");
+    $("#add-nsfw-label").removeClass("active");
+    $("#addEntryError").hide()
 });
 
 // Handle Enter key on unlock dialog
@@ -1170,6 +1176,7 @@ $("#preview").click(() => {
 });
 
 // Handle "Add NSFW Label" button click
-$("p#add-nsfw-label").click(() => {
-    $("p#add-nsfw-label").toggleClass("active");
+$("#add-nsfw-label").click((e) => {
+    e.preventDefault();
+    $("#add-nsfw-label").toggleClass("active");
 });
