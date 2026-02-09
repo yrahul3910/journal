@@ -912,21 +912,13 @@ $("#addEntry").click(() => {
 
     if (isNewEntry) {
         journalEntries.en.push(newEntry);
-
-        // Show the entry in #list.
-        let html = "";
-        html += "<div class='entry' id='" + currentEntryCount + "'><b>";
-        html += date.toDateString() + "</b><span>  </span><span class='sentiment " +
-            sentiment + "'></span>" + `<span style="color: ${sentiments[sentiment]}; font-size: 12px"> \
-            ${sentiment}</span>`;
-        if (nsfw)
-            html += `<span class="nsfw">NSFW</span>`;
-        html += "<br/><p>";
-        let words = content.split(/\s+/).slice(0, 5).join(" ");
-        html += words + "...</p></div><hr />";
-        $("#list").append(html);
-        allEntriesHTML += html;
         currentEntryCount++;
+
+        // Sort entries by date (most recent first)
+        journalEntries.en.sort((a, b) => new Date(b.entryDate) - new Date(a.entryDate));
+
+        // Re-render the entire list to show the entry in the correct position
+        showData(JSON.stringify(journalEntries));
     } else {
         for (let entry of journalEntries.en) {
             // First find the entry
