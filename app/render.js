@@ -485,9 +485,11 @@ $("#open").click(async () => {
         console.log("[OPEN] Reading file...");
         encryptedData = fs.readFileSync(filenames[0]).toString();
         console.log("[OPEN] File read successfully, length:", encryptedData.length);
-        
+
         Metro.dialog.open(document.getElementById("decryptDialog"));
         $(".dialog-overlay").css("background", "rgba(29, 29, 29, 0.7");
+        // Focus the password input after a brief delay to ensure dialog is fully rendered
+        setTimeout(() => $("#unlock").focus(), 100);
         console.log("[OPEN] Decrypt dialog opened");
     } catch (error) {
         console.error("[OPEN] Error in file open:", error);
