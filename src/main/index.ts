@@ -177,31 +177,54 @@ ipcMain.handle('decrypt-journal', async (_event, args: { filePath: string; passw
                       typeof entry.attachment
                     )
 
-                    // attachment might be a number (count) or an array
-                    const attachmentCount = Array.isArray(entry.attachment)
-                      ? entry.attachment.length
-                      : typeof entry.attachment === 'number'
-                        ? entry.attachment
-                        : 0
-
-                    if (attachmentCount > 0) {
+                    if (Array.isArray(entry.attachment) && entry.attachment.length > 0) {
                       const images: string[] = []
-                      for (let imgIdx = 0; imgIdx < attachmentCount; imgIdx++) {
-                        const filename = `${idx}_${imgIdx}.png`
-                        const imgPath = imagesDir + '/' + filename
-                        console.log(`[DECRYPT] Looking for image: ${imgPath}`)
 
-                        if (fs.existsSync(imgPath)) {
-                          const imgBuffer = fs.readFileSync(imgPath)
-                          const base64 = 'data:image/png;base64,' + imgBuffer.toString('base64')
-                          console.log(
-                            `[DECRYPT] Loaded image ${filename}, size: ${imgBuffer.length} bytes`
-                          )
-                          images.push(base64)
-                        } else {
-                          console.log(`[DECRYPT] Image not found: ${imgPath}`)
+                      // Check if attachment contains paths or is already base64
+                      const firstItem = entry.attachment[0]
+                      if (typeof firstItem === 'string' && firstItem.includes('/_jbfiles/')) {
+                        // It's a path - load the actual files
+                        entry.attachment.forEach((filePath: string) => {
+                          // Convert relative path to absolute
+                          const filename = filePath.split('/').pop() // Get just the filename
+                          const fullPath = tmp + '/_jbfiles/images/' + filename
+                          console.log(`[DECRYPT] Loading image from path: ${fullPath}`)
+
+                          if (fs.existsSync(fullPath)) {
+                            const imgBuffer = fs.readFileSync(fullPath)
+                            // Detect image type from extension
+                            const ext = filename?.split('.').pop()?.toLowerCase()
+                            const mimeType =
+                              ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png'
+                            const base64 = `data:${mimeType};base64,` + imgBuffer.toString('base64')
+                            console.log(
+                              `[DECRYPT] Loaded image ${filename}, size: ${imgBuffer.length} bytes`
+                            )
+                            images.push(base64)
+                          } else {
+                            console.log(`[DECRYPT] Image not found: ${fullPath}`)
+                          }
+                        })
+                      } else if (
+                        typeof entry.attachment === 'number' ||
+                        (Array.isArray(entry.attachment) && typeof entry.attachment[0] === 'number')
+                      ) {
+                        // It's a count - try the old naming pattern
+                        const count =
+                          typeof entry.attachment === 'number'
+                            ? entry.attachment
+                            : entry.attachment.length
+                        for (let imgIdx = 0; imgIdx < count; imgIdx++) {
+                          const filename = `${idx}_${imgIdx}.png`
+                          const imgPath = imagesDir + '/' + filename
+                          if (fs.existsSync(imgPath)) {
+                            const imgBuffer = fs.readFileSync(imgPath)
+                            const base64 = 'data:image/png;base64,' + imgBuffer.toString('base64')
+                            images.push(base64)
+                          }
                         }
                       }
+
                       console.log(`[DECRYPT] Entry ${idx} loaded ${images.length} images`)
                       entry.attachment = images
                     }
