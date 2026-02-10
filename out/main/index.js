@@ -385,13 +385,14 @@ ipcMain.handle("save-journal", async (_event, args) => {
     await rimraf(tmp + "/_jb.tar.gz");
     fs.mkdirSync(tmp + "/_jbfiles", { recursive: true });
     fs.mkdirSync(tmp + "/_jbimages", { recursive: true });
-    fs.writeFileSync(tmp + "/_jbfiles/journal.json", JSON.stringify(journalData));
+    fs.writeFileSync(tmp + "/_jbfiles/data.json", JSON.stringify(journalData));
+    fs.mkdirSync(tmp + "/_jbfiles/images", { recursive: true });
     journalData.en.forEach((entry, idx) => {
       if (entry.attachment && entry.attachment.length > 0) {
         entry.attachment.forEach((img, imgIdx) => {
           const filename = `${idx}_${imgIdx}.png`;
           const buffer = Buffer.from(img.replace(/^data:image\/\w+;base64,/, ""), "base64");
-          fs.writeFileSync(tmp + "/_jbimages/" + filename, buffer);
+          fs.writeFileSync(tmp + "/_jbfiles/images/" + filename, buffer);
         });
       }
     });
