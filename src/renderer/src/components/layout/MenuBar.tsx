@@ -5,6 +5,8 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { useJournalStore } from '@/store/journal-store'
+import { saveJournal, exportToHTML } from '@/lib/journal-io'
+import { toast } from 'sonner'
 
 export function MenuBar() {
   const { journalData, openDialog } = useJournalStore()
@@ -26,27 +28,41 @@ export function MenuBar() {
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!journalData) {
-      alert('No journal is open.')
+      toast.error('No journal is open.')
       return
     }
-    // Will implement save logic
-    console.log('Save clicked')
+
+    toast.loading('Saving journal...')
+    const result = await saveJournal()
+
+    if (result.success) {
+      toast.success('Journal saved successfully!')
+    } else {
+      toast.error(result.error || 'Failed to save journal')
+    }
   }
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!journalData) {
-      alert('No journal is open.')
+      toast.error('No journal is open.')
       return
     }
-    // Will implement export logic
-    console.log('Export clicked')
+
+    toast.loading('Exporting to HTML...')
+    const result = await exportToHTML()
+
+    if (result.success) {
+      toast.success('Exported successfully!')
+    } else {
+      toast.error(result.error || 'Failed to export journal')
+    }
   }
 
   const handleNewEntry = () => {
     if (!journalData) {
-      alert('No journal is open.')
+      toast.error('No journal is open.')
       return
     }
     useJournalStore.setState({
@@ -59,12 +75,12 @@ export function MenuBar() {
 
   const handleUpdateEntry = () => {
     if (!journalData) {
-      alert('No journal is open.')
+      toast.error('No journal is open.')
       return
     }
     const { selectedEntry, selectedEntryIndex } = useJournalStore.getState()
     if (!selectedEntry || selectedEntryIndex === null) {
-      alert('Please select an entry to update.')
+      toast.error('Please select an entry to update.')
       return
     }
     useJournalStore.setState({
@@ -77,7 +93,7 @@ export function MenuBar() {
 
   const handleSearch = () => {
     if (!journalData) {
-      alert('No journal is open.')
+      toast.error('No journal is open.')
       return
     }
     openDialog('search')
@@ -85,7 +101,7 @@ export function MenuBar() {
 
   const handleStatistics = () => {
     if (!journalData) {
-      alert('No journal is open.')
+      toast.error('No journal is open.')
       return
     }
     openDialog('statistics')
@@ -97,10 +113,11 @@ export function MenuBar() {
 
   const handleChangePassword = () => {
     if (!journalData) {
-      alert('No journal is open.')
+      toast.error('No journal is open.')
       return
     }
-    openDialog('newJournal') // Reuse new journal dialog for password change
+    // TODO: Implement password change dialog
+    toast.info('Password change feature coming soon!')
   }
 
   const handleAbout = () => {
