@@ -4,9 +4,12 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { format } from 'date-fns'
 import { SENTIMENT_COLORS } from '@/types/journal'
+import { ImageModal } from '@/components/dialogs/ImageModal'
+import { useState } from 'react'
 
 export function EntryViewer() {
   const { selectedEntry } = useJournalStore()
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   if (!selectedEntry) {
     return (
@@ -60,6 +63,7 @@ export function EntryViewer() {
                     src={img}
                     alt={`Attachment ${idx + 1}`}
                     className="rounded-lg border shadow-sm w-full h-auto cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setSelectedImage(img)}
                     onContextMenu={(e) => {
                       e.preventDefault()
                       handleImageContextMenu(img)
@@ -71,6 +75,9 @@ export function EntryViewer() {
           </div>
         )}
       </div>
+
+      {/* Image Modal */}
+      <ImageModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
     </ScrollArea>
   )
 }
