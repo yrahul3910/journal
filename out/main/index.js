@@ -333,9 +333,13 @@ ipcMain.handle("decrypt-journal", async (_event, args) => {
               } else {
                 console.log("[DECRYPT] _jbfiles directory does not exist!");
               }
-              const journalPath = tmp + "/_jbfiles/journal.json";
+              let journalPath = tmp + "/_jbfiles/data.json";
+              if (!fs.existsSync(journalPath)) {
+                journalPath = tmp + "/_jbfiles/journal.json";
+              }
+              console.log("[DECRYPT] Reading journal from:", journalPath);
               const data = JSON.parse(fs.readFileSync(journalPath, "utf8"));
-              const imagesDir = tmp + "/_jbimages";
+              const imagesDir = tmp + "/_jbfiles/images";
               if (fs.existsSync(imagesDir)) {
                 data.en.forEach((entry, idx) => {
                   if (entry.attachment && entry.attachment.length > 0) {
