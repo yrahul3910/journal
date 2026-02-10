@@ -321,14 +321,39 @@ ipcMain.handle("decrypt-journal", async (_event, args) => {
           }
           decompress(tmp + "/_jb.tar.gz", (decompressErr) => {
             if (decompressErr) {
+              console.error("[DECRYPT] Decompress error:", decompressErr);
               reject(new Error("Failed to decompress journal"));
               return;
             }
             try {
+              console.log("[DECRYPT] Looking for journal.json in:", tmp + "/_jbfiles");
+              if (fs.existsSync(tmp + "/_jbfiles")) {
+                const files = fs.readdirSync(tmp + "/_jbfiles");
+                console.log("[DECRYPT] Files in _jbfiles:", files);
+              } else {
+                console.log("[DECRYPT] _jbfiles directory does not exist!");
+              }
               const journalPath = tmp + "/_jbfiles/journal.json";
               const data = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+              const imagesDir = tmp + "/_jbimages";
+              if (fs.existsSync(imagesDir)) {
+                data.en.forEach((entry, idx) => {
+                  if (entry.attachment && entry.attachment.length > 0) {
+                    entry.attachment = entry.attachment.map((_, imgIdx) => {
+                      const filename = `${idx}_${imgIdx}.png`;
+                      const imgPath = imagesDir + "/" + filename;
+                      if (fs.existsSync(imgPath)) {
+                        const imgBuffer = fs.readFileSync(imgPath);
+                        return "data:image/png;base64," + imgBuffer.toString("base64");
+                      }
+                      return null;
+                    }).filter(Boolean);
+                  }
+                });
+              }
               resolve({ success: true, data });
             } catch (readErr) {
+              console.error("[DECRYPT] Error reading journal:", readErr);
               reject(new Error("Failed to read journal data"));
             }
           });
