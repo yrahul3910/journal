@@ -3,7 +3,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { EntryCard } from './EntryCard'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 export function EntryList() {
   const { journalData, selectedEntryIndex, selectEntry } = useJournalStore()
@@ -25,9 +25,13 @@ export function EntryList() {
 
   // Track which years are open (all open by default)
   const years = Object.keys(entriesByYear).sort((a, b) => Number(b) - Number(a))
-  const [openYears, setOpenYears] = useState<Record<string, boolean>>(
-    years.reduce((acc, year) => ({ ...acc, [year]: true }), {})
-  )
+  const [openYears, setOpenYears] = useState<Record<string, boolean>>({})
+
+  // Initialize openYears when years change
+  useEffect(() => {
+    const newOpenYears = years.reduce((acc, year) => ({ ...acc, [year]: true }), {})
+    setOpenYears(newOpenYears)
+  }, [journalData]) // Only update when journalData changes
 
   if (!journalData || journalData.en.length === 0) {
     return (
@@ -46,7 +50,7 @@ export function EntryList() {
       <div className="p-4 space-y-3">
         {years.map((year) => {
           const entries = entriesByYear[Number(year)]
-          const isOpen = openYears[year]
+          const isOpen = openYears[year] ?? true // Default to true if undefined
 
           return (
             <Collapsible key={year} open={isOpen} onOpenChange={() => toggleYear(year)}>

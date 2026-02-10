@@ -177,9 +177,26 @@ ipcMain.handle('decrypt-journal', async (_event, args: { filePath: string; passw
                       typeof entry.attachment
                     )
 
-                    if (Array.isArray(entry.attachment) && entry.attachment.length > 0) {
-                      const images: string[] = []
+                    const images: string[] = []
 
+                    // Handle single string attachment
+                    if (typeof entry.attachment === 'string') {
+                      // Check if it's already a data URL
+                      if (entry.attachment.startsWith('data:image/')) {
+                        images.push(entry.attachment)
+                      } else if (entry.attachment.startsWith('/9j/')) {
+                        // Raw JPEG base64 - add prefix
+                        images.push('data:image/jpeg;base64,' + entry.attachment)
+                      } else if (entry.attachment.startsWith('iVBOR')) {
+                        // Raw PNG base64 - add prefix
+                        images.push('data:image/png;base64,' + entry.attachment)
+                      } else {
+                        // Assume JPEG if we can't detect
+                        images.push('data:image/jpeg;base64,' + entry.attachment)
+                      }
+                      console.log(`[DECRYPT] Entry ${idx} converted single string attachment`)
+                      entry.attachment = images
+                    } else if (Array.isArray(entry.attachment) && entry.attachment.length > 0) {
                       // Check if attachment contains paths or is already base64
                       const firstItem = entry.attachment[0]
                       if (typeof firstItem === 'string' && firstItem.includes('/_jbfiles/')) {
@@ -273,22 +290,38 @@ ipcMain.handle('save-journal', async (_event, args: { filePath: string; password
     fs.mkdirSync(tmp + '/_jbfiles', { recursive: true })
     fs.mkdirSync(tmp + '/_jbimages', { recursive: true })
 
-    // Write journal JSON (use data.json to match old format)
-    fs.writeFileSync(tmp + '/_jbfiles/data.json', JSON.stringify(journalData))
-
     // Create images directory inside _jbfiles
     fs.mkdirSync(tmp + '/_jbfiles/images', { recursive: true })
 
-    // Write image attachments
+    // Write image attachments and update attachment field to use file paths
     journalData.en.forEach((entry: any, idx: number) => {
       if (entry.attachment && entry.attachment.length > 0) {
+        const filePaths: string[] = []
         entry.attachment.forEach((img: string, imgIdx: number) => {
-          const filename = `${idx}_${imgIdx}.png`
+          // Determine file extension from data URL
+          const isJpeg = img.includes('data:image/jpeg')
+          const ext = isJpeg ? 'jpg' : 'png'
+
+          // Use timestamp-based naming for better compatibility
+          const timestamp = entry.entryDate || Date.now()
+          const filename = `${timestamp}_${imgIdx}.${ext}`
+          const filePath = `./_jbfiles/images/${filename}`
+
+          // Save image file
           const buffer = Buffer.from(img.replace(/^data:image\/\w+;base64,/, ''), 'base64')
           fs.writeFileSync(tmp + '/_jbfiles/images/' + filename, buffer)
+
+          // Store file path for JSON
+          filePaths.push(filePath)
         })
+
+        // Update attachment to use file paths instead of data URLs
+        entry.attachment = filePaths
       }
     })
+
+    // Write journal JSON with updated attachment paths
+    fs.writeFileSync(tmp + '/_jbfiles/data.json', JSON.stringify(journalData))
 
     // Compress
     return new Promise((resolve, reject) => {
