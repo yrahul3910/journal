@@ -2,16 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useJournalStore } from '@/store/journal-store'
 import { BookOpen, FolderOpen, Plus } from 'lucide-react'
+import { useElectron } from '@/hooks/useElectron'
+import { toast } from 'sonner'
 
 export function WelcomePage() {
   const { openDialog } = useJournalStore()
+  const { electron, isReady } = useElectron()
 
   const handleNewJournal = () => {
     openDialog('newJournal')
   }
 
   const handleOpen = async () => {
-    const result = await window.electron.openFileDialog()
+    if (!electron || !isReady) {
+      toast.error('Electron API not ready')
+      return
+    }
+    const result = await electron.openFileDialog()
     if (result) {
       useJournalStore.setState({
         currentFilePath: result.filePath,

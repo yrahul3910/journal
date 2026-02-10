@@ -1,14 +1,23 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import fs from 'fs'
 import os from 'os'
 import { rimraf } from 'rimraf'
 import * as encryption from './encryption'
 import * as archive from './archive'
 
+// In ESM, __dirname is not available, so we need to create it
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {
+  console.log('[MAIN] Creating window...')
+  console.log('[MAIN] __dirname:', __dirname)
+  console.log('[MAIN] Preload path:', path.join(__dirname, '../preload/index.mjs'))
+
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 700,
@@ -16,22 +25,35 @@ function createWindow() {
     minHeight: 600,
     frame: false,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: path.join(__dirname, '../preload/index.mjs'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: false
     }
   })
 
+  console.log('[MAIN] Window created')
+
   // In development, load from vite dev server
-  if (process.env.NODE_ENV === 'development') {
+  if (!app.isPackaged) {
+    console.log('[MAIN] Loading dev server...')
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
   } else {
+    console.log('[MAIN] Loading production build...')
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 
   mainWindow.setTitle('JournalBear')
   mainWindow.setMenu(null)
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[MAIN] Page loaded')
+  })
+
+  mainWindow.webContents.on('console-message', (_event, level, message) => {
+    console.log(`[RENDERER] ${message}`)
+  })
 
   mainWindow.on('closed', () => {
     mainWindow = null
@@ -59,6 +81,7 @@ ipcMain.on('close-window', () => {
 
 // File operations
 ipcMain.handle('open-file-dialog', async () => {
+  console.log('[MAIN] Opening file dialog...')
   const result = await dialog.showOpenDialog({
     filters: [
       { name: 'JournalBear 5.1 Document', extensions: ['zjournal'] },
@@ -226,11 +249,12 @@ ipcMain.handle('save-image-dialog', async () => {
 })
 
 ipcMain.handle('check-password-strength', async (_event, password: string) => {
-  return encryption.checkPwdStrength(password)
+  return encryption.checkPasswordStrength(password)
 })
 
 // App lifecycle
 app.whenReady().then(() => {
+  console.log('[MAIN] App ready')
   createWindow()
 
   // Perform cleanup

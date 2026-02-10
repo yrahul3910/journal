@@ -1,10 +1,11 @@
 import { ipcMain, dialog, app, BrowserWindow } from "electron";
 import path from "path";
+import { fileURLToPath } from "url";
 import fs from "fs";
 import os from "os";
 import { rimraf } from "rimraf";
 import crypto from "crypto";
-import owasp from "owasp-password-strength-test";
+import "owasp-password-strength-test";
 import tar from "targz";
 import __cjs_mod__ from "node:module";
 const __filename = import.meta.filename;
@@ -55,14 +56,6 @@ const getDecryptedText = (text, pwd) => {
     console.error("[ENCRYPTION] Decryption error:", ex);
     return void 0;
   }
-};
-const checkPwdStrength = (pwd) => {
-  owasp.config({
-    minLength: 8
-  });
-  const result = owasp.test(pwd);
-  if (result.errors) return result.errors;
-  else return [];
 };
 const encryptFile = (path2, outputPath, key, func) => {
   try {
@@ -224,8 +217,13 @@ const decompress = (filename, func) => {
     func
   );
 };
+const __filename$1 = fileURLToPath(import.meta.url);
+const __dirname$1 = path.dirname(__filename$1);
 let mainWindow = null;
 function createWindow() {
+  console.log("[MAIN] Creating window...");
+  console.log("[MAIN] __dirname:", __dirname$1);
+  console.log("[MAIN] Preload path:", path.join(__dirname$1, "../preload/index.mjs"));
   mainWindow = new BrowserWindow({
     width: 1e3,
     height: 700,
@@ -233,19 +231,29 @@ function createWindow() {
     minHeight: 600,
     frame: false,
     webPreferences: {
-      preload: path.join(__dirname, "../preload/index.js"),
+      preload: path.join(__dirname$1, "../preload/index.mjs"),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: false
     }
   });
-  if (process.env.NODE_ENV === "development") {
+  console.log("[MAIN] Window created");
+  if (!app.isPackaged) {
+    console.log("[MAIN] Loading dev server...");
     mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+    console.log("[MAIN] Loading production build...");
+    mainWindow.loadFile(path.join(__dirname$1, "../renderer/index.html"));
   }
   mainWindow.setTitle("JournalBear");
   mainWindow.setMenu(null);
+  mainWindow.webContents.on("did-finish-load", () => {
+    console.log("[MAIN] Page loaded");
+  });
+  mainWindow.webContents.on("console-message", (_event, level, message) => {
+    console.log(`[RENDERER] ${message}`);
+  });
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
@@ -264,6 +272,7 @@ ipcMain.on("close-window", () => {
   mainWindow?.close();
 });
 ipcMain.handle("open-file-dialog", async () => {
+  console.log("[MAIN] Opening file dialog...");
   const result = await dialog.showOpenDialog({
     filters: [
       { name: "JournalBear 5.1 Document", extensions: ["zjournal"] },
@@ -393,9 +402,10 @@ ipcMain.handle("save-image-dialog", async () => {
   return result.filePaths[0];
 });
 ipcMain.handle("check-password-strength", async (_event, password) => {
-  return checkPwdStrength(password);
+  return (void 0)(password);
 });
 app.whenReady().then(() => {
+  console.log("[MAIN] App ready");
   createWindow();
   const tmp = os.tmpdir();
   console.log("[MAIN] Cleaning up temp directory:", tmp);

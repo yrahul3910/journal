@@ -77,7 +77,7 @@ export const getDecryptedText = (text: string, pwd: string): string | undefined 
   }
 }
 
-export const checkPwdStrength = (pwd: string): string[] => {
+export const checkPasswordStrength = (pwd: string): string[] => {
   owasp.config({
     minLength: 8
   })

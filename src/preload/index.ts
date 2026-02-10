@@ -1,8 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+console.log('[PRELOAD] Preload script starting...')
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
-contextBridge.exposeInMainWorld('electron', {
+try {
+  contextBridge.exposeInMainWorld('electron', {
   // Window controls
   minimizeWindow: () => ipcRenderer.send('minimize-window'),
   maximizeWindow: () => ipcRenderer.send('maximize-window'),
@@ -19,3 +22,7 @@ contextBridge.exposeInMainWorld('electron', {
   saveImageDialog: () => ipcRenderer.invoke('save-image-dialog'),
   checkPasswordStrength: (password: string) => ipcRenderer.invoke('check-password-strength', password)
 })
+  console.log('[PRELOAD] Successfully exposed electron API')
+} catch (error) {
+  console.error('[PRELOAD] Error exposing API:', error)
+}
