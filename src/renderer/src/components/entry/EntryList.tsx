@@ -3,11 +3,25 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { EntryCard } from './EntryCard'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 export function EntryList() {
   const { journalData, selectedEntryIndex, selectEntry } = useJournalStore()
-  const entriesByYear = useJournalStore((state) => state.getEntriesByYear())
+
+  // Use useMemo to cache the entriesByYear calculation
+  const entriesByYear = useMemo(() => {
+    if (!journalData) return {}
+
+    const grouped: Record<number, typeof journalData.en> = {}
+    journalData.en.forEach((entry) => {
+      const year = new Date(entry.entryDate).getFullYear()
+      if (!grouped[year]) {
+        grouped[year] = []
+      }
+      grouped[year].push(entry)
+    })
+    return grouped
+  }, [journalData])
 
   // Track which years are open (all open by default)
   const years = Object.keys(entriesByYear).sort((a, b) => Number(b) - Number(a))

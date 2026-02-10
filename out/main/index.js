@@ -5,7 +5,7 @@ import fs from "fs";
 import os from "os";
 import { rimraf } from "rimraf";
 import crypto from "crypto";
-import "owasp-password-strength-test";
+import owasp from "owasp-password-strength-test";
 import tar from "targz";
 import __cjs_mod__ from "node:module";
 const __filename = import.meta.filename;
@@ -56,6 +56,14 @@ const getDecryptedText = (text, pwd) => {
     console.error("[ENCRYPTION] Decryption error:", ex);
     return void 0;
   }
+};
+const checkPasswordStrength = (pwd) => {
+  owasp.config({
+    minLength: 8
+  });
+  const result = owasp.test(pwd);
+  if (result.errors) return result.errors;
+  else return [];
 };
 const encryptFile = (path2, outputPath, key, func) => {
   try {
@@ -402,7 +410,7 @@ ipcMain.handle("save-image-dialog", async () => {
   return result.filePaths[0];
 });
 ipcMain.handle("check-password-strength", async (_event, password) => {
-  return (void 0)(password);
+  return checkPasswordStrength(password);
 });
 app.whenReady().then(() => {
   console.log("[MAIN] App ready");
