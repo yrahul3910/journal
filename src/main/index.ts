@@ -217,8 +217,11 @@ ipcMain.handle('save-journal', async (_event, args: { filePath: string; password
     fs.mkdirSync(tmp + '/_jbfiles', { recursive: true })
     fs.mkdirSync(tmp + '/_jbimages', { recursive: true })
 
-    // Write journal JSON
-    fs.writeFileSync(tmp + '/_jbfiles/journal.json', JSON.stringify(journalData))
+    // Write journal JSON (use data.json to match old format)
+    fs.writeFileSync(tmp + '/_jbfiles/data.json', JSON.stringify(journalData))
+
+    // Create images directory inside _jbfiles
+    fs.mkdirSync(tmp + '/_jbfiles/images', { recursive: true })
 
     // Write image attachments
     journalData.en.forEach((entry: any, idx: number) => {
@@ -226,7 +229,7 @@ ipcMain.handle('save-journal', async (_event, args: { filePath: string; password
         entry.attachment.forEach((img: string, imgIdx: number) => {
           const filename = `${idx}_${imgIdx}.png`
           const buffer = Buffer.from(img.replace(/^data:image\/\w+;base64,/, ''), 'base64')
-          fs.writeFileSync(tmp + '/_jbimages/' + filename, buffer)
+          fs.writeFileSync(tmp + '/_jbfiles/images/' + filename, buffer)
         })
       }
     })
