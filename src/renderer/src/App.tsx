@@ -4,6 +4,7 @@ import { JournalView } from '@/components/journal/JournalView'
 import { DialogManager } from '@/components/dialogs/DialogManager'
 import { useJournalStore } from '@/store/journal-store'
 import { useEffect } from 'react'
+import { Toaster } from 'sonner'
 
 function App() {
   const { viewMode } = useJournalStore()
@@ -26,6 +27,7 @@ function App() {
         {viewMode === 'welcome' ? <WelcomePage /> : <JournalView />}
       </MainLayout>
       <DialogManager />
+      <Toaster richColors position="top-right" />
     </>
   )
 }
