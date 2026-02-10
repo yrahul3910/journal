@@ -134,17 +134,34 @@ ipcMain.handle('decrypt-journal', async (_event, args: { filePath: string; passw
           // Step 2: Decompress
           archive.decompress(tmp + '/_jb.tar.gz', (decompressErr) => {
             if (decompressErr) {
+              console.error('[DECRYPT] Decompress error:', decompressErr)
               reject(new Error('Failed to decompress journal'))
               return
             }
 
             // Step 3: Read JSON and load images
             try {
-              const journalPath = tmp + '/_jbfiles/journal.json'
+              console.log('[DECRYPT] Looking for journal.json in:', tmp + '/_jbfiles')
+
+              // Check if the directory exists and list its contents
+              if (fs.existsSync(tmp + '/_jbfiles')) {
+                const files = fs.readdirSync(tmp + '/_jbfiles')
+                console.log('[DECRYPT] Files in _jbfiles:', files)
+              } else {
+                console.log('[DECRYPT] _jbfiles directory does not exist!')
+              }
+
+              // Try both data.json (old format) and journal.json (new format)
+              let journalPath = tmp + '/_jbfiles/data.json'
+              if (!fs.existsSync(journalPath)) {
+                journalPath = tmp + '/_jbfiles/journal.json'
+              }
+
+              console.log('[DECRYPT] Reading journal from:', journalPath)
               const data = JSON.parse(fs.readFileSync(journalPath, 'utf8'))
 
-              // Load image attachments from _jbimages directory
-              const imagesDir = tmp + '/_jbimages'
+              // Load image attachments from images directory
+              const imagesDir = tmp + '/_jbfiles/images'
               if (fs.existsSync(imagesDir)) {
                 data.en.forEach((entry: any, idx: number) => {
                   if (entry.attachment && entry.attachment.length > 0) {
