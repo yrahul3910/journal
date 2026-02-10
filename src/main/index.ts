@@ -162,9 +162,21 @@ ipcMain.handle('decrypt-journal', async (_event, args: { filePath: string; passw
 
               // Load image attachments from images directory
               const imagesDir = tmp + '/_jbfiles/images'
+              console.log('[DECRYPT] Checking for images directory:', imagesDir)
+              console.log('[DECRYPT] Images directory exists:', fs.existsSync(imagesDir))
+
               if (fs.existsSync(imagesDir)) {
+                const imageFiles = fs.readdirSync(imagesDir)
+                console.log('[DECRYPT] Found image files:', imageFiles)
+
                 data.en.forEach((entry: any, idx: number) => {
                   if (entry.attachment) {
+                    console.log(
+                      `[DECRYPT] Entry ${idx} has attachment:`,
+                      entry.attachment,
+                      typeof entry.attachment
+                    )
+
                     // attachment might be a number (count) or an array
                     const attachmentCount = Array.isArray(entry.attachment)
                       ? entry.attachment.length
@@ -177,15 +189,26 @@ ipcMain.handle('decrypt-journal', async (_event, args: { filePath: string; passw
                       for (let imgIdx = 0; imgIdx < attachmentCount; imgIdx++) {
                         const filename = `${idx}_${imgIdx}.png`
                         const imgPath = imagesDir + '/' + filename
+                        console.log(`[DECRYPT] Looking for image: ${imgPath}`)
+
                         if (fs.existsSync(imgPath)) {
                           const imgBuffer = fs.readFileSync(imgPath)
-                          images.push('data:image/png;base64,' + imgBuffer.toString('base64'))
+                          const base64 = 'data:image/png;base64,' + imgBuffer.toString('base64')
+                          console.log(
+                            `[DECRYPT] Loaded image ${filename}, size: ${imgBuffer.length} bytes`
+                          )
+                          images.push(base64)
+                        } else {
+                          console.log(`[DECRYPT] Image not found: ${imgPath}`)
                         }
                       }
+                      console.log(`[DECRYPT] Entry ${idx} loaded ${images.length} images`)
                       entry.attachment = images
                     }
                   }
                 })
+              } else {
+                console.log('[DECRYPT] No images directory found')
               }
 
               resolve({ success: true, data })
