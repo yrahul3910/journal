@@ -138,12 +138,32 @@ ipcMain.handle('decrypt-journal', async (_event, args: { filePath: string; passw
               return
             }
 
-            // Step 3: Read JSON
+            // Step 3: Read JSON and load images
             try {
               const journalPath = tmp + '/_jbfiles/journal.json'
               const data = JSON.parse(fs.readFileSync(journalPath, 'utf8'))
+
+              // Load image attachments from _jbimages directory
+              const imagesDir = tmp + '/_jbimages'
+              if (fs.existsSync(imagesDir)) {
+                data.en.forEach((entry: any, idx: number) => {
+                  if (entry.attachment && entry.attachment.length > 0) {
+                    entry.attachment = entry.attachment.map((_: any, imgIdx: number) => {
+                      const filename = `${idx}_${imgIdx}.png`
+                      const imgPath = imagesDir + '/' + filename
+                      if (fs.existsSync(imgPath)) {
+                        const imgBuffer = fs.readFileSync(imgPath)
+                        return 'data:image/png;base64,' + imgBuffer.toString('base64')
+                      }
+                      return null
+                    }).filter(Boolean)
+                  }
+                })
+              }
+
               resolve({ success: true, data })
             } catch (readErr) {
+              console.error('[DECRYPT] Error reading journal:', readErr)
               reject(new Error('Failed to read journal data'))
             }
           })
