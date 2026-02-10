@@ -48,11 +48,13 @@ export function EntryViewer() {
         </div>
 
         {/* Attachments */}
-        {selectedEntry.attachment && selectedEntry.attachment.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Attachments</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {selectedEntry.attachment.map((img, idx) => (
+        {selectedEntry.attachment &&
+          Array.isArray(selectedEntry.attachment) &&
+          selectedEntry.attachment.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Attachments</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {selectedEntry.attachment.map((img, idx) => (
                 <div key={idx} className="relative group">
                   <img
                     src={img}
