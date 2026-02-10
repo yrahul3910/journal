@@ -352,22 +352,49 @@ ipcMain.handle("decrypt-journal", async (_event, args) => {
                       entry.attachment,
                       typeof entry.attachment
                     );
-                    const attachmentCount = Array.isArray(entry.attachment) ? entry.attachment.length : typeof entry.attachment === "number" ? entry.attachment : 0;
-                    if (attachmentCount > 0) {
-                      const images = [];
-                      for (let imgIdx = 0; imgIdx < attachmentCount; imgIdx++) {
-                        const filename = `${idx}_${imgIdx}.png`;
-                        const imgPath = imagesDir + "/" + filename;
-                        console.log(`[DECRYPT] Looking for image: ${imgPath}`);
-                        if (fs.existsSync(imgPath)) {
-                          const imgBuffer = fs.readFileSync(imgPath);
-                          const base64 = "data:image/png;base64," + imgBuffer.toString("base64");
-                          console.log(
-                            `[DECRYPT] Loaded image ${filename}, size: ${imgBuffer.length} bytes`
-                          );
-                          images.push(base64);
-                        } else {
-                          console.log(`[DECRYPT] Image not found: ${imgPath}`);
+                    const images = [];
+                    if (typeof entry.attachment === "string") {
+                      if (entry.attachment.startsWith("data:image/")) {
+                        images.push(entry.attachment);
+                      } else if (entry.attachment.startsWith("/9j/")) {
+                        images.push("data:image/jpeg;base64," + entry.attachment);
+                      } else if (entry.attachment.startsWith("iVBOR")) {
+                        images.push("data:image/png;base64," + entry.attachment);
+                      } else {
+                        images.push("data:image/jpeg;base64," + entry.attachment);
+                      }
+                      console.log(`[DECRYPT] Entry ${idx} converted single string attachment`);
+                      entry.attachment = images;
+                    } else if (Array.isArray(entry.attachment) && entry.attachment.length > 0) {
+                      const firstItem = entry.attachment[0];
+                      if (typeof firstItem === "string" && firstItem.includes("/_jbfiles/")) {
+                        entry.attachment.forEach((filePath2) => {
+                          const filename = filePath2.split("/").pop();
+                          const fullPath = tmp + "/_jbfiles/images/" + filename;
+                          console.log(`[DECRYPT] Loading image from path: ${fullPath}`);
+                          if (fs.existsSync(fullPath)) {
+                            const imgBuffer = fs.readFileSync(fullPath);
+                            const ext = filename?.split(".").pop()?.toLowerCase();
+                            const mimeType = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
+                            const base64 = `data:${mimeType};base64,` + imgBuffer.toString("base64");
+                            console.log(
+                              `[DECRYPT] Loaded image ${filename}, size: ${imgBuffer.length} bytes`
+                            );
+                            images.push(base64);
+                          } else {
+                            console.log(`[DECRYPT] Image not found: ${fullPath}`);
+                          }
+                        });
+                      } else if (typeof entry.attachment === "number" || Array.isArray(entry.attachment) && typeof entry.attachment[0] === "number") {
+                        const count = typeof entry.attachment === "number" ? entry.attachment : entry.attachment.length;
+                        for (let imgIdx = 0; imgIdx < count; imgIdx++) {
+                          const filename = `${idx}_${imgIdx}.png`;
+                          const imgPath = imagesDir + "/" + filename;
+                          if (fs.existsSync(imgPath)) {
+                            const imgBuffer = fs.readFileSync(imgPath);
+                            const base64 = "data:image/png;base64," + imgBuffer.toString("base64");
+                            images.push(base64);
+                          }
                         }
                       }
                       console.log(`[DECRYPT] Entry ${idx} loaded ${images.length} images`);
@@ -408,17 +435,24 @@ ipcMain.handle("save-journal", async (_event, args) => {
     await rimraf(tmp + "/_jb.tar.gz");
     fs.mkdirSync(tmp + "/_jbfiles", { recursive: true });
     fs.mkdirSync(tmp + "/_jbimages", { recursive: true });
-    fs.writeFileSync(tmp + "/_jbfiles/data.json", JSON.stringify(journalData));
     fs.mkdirSync(tmp + "/_jbfiles/images", { recursive: true });
     journalData.en.forEach((entry, idx) => {
       if (entry.attachment && entry.attachment.length > 0) {
+        const filePaths = [];
         entry.attachment.forEach((img, imgIdx) => {
-          const filename = `${idx}_${imgIdx}.png`;
+          const isJpeg = img.includes("data:image/jpeg");
+          const ext = isJpeg ? "jpg" : "png";
+          const timestamp = entry.entryDate || Date.now();
+          const filename = `${timestamp}_${imgIdx}.${ext}`;
+          const filePath2 = `./_jbfiles/images/${filename}`;
           const buffer = Buffer.from(img.replace(/^data:image\/\w+;base64,/, ""), "base64");
           fs.writeFileSync(tmp + "/_jbfiles/images/" + filename, buffer);
+          filePaths.push(filePath2);
         });
+        entry.attachment = filePaths;
       }
     });
+    fs.writeFileSync(tmp + "/_jbfiles/data.json", JSON.stringify(journalData));
     return new Promise((resolve, reject) => {
       compress(tmp + "/_jbfiles", (err, archivePath) => {
         if (err || !archivePath) {
