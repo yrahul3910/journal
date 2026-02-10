@@ -164,16 +164,26 @@ ipcMain.handle('decrypt-journal', async (_event, args: { filePath: string; passw
               const imagesDir = tmp + '/_jbfiles/images'
               if (fs.existsSync(imagesDir)) {
                 data.en.forEach((entry: any, idx: number) => {
-                  if (entry.attachment && entry.attachment.length > 0) {
-                    entry.attachment = entry.attachment.map((_: any, imgIdx: number) => {
-                      const filename = `${idx}_${imgIdx}.png`
-                      const imgPath = imagesDir + '/' + filename
-                      if (fs.existsSync(imgPath)) {
-                        const imgBuffer = fs.readFileSync(imgPath)
-                        return 'data:image/png;base64,' + imgBuffer.toString('base64')
+                  if (entry.attachment) {
+                    // attachment might be a number (count) or an array
+                    const attachmentCount = Array.isArray(entry.attachment)
+                      ? entry.attachment.length
+                      : typeof entry.attachment === 'number'
+                        ? entry.attachment
+                        : 0
+
+                    if (attachmentCount > 0) {
+                      const images: string[] = []
+                      for (let imgIdx = 0; imgIdx < attachmentCount; imgIdx++) {
+                        const filename = `${idx}_${imgIdx}.png`
+                        const imgPath = imagesDir + '/' + filename
+                        if (fs.existsSync(imgPath)) {
+                          const imgBuffer = fs.readFileSync(imgPath)
+                          images.push('data:image/png;base64,' + imgBuffer.toString('base64'))
+                        }
                       }
-                      return null
-                    }).filter(Boolean)
+                      entry.attachment = images
+                    }
                   }
                 })
               }
