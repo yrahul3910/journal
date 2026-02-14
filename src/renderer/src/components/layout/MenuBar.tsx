@@ -47,13 +47,13 @@ export function MenuBar() {
       return
     }
 
-    toast.loading('Saving journal...')
+    const toastId = toast.loading('Saving journal...')
     const result = await saveJournal()
 
     if (result.success) {
-      toast.success('Journal saved successfully!')
+      toast.success('Journal saved successfully!', { id: toastId })
     } else {
-      toast.error(result.error || 'Failed to save journal')
+      toast.error(result.error || 'Failed to save journal', { id: toastId })
     }
   }
 
@@ -63,13 +63,13 @@ export function MenuBar() {
       return
     }
 
-    toast.loading('Exporting to HTML...')
+    const toastId = toast.loading('Exporting to HTML...')
     const result = await exportToHTML()
 
     if (result.success) {
-      toast.success('Exported successfully!')
+      toast.success('Exported successfully!', { id: toastId })
     } else {
-      toast.error(result.error || 'Failed to export journal')
+      toast.error(result.error || 'Failed to export journal', { id: toastId })
     }
   }
 
