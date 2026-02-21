@@ -234,7 +234,7 @@ function createWindow() {
   console.log("[MAIN] Preload path:", path.join(__dirname$1, "../preload/index.mjs"));
   mainWindow = new BrowserWindow({
     width: 1e3,
-    height: 700,
+    height: 768,
     minWidth: 800,
     minHeight: 600,
     frame: false,

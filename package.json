@@ -89,9 +89,9 @@
     "start": "electron app/index.js",
     "pack": "electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist-mac": "npm run build && electron-builder -m",
+    "dist-mac": "npm run build && electron-builder -m --arm64",
     "dist-linux": "npm run build && electron-builder -l",
-    "dist-win": "npm run build && electron-builder -w",
+    "dist-win": "npm run build && electron-builder -w --x64",
     "ship": "npm run build && electron-builder -p always"
   }
 }
