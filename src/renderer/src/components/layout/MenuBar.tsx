@@ -8,9 +8,38 @@ import { useJournalStore } from '@/store/journal-store'
 import { saveJournal, exportToHTML } from '@/lib/journal-io'
 import { toast } from 'sonner'
 import { Minus, Moon, Square, Sun, X } from 'lucide-react'
+import { useState } from 'react'
+
+type MenuName = 'file' | 'entry' | 'preferences' | 'help'
 
 export function MenuBar() {
   const { journalData, openDialog, theme, setTheme } = useJournalStore()
+
+  // Track which menu is open so hovering a sibling trigger switches to it
+  // (only once a menu has been opened by clicking).
+  const [openMenu, setOpenMenu] = useState<MenuName | null>(null)
+
+  const menuProps = (name: MenuName) => ({
+    // modal={false} keeps pointer events alive outside the open menu so that
+    // hovering a sibling trigger can switch menus.
+    modal: false,
+    open: openMenu === name,
+    onOpenChange: (open: boolean) => setOpenMenu(open ? name : null)
+  })
+
+  // When switching menus on hover, the closing menu's default auto-focus would
+  // pull focus back to its own trigger, which the newly opened menu reads as a
+  // "focus outside" event and closes itself. Suppressing it stops the flicker.
+  const menuContentProps = {
+    onCloseAutoFocus: (e: Event) => e.preventDefault()
+  }
+
+  const triggerHoverProps = (name: MenuName) => ({
+    onMouseEnter: () => {
+      // Switch menus on hover only when a menu is already open.
+      if (openMenu !== null && openMenu !== name) setOpenMenu(name)
+    }
+  })
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
@@ -154,11 +183,11 @@ export function MenuBar() {
         <div className="text-sm font-bold">JournalBear</div>
         <div className="flex gap-1">
           {/* File Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={menuTriggerClass}>
+          <DropdownMenu {...menuProps('file')}>
+            <DropdownMenuTrigger className={menuTriggerClass} {...triggerHoverProps('file')}>
               File
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent {...menuContentProps}>
               <DropdownMenuItem onClick={handleNewJournal}>New Journal</DropdownMenuItem>
               <DropdownMenuItem onClick={handleOpen}>Open</DropdownMenuItem>
               <DropdownMenuItem onClick={handleSave}>Save</DropdownMenuItem>
@@ -167,11 +196,11 @@ export function MenuBar() {
           </DropdownMenu>
 
           {/* Entry Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={menuTriggerClass}>
+          <DropdownMenu {...menuProps('entry')}>
+            <DropdownMenuTrigger className={menuTriggerClass} {...triggerHoverProps('entry')}>
               Entry
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent {...menuContentProps}>
               <DropdownMenuItem onClick={handleNewEntry}>New Entry</DropdownMenuItem>
               <DropdownMenuItem onClick={handleUpdateEntry}>Update Entry</DropdownMenuItem>
               <DropdownMenuItem onClick={handleSearch}>Search</DropdownMenuItem>
@@ -180,21 +209,21 @@ export function MenuBar() {
           </DropdownMenu>
 
           {/* Preferences Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={menuTriggerClass}>
+          <DropdownMenu {...menuProps('preferences')}>
+            <DropdownMenuTrigger className={menuTriggerClass} {...triggerHoverProps('preferences')}>
               Preferences
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent {...menuContentProps}>
               <DropdownMenuItem onClick={handleChangePassword}>Change Password</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {/* Help Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={menuTriggerClass}>
+          <DropdownMenu {...menuProps('help')}>
+            <DropdownMenuTrigger className={menuTriggerClass} {...triggerHoverProps('help')}>
               Help
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent {...menuContentProps}>
               <DropdownMenuItem onClick={handleAbout}>About</DropdownMenuItem>
               <DropdownMenuItem onClick={handleIntro}>Getting Started</DropdownMenuItem>
               <DropdownMenuItem asChild>
