@@ -7,10 +7,17 @@ import {
 import { useJournalStore } from '@/store/journal-store'
 import { saveJournal, exportToHTML } from '@/lib/journal-io'
 import { toast } from 'sonner'
-import { Minus, Square, X } from 'lucide-react'
+import { Minus, Moon, Square, Sun, X } from 'lucide-react'
 
 export function MenuBar() {
-  const { journalData, openDialog } = useJournalStore()
+  const { journalData, openDialog, theme, setTheme } = useJournalStore()
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+    localStorage.setItem('lastThemeChange', Date.now().toString())
+  }
 
   const handleMinimize = () => {
     window.electron.minimizeWindow()
@@ -120,10 +127,6 @@ export function MenuBar() {
     openDialog('statistics')
   }
 
-  const handleSettings = () => {
-    openDialog('settings')
-  }
-
   const handleChangePassword = () => {
     if (!journalData) {
       toast.error('No journal is open.')
@@ -141,6 +144,9 @@ export function MenuBar() {
     openDialog('intro')
   }
 
+  const menuTriggerClass =
+    'px-3 py-1.5 text-xs rounded text-white outline-none transition-colors hover:bg-white/10 focus-visible:bg-white/10 data-[state=open]:bg-white/10'
+
   return (
     <div className="titlebar-drag flex h-10 items-center justify-between bg-black text-white px-4">
       {/* Left side: App name + menus */}
@@ -149,7 +155,7 @@ export function MenuBar() {
         <div className="flex gap-1">
           {/* File Menu */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="px-3 py-1.5 text-xs hover:bg-white/10 rounded text-white">
+            <DropdownMenuTrigger className={menuTriggerClass}>
               File
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -162,7 +168,7 @@ export function MenuBar() {
 
           {/* Entry Menu */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="px-3 py-1.5 text-xs hover:bg-white/10 rounded text-white">
+            <DropdownMenuTrigger className={menuTriggerClass}>
               Entry
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -175,18 +181,17 @@ export function MenuBar() {
 
           {/* Preferences Menu */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="px-3 py-1.5 text-xs hover:bg-white/10 rounded text-white">
+            <DropdownMenuTrigger className={menuTriggerClass}>
               Preferences
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={handleSettings}>Settings</DropdownMenuItem>
               <DropdownMenuItem onClick={handleChangePassword}>Change Password</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {/* Help Menu */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="px-3 py-1.5 text-xs hover:bg-white/10 rounded text-white">
+            <DropdownMenuTrigger className={menuTriggerClass}>
               Help
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -215,25 +220,33 @@ export function MenuBar() {
         </div>
       </div>
 
-      {/* Right side: Window controls */}
-      <div className="titlebar-no-drag flex gap-2">
+      {/* Right side: Theme toggle + window controls */}
+      <div className="titlebar-no-drag flex items-center gap-2">
+        <button
+          onClick={toggleTheme}
+          className="mr-1 flex h-6 w-6 items-center justify-center rounded outline-none transition-colors hover:bg-white/10 focus-visible:bg-white/10"
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
         <button
           onClick={handleMinimize}
-          className="flex h-6 w-6 items-center justify-center hover:bg-white/10 rounded"
+          className="flex h-6 w-6 items-center justify-center rounded outline-none transition-colors hover:bg-white/10 focus-visible:bg-white/10"
           aria-label="Minimize"
         >
           <Minus className="h-4 w-4" />
         </button>
         <button
           onClick={handleMaximize}
-          className="flex h-6 w-6 items-center justify-center hover:bg-white/10 rounded"
+          className="flex h-6 w-6 items-center justify-center rounded outline-none transition-colors hover:bg-white/10 focus-visible:bg-white/10"
           aria-label="Maximize"
         >
           <Square className="h-3 w-3" />
         </button>
         <button
           onClick={handleClose}
-          className="flex h-6 w-6 items-center justify-center hover:bg-red-600 rounded"
+          className="flex h-6 w-6 items-center justify-center rounded outline-none transition-colors hover:bg-red-600 focus-visible:bg-red-600"
           aria-label="Close"
         >
           <X className="h-4 w-4" />

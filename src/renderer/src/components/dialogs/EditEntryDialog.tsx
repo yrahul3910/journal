@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle
@@ -24,6 +25,7 @@ import { format } from 'date-fns'
 import { CalendarIcon, Smile, Eye } from 'lucide-react'
 import { EmojiPicker } from './EmojiPicker'
 import { FileDropZone } from './FileDropZone'
+import { PreviewDialog } from './PreviewDialog'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import type { Sentiment, JournalEntry } from '@/types/journal'
 
@@ -38,8 +40,7 @@ export function EditEntryDialog() {
     addEntry,
     updateEntry,
     selectedEntryIndex,
-    journalData,
-    openDialog
+    journalData
   } = useJournalStore()
 
   const [date, setDate] = useState<Date>(new Date())
@@ -48,28 +49,67 @@ export function EditEntryDialog() {
   const [nsfw, setNsfw] = useState(false)
   const [error, setError] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  // Snapshot of the form state when the dialog opened, used to detect edits.
+  const initialRef = useRef<{
+    date: number
+    sentiment: Sentiment
+    content: string
+    nsfw: boolean
+    images: string[]
+  } | null>(null)
 
   const isOpen = activeDialog === 'edit'
 
   // Load editing entry data
   useEffect(() => {
     if (isOpen && editingEntry) {
+      const images = editingEntry.attachment || []
       setDate(new Date(editingEntry.entryDate))
       setSentiment(editingEntry.sentiment)
       setContent(editingEntry.content)
       setNsfw(editingEntry.nsfw || false)
-      setEncodedImages(editingEntry.attachment || [])
+      setEncodedImages(images)
+      initialRef.current = {
+        date: new Date(editingEntry.entryDate).getTime(),
+        sentiment: editingEntry.sentiment,
+        content: editingEntry.content,
+        nsfw: editingEntry.nsfw || false,
+        images
+      }
     } else if (isOpen && isNewEntry) {
       // Reset for new entry
-      setDate(new Date())
+      const now = new Date()
+      setDate(now)
       setSentiment('Neutral')
       setContent('')
       setNsfw(false)
       setEncodedImages([])
+      initialRef.current = {
+        date: now.getTime(),
+        sentiment: 'Neutral',
+        content: '',
+        nsfw: false,
+        images: []
+      }
     }
   }, [isOpen, editingEntry, isNewEntry])
+
+  const isDirty = (): boolean => {
+    const initial = initialRef.current
+    if (!initial) return false
+    return (
+      date.getTime() !== initial.date ||
+      sentiment !== initial.sentiment ||
+      content !== initial.content ||
+      nsfw !== initial.nsfw ||
+      encodedImages.length !== initial.images.length ||
+      encodedImages.some((img, i) => img !== initial.images[i])
+    )
+  }
 
   const handleSubmit = () => {
     setError('')
@@ -111,11 +151,24 @@ export function EditEntryDialog() {
     setNsfw(false)
     setError('')
     setShowEmojiPicker(false)
+    setShowDiscardConfirm(false)
+    setShowPreview(false)
+    initialRef.current = null
   }
 
   const handleClose = () => {
     closeDialog()
     resetForm()
+  }
+
+  // Guards every close path (Escape, click outside, Cancel button): if the
+  // entry has unsaved changes, ask before discarding instead of closing.
+  const attemptClose = () => {
+    if (isDirty()) {
+      setShowDiscardConfirm(true)
+    } else {
+      handleClose()
+    }
   }
 
   const handleEmojiSelect = (shortcode: string) => {
@@ -139,11 +192,11 @@ export function EditEntryDialog() {
   }
 
   const handlePreview = () => {
-    openDialog('preview')
+    setShowPreview(true)
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && attemptClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isNewEntry ? 'New Entry' : 'Update Entry'}</DialogTitle>
@@ -255,12 +308,36 @@ export function EditEntryDialog() {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={attemptClose}>
             Cancel
           </Button>
           <Button onClick={handleSubmit}>{isNewEntry ? 'Add Entry' : 'Update Entry'}</Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Confirm discarding unsaved changes before closing the editor */}
+      <Dialog open={showDiscardConfirm} onOpenChange={(open) => !open && setShowDiscardConfirm(false)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Discard unsaved changes?</DialogTitle>
+            <DialogDescription>
+              This entry has changes that haven&apos;t been saved. If you close now, they&apos;ll be
+              lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDiscardConfirm(false)}>
+              Keep editing
+            </Button>
+            <Button variant="destructive" onClick={handleClose}>
+              Discard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Live preview of the current draft, rendered over the editor */}
+      <PreviewDialog open={showPreview} onOpenChange={setShowPreview} content={content} />
     </Dialog>
   )
 }

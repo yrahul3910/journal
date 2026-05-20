@@ -20,9 +20,19 @@ export function EntryCard({ entry, isSelected, onClick }: EntryCardProps) {
   return (
     <div
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       className={cn(
-        'cursor-pointer rounded-lg border p-3 transition-colors hover:bg-accent',
-        isSelected && 'bg-accent border-primary'
+        'cursor-pointer rounded-lg border p-3 outline-none transition-all hover:bg-accent hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring/60',
+        isSelected
+          ? 'border-primary bg-accent shadow-sm ring-1 ring-primary'
+          : 'border-border'
       )}
     >
       <div className="flex items-start gap-3">

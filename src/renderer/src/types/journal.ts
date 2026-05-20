@@ -19,12 +19,10 @@ export type DialogType =
   | 'edit'
   | 'newJournal'
   | 'decrypt'
-  | 'settings'
   | 'search'
   | 'statistics'
   | 'about'
   | 'intro'
-  | 'preview'
   | 'error'
   | null
 

@@ -54,7 +54,7 @@ export function EntryList() {
 
           return (
             <Collapsible key={year} open={isOpen} onOpenChange={() => toggleYear(year)}>
-              <CollapsibleTrigger className="flex items-center gap-2 w-full hover:bg-accent p-2 rounded-lg">
+              <CollapsibleTrigger className="flex items-center gap-2 w-full p-2 rounded-lg outline-none transition-colors hover:bg-accent focus-visible:bg-accent">
                 {isOpen ? (
                   <ChevronDown className="h-4 w-4" />
                 ) : (
