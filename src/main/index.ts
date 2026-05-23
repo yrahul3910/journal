@@ -1,22 +1,17 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import fs from 'fs'
 import os from 'os'
 import { rimraf } from 'rimraf'
 import * as encryption from './encryption'
 import * as archive from './archive'
 
-// In ESM, __dirname is not available, so we need to create it
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {
     console.log('[MAIN] Creating window...')
     console.log('[MAIN] __dirname:', __dirname)
-    console.log('[MAIN] Preload path:', path.join(__dirname, '../preload/index.mjs'))
+    console.log('[MAIN] Preload path:', path.join(__dirname, '../preload/index.js'))
 
     mainWindow = new BrowserWindow({
         width: 1000,
@@ -25,7 +20,7 @@ function createWindow() {
         minHeight: 600,
         frame: false,
         webPreferences: {
-            preload: path.join(__dirname, '../preload/index.mjs'),
+            preload: path.join(__dirname, '../preload/index.js'),
             nodeIntegration: false,
             contextIsolation: true,
             sandbox: false

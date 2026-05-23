@@ -63,3 +63,4 @@ dist/
 ###build/
 JournalBear-*/
 electron-builder.yml
+.DS_Store
