@@ -1,7 +1,8 @@
 import Foundation
 
-/// Top-level decoded journal document. Mirrors the `.zjournal` `data.json` schema.
-/// The `en` key is a historical name kept for backwards compatibility with old files.
+/// Top-level decoded journal document (the archive's `data.json`).
+/// `en` is the historical key for the entries array; it becomes `entries` in the
+/// finalized 7.0 format, but the current test file still uses `en`, so we keep it.
 struct JournalData: Decodable {
     var version: Double?
     var en: [JournalEntry]
@@ -9,9 +10,9 @@ struct JournalData: Decodable {
 
 /// A single journal entry.
 ///
-/// Decoding is deliberately lenient: across the file format's history `entryDate`
-/// has been stored as both a string and a number, and `attachment` as a string, an
-/// array of strings, or omitted entirely. We tolerate all of these so old files open.
+/// `attachment` is a list of filenames stored under `images/` in the archive.
+/// Decoding stays tolerant of `entryDate` being a string or epoch number and of a
+/// missing `attachment`/`nsfw`, so one odd field never fails the whole load.
 struct JournalEntry: Identifiable, Decodable {
     let id = UUID()
     var entryDate: String
@@ -42,13 +43,7 @@ struct JournalEntry: Identifiable, Decodable {
         content = (try? c.decode(String.self, forKey: .content)) ?? ""
         sentiment = (try? c.decode(String.self, forKey: .sentiment)) ?? "Neutral"
 
-        if let arr = try? c.decode([String].self, forKey: .attachment) {
-            attachment = arr
-        } else if let s = try? c.decode(String.self, forKey: .attachment) {
-            attachment = [s]
-        } else {
-            attachment = []
-        }
+        attachment = (try? c.decode([String].self, forKey: .attachment)) ?? []
 
         nsfw = (try? c.decode(Bool.self, forKey: .nsfw)) ?? false
     }

@@ -23,7 +23,22 @@ open build/Debug/JournalBear.app
 ```
 
 The project uses Xcode 16+ filesystem-synchronized groups, so new files added
-under `JournalBear/` are picked up automatically — no `project.pbxproj` edits.
+under `JournalBear/` (or `JournalBearTests/`) are picked up automatically — no
+`project.pbxproj` edits.
+
+## Tests
+Swift Testing target `JournalBearTests` (hosted by the app). Run in Xcode with ⌘U,
+or from the command line:
+```sh
+DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" \
+  xcodebuild test -project JournalBear.xcodeproj -scheme JournalBear \
+  -destination 'platform=macOS,arch=arm64' \
+  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=""
+```
+The read-path tests open `test_journal.zjournal` from the repo root (gitignored;
+its password is embedded in the test). When the write path lands, add round-trip
+tests that build → save → reopen → assert, so no committed fixture or password
+is needed.
 
 ## Layout
 - `JournalBear/JournalBearApp.swift` — app entry, menu commands.
@@ -42,10 +57,16 @@ plaintext is a gzip-compressed tar of `data.json` plus an `images/` directory.
 This matches the Electron app's `src/main/encryption.ts` and `archive.ts`.
 
 ## Status
-Read path: opens and decrypts a `.zjournal`, lists entries, shows entry content
-(inline Markdown) and renders image attachments inline. Not yet implemented:
-full block Markdown, emoji shortcodes (`:smile:`), creating/editing/saving,
-search, statistics.
+Targets the **7.0 format only** — no legacy fallbacks. Read path: opens and
+decrypts a `.zjournal`, lists entries, shows entry content (inline Markdown), and
+renders image attachments inline (every image is a plain file under `images/`).
+Emoji shortcodes (`:smile:`) are intentionally unsupported — Unicode only.
+
+The entries array is still read under the key `en` transitionally; 7.0 renames it
+to `entries`, switched over once a real 7.0 file exists to test against. A full
+format spec will live in a design doc in the repo root.
+
+Not yet implemented: full block Markdown, creating/editing/saving, search, statistics.
 
 `Core/` + `Models/Journal.swift` have no SwiftUI/AppKit dependencies, so the read
 pipeline can be exercised headlessly by compiling them with a small `main.swift`

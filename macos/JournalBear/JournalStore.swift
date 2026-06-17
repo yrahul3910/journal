@@ -6,7 +6,6 @@ import UniformTypeIdentifiers
 @MainActor
 final class JournalStore: ObservableObject {
     @Published var entries: [JournalEntry] = []
-    @Published var selection: JournalEntry.ID?
     @Published var documentName: String?
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -51,7 +50,6 @@ final class JournalStore: ObservableObject {
 
                 entries = sorted
                 documentName = url.deletingPathExtension().lastPathComponent
-                selection = sorted.first?.id
                 pendingURL = nil
             } catch {
                 errorMessage = (error as? JournalError)?.message ?? error.localizedDescription
@@ -63,10 +61,5 @@ final class JournalStore: ObservableObject {
     func cancelPassword() {
         showPasswordPrompt = false
         pendingURL = nil
-    }
-
-    func entry(for id: JournalEntry.ID?) -> JournalEntry? {
-        guard let id else { return nil }
-        return entries.first { $0.id == id }
     }
 }

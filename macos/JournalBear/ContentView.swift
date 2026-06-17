@@ -3,10 +3,11 @@ import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var store: JournalStore
+    @State private var selection: JournalEntry.ID?
 
     var body: some View {
         NavigationSplitView {
-            List(store.entries, selection: $store.selection) { entry in
+            List(store.entries, selection: $selection) { entry in
                 EntryRow(entry: entry)
             }
             .navigationTitle(store.documentName ?? "JournalBear")
@@ -22,7 +23,7 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            if let entry = store.entry(for: store.selection) {
+            if let entry = store.entries.first(where: { $0.id == selection }) {
                 EntryDetail(entry: entry)
             } else {
                 Text("Select an entry")
@@ -63,6 +64,10 @@ struct ContentView: View {
             Text(store.errorMessage ?? "")
         }
         .frame(minWidth: 820, minHeight: 520)
+        .onChange(of: store.documentName) {
+            // Auto-select the first entry whenever a new journal is opened.
+            selection = store.entries.first?.id
+        }
     }
 }
 

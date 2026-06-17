@@ -9,12 +9,12 @@ struct JournalError: Error {
     static let parseFailed = JournalError(message: "The journal data could not be read.")
 }
 
-/// Reads a `.zjournal` file.
+/// Reads a `.zjournal` file. Supports the 7.0 format only.
 ///
 /// On-disk layout (produced by the Electron app):
 ///   `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`
-/// where the plaintext is a gzip-compressed tar containing `data.json` (and an
-/// `images/` directory of attachments).
+/// where the plaintext is a gzip-compressed tar containing `data.json` and an
+/// `images/` directory holding every attachment as a plain image file.
 enum JournalFile {
     static func open(url: URL, password: String) throws -> JournalData {
         let fileData = try Data(contentsOf: url)
@@ -29,8 +29,7 @@ enum JournalFile {
         let tarball = try Gzip.decompress(tarGz)
         let files = Tar.extract(tarball)
 
-        // `data.json` is the current name; `journal.json` is an older alias.
-        guard let json = files["data.json"] ?? files["journal.json"] else {
+        guard let json = files["data.json"] else {
             throw JournalError.parseFailed
         }
 
@@ -41,10 +40,13 @@ enum JournalFile {
             throw JournalError.parseFailed
         }
 
-        // Resolve attachment references into decoded image bytes against the archive.
+        // Every attachment is a file under `images/`, referenced by name.
         data.en = data.en.map { entry in
             var resolved = entry
-            resolved.images = AttachmentResolver.resolve(entry.attachment, in: files)
+            resolved.images = entry.attachment.compactMap { reference in
+                let filename = reference.split(separator: "/").last.map(String.init) ?? reference
+                return files["images/" + filename]
+            }
             return resolved
         }
 
