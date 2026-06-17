@@ -64,3 +64,4 @@ dist/
 JournalBear-*/
 electron-builder.yml
 .DS_Store
+out/
