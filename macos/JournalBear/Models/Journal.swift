@@ -20,6 +20,10 @@ struct JournalEntry: Identifiable, Decodable {
     var attachment: [String]
     var nsfw: Bool
 
+    /// Decoded image bytes for `attachment`, resolved against the archive at open
+    /// time. Not part of the JSON; populated by `JournalFile`.
+    var images: [Data] = []
+
     private enum CodingKeys: String, CodingKey {
         case entryDate, content, sentiment, attachment, nsfw
     }

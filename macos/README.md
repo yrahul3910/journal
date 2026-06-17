@@ -42,6 +42,11 @@ plaintext is a gzip-compressed tar of `data.json` plus an `images/` directory.
 This matches the Electron app's `src/main/encryption.ts` and `archive.ts`.
 
 ## Status
-Open-only milestone: opens and decrypts a `.zjournal`, lists entries, shows
-entry content (inline Markdown). Not yet implemented: image attachment display,
-full block Markdown, creating/editing/saving, search, statistics.
+Read path: opens and decrypts a `.zjournal`, lists entries, shows entry content
+(inline Markdown) and renders image attachments inline. Not yet implemented:
+full block Markdown, emoji shortcodes (`:smile:`), creating/editing/saving,
+search, statistics.
+
+`Core/` + `Models/Journal.swift` have no SwiftUI/AppKit dependencies, so the read
+pipeline can be exercised headlessly by compiling them with a small `main.swift`
+via `xcrun swiftc` — handy for verifying format compatibility without the GUI.

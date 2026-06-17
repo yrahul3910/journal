@@ -34,10 +34,20 @@ enum JournalFile {
             throw JournalError.parseFailed
         }
 
+        var data: JournalData
         do {
-            return try JSONDecoder().decode(JournalData.self, from: json)
+            data = try JSONDecoder().decode(JournalData.self, from: json)
         } catch {
             throw JournalError.parseFailed
         }
+
+        // Resolve attachment references into decoded image bytes against the archive.
+        data.en = data.en.map { entry in
+            var resolved = entry
+            resolved.images = AttachmentResolver.resolve(entry.attachment, in: files)
+            return resolved
+        }
+
+        return data
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var store: JournalStore
@@ -104,10 +105,31 @@ private struct EntryDetail: View {
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                if !entry.attachment.isEmpty {
-                    Label("\(entry.attachment.count) attachment(s)", systemImage: "paperclip")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                if !entry.images.isEmpty {
+                    Divider()
+                    Label(
+                        "^[\(entry.images.count) attachment](inflect: true)",
+                        systemImage: "paperclip"
+                    )
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                    ForEach(Array(entry.images.enumerated()), id: \.offset) { _, data in
+                        if let image = NSImage(data: data) {
+                            Image(nsImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                    }
+                } else if !entry.attachment.isEmpty {
+                    Label(
+                        "Couldn't load ^[\(entry.attachment.count) attachment](inflect: true)",
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
                 }
             }
             .padding(28)
