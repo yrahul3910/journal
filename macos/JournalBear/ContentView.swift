@@ -89,8 +89,19 @@ private struct EntryRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(entry.displayDate)
-                .font(.subheadline.weight(.semibold))
+            HStack(spacing: 6) {
+                Text(entry.displayDate)
+                    .font(.subheadline.weight(.semibold))
+                if !entry.attachments.isEmpty {
+                    Image(systemName: "paperclip")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel(
+                            "^[\(entry.attachments.count) attachment](inflect: true)"
+                        )
+                }
+                Spacer(minLength: 0)
+            }
             Text(entry.content)
                 .font(.caption)
                 .foregroundStyle(.secondary)
