@@ -104,6 +104,35 @@ struct JournalFileTests {
         #expect(entry.images.first?.prefix(3).elementsEqual([0xFF, 0xD8, 0xFF]) == true)
     }
 
+    // MARK: - Date parsing
+
+    /// The timezone-less ISO datetime an older Electron build wrote. This used to
+    /// fail parsing, so the entry showed its raw string and sorted to distantPast.
+    @Test func parsesTimezonelessISODatetime() throws {
+        let date = try #require(JournalEntry.parseDate("2017-09-16T00:00:00"))
+        let cal = Calendar(identifier: .gregorian)
+        let c = cal.dateComponents([.year, .month, .day], from: date)
+        #expect(c.year == 2017 && c.month == 9 && c.day == 16)
+    }
+
+    @Test func parsesDateOnly() throws {
+        let date = try #require(JournalEntry.parseDate("2017-09-16"))
+        let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
+        #expect(c.year == 2017 && c.month == 9 && c.day == 16)
+    }
+
+    @Test func parsesISOWithTimezoneAndEpoch() throws {
+        #expect(JournalEntry.parseDate("2015-03-02T05:00:00.000Z") != nil)
+        #expect(JournalEntry.parseDate("2015-03-02T05:00:00Z") != nil)
+        #expect(JournalEntry.parseDate("1600000000000") != nil) // epoch ms
+        #expect(JournalEntry.parseDate("1600000000") != nil)    // epoch s
+    }
+
+    @Test func rejectsGarbageDates() {
+        #expect(JournalEntry.parseDate("") == nil)
+        #expect(JournalEntry.parseDate("not a date") == nil)
+    }
+
     @Test func savedFileFailsWithWrongPassword() throws {
         let entries = [JournalEntry(entryDate: "2030-01-01T00:00:00Z", content: "x", sentiment: "Neutral")]
         let out = Self.tempURL()

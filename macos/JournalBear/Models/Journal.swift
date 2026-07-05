@@ -94,11 +94,46 @@ extension JournalEntry {
             return Date(timeIntervalSince1970: seconds)
         }
 
-        let iso = ISO8601DateFormatter()
-        if let date = iso.date(from: trimmed) { return date }
-        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = iso.date(from: trimmed) { return date }
+        // ISO 8601 with a timezone designator (…Z or ±hh:mm), with or without
+        // fractional seconds.
+        if let date = isoFormatter.date(from: trimmed) { return date }
+        if let date = isoFractionalFormatter.date(from: trimmed) { return date }
+
+        // Timezone-less formats written by older Electron builds, e.g.
+        // "2017-09-16T00:00:00" or a bare "2017-09-16". Parsed in the local
+        // timezone so the displayed calendar day matches what was stored.
+        for formatter in localFormatters {
+            if let date = formatter.date(from: trimmed) { return date }
+        }
 
         return nil
+    }
+
+    // Cached formatters. parseDate runs from both the sort (a background task)
+    // and displayDate (main), so these are only ever read, never reconfigured —
+    // Date/ISO8601 formatters are safe to parse with concurrently that way.
+    private static let isoFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private static let isoFractionalFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let localFormatters: [DateFormatter] = [
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd",
+    ].map { format in
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        f.dateFormat = format
+        return f
     }
 }
