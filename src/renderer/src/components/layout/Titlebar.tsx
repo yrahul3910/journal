@@ -1,17 +1,17 @@
-import { Minus, Square, X } from 'lucide-react'
+import { Minus, Square, X } from "lucide-react";
 
 export function Titlebar() {
     const handleMinimize = () => {
-        window.electron.minimizeWindow()
-    }
+        window.electron.minimizeWindow();
+    };
 
     const handleMaximize = () => {
-        window.electron.maximizeWindow()
-    }
+        window.electron.maximizeWindow();
+    };
 
     const handleClose = () => {
-        window.electron.closeWindow()
-    }
+        window.electron.closeWindow();
+    };
 
     return (
         <div className="titlebar-drag flex h-8 items-center justify-between bg-primary px-4 text-primary-foreground">
@@ -42,5 +42,5 @@ export function Titlebar() {
                 </button>
             </div>
         </div>
-    )
+    );
 }

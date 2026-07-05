@@ -1,88 +1,111 @@
-import { useJournalStore } from '@/store/journal-store'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { EntryCard } from './EntryCard'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import { useState, useMemo, useEffect } from 'react'
+import { useJournalStore } from "@/store/journal-store";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { EntryCard } from "./EntryCard";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
 
 export function EntryList() {
-  const { journalData, selectedEntryIndex, selectEntry } = useJournalStore()
+    const { journalData, selectedEntryIndex, selectEntry } = useJournalStore();
 
-  // Use useMemo to cache the entriesByYear calculation
-  const entriesByYear = useMemo(() => {
-    if (!journalData) return {}
+    // Use useMemo to cache the entriesByYear calculation
+    const entriesByYear = useMemo(() => {
+        if (!journalData) return {};
 
-    const grouped: Record<number, typeof journalData.en> = {}
-    journalData.en.forEach((entry) => {
-      const year = new Date(entry.entryDate).getFullYear()
-      if (!grouped[year]) {
-        grouped[year] = []
-      }
-      grouped[year].push(entry)
-    })
-    return grouped
-  }, [journalData])
+        const grouped: Record<number, typeof journalData.entries> = {};
+        journalData.entries.forEach((entry) => {
+            const year = new Date(entry.entryDate).getFullYear();
+            if (!grouped[year]) {
+                grouped[year] = [];
+            }
+            grouped[year].push(entry);
+        });
+        return grouped;
+    }, [journalData]);
 
-  // Track which years are open (all open by default)
-  const years = Object.keys(entriesByYear).sort((a, b) => Number(b) - Number(a))
-  const [openYears, setOpenYears] = useState<Record<string, boolean>>({})
+    // Track which years are open (all open by default)
+    const years = Object.keys(entriesByYear).sort(
+        (a, b) => Number(b) - Number(a),
+    );
+    const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
 
-  // Initialize openYears when years change
-  useEffect(() => {
-    const newOpenYears = years.reduce((acc, year) => ({ ...acc, [year]: true }), {})
-    setOpenYears(newOpenYears)
-  }, [journalData]) // Only update when journalData changes
+    // Initialize openYears when years change
+    useEffect(() => {
+        const newOpenYears = years.reduce(
+            (acc, year) => ({ ...acc, [year]: true }),
+            {},
+        );
+        setOpenYears(newOpenYears);
+    }, [journalData]); // Only update when journalData changes
 
-  if (!journalData || journalData.en.length === 0) {
+    if (!journalData || journalData.entries.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p>No entries yet. Create your first entry!</p>
+            </div>
+        );
+    }
+
+    const toggleYear = (year: string) => {
+        setOpenYears((prev) => ({ ...prev, [year]: !prev[year] }));
+    };
+
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p>No entries yet. Create your first entry!</p>
-      </div>
-    )
-  }
+        <ScrollArea className="h-full">
+            <div className="p-4 space-y-3">
+                {years.map((year) => {
+                    const entries = entriesByYear[Number(year)];
+                    const isOpen = openYears[year] ?? true; // Default to true if undefined
 
-  const toggleYear = (year: string) => {
-    setOpenYears((prev) => ({ ...prev, [year]: !prev[year] }))
-  }
+                    return (
+                        <Collapsible
+                            key={year}
+                            open={isOpen}
+                            onOpenChange={() => toggleYear(year)}
+                        >
+                            <CollapsibleTrigger className="flex items-center gap-2 w-full p-2 rounded-lg outline-none transition-colors hover:bg-accent focus-visible:bg-accent">
+                                {isOpen ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                )}
+                                <span className="font-bold text-lg">
+                                    {year}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                    ({entries.length})
+                                </span>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-2 space-y-2">
+                                {entries.map((entry) => {
+                                    // Find the actual index in the full array
+                                    const actualIndex =
+                                        journalData.entries.findIndex(
+                                            (e) => e === entry,
+                                        );
+                                    const isSelected =
+                                        actualIndex === selectedEntryIndex;
 
-  return (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-3">
-        {years.map((year) => {
-          const entries = entriesByYear[Number(year)]
-          const isOpen = openYears[year] ?? true // Default to true if undefined
-
-          return (
-            <Collapsible key={year} open={isOpen} onOpenChange={() => toggleYear(year)}>
-              <CollapsibleTrigger className="flex items-center gap-2 w-full p-2 rounded-lg outline-none transition-colors hover:bg-accent focus-visible:bg-accent">
-                {isOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                <span className="font-bold text-lg">{year}</span>
-                <span className="text-sm text-muted-foreground">({entries.length})</span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 space-y-2">
-                {entries.map((entry, idx) => {
-                  // Find the actual index in the full array
-                  const actualIndex = journalData.en.findIndex((e) => e === entry)
-                  const isSelected = actualIndex === selectedEntryIndex
-
-                  return (
-                    <EntryCard
-                      key={actualIndex}
-                      entry={entry}
-                      isSelected={isSelected}
-                      onClick={() => selectEntry(entry, actualIndex)}
-                    />
-                  )
+                                    return (
+                                        <EntryCard
+                                            key={actualIndex}
+                                            entry={entry}
+                                            isSelected={isSelected}
+                                            onClick={() =>
+                                                selectEntry(entry, actualIndex)
+                                            }
+                                        />
+                                    );
+                                })}
+                            </CollapsibleContent>
+                        </Collapsible>
+                    );
                 })}
-              </CollapsibleContent>
-            </Collapsible>
-          )
-        })}
-      </div>
-    </ScrollArea>
-  )
+            </div>
+        </ScrollArea>
+    );
 }

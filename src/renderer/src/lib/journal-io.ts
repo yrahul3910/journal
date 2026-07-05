@@ -1,65 +1,71 @@
-import { useJournalStore } from '@/store/journal-store'
-import showdown from 'showdown'
+import { useJournalStore } from "@/store/journal-store";
+import showdown from "showdown";
 
 // Showdown converter for HTML export
 const converter = new showdown.Converter({
-  literalMidWordUnderscores: true,
-  literalMidWordAsterisks: true,
-  tables: true,
-  strikethrough: true,
-  tasklists: true,
-  simpleLineBreaks: true,
-  simplifiedAutoLink: true,
-  openLinksInNewWindow: true,
-  emoji: false,
-  backslashEscapesHTMLTags: true
-})
+    literalMidWordUnderscores: true,
+    literalMidWordAsterisks: true,
+    tables: true,
+    strikethrough: true,
+    tasklists: true,
+    simpleLineBreaks: true,
+    simplifiedAutoLink: true,
+    openLinksInNewWindow: true,
+    emoji: false,
+    backslashEscapesHTMLTags: true,
+});
 
-export async function saveJournal(): Promise<{ success: boolean; error?: string }> {
-  const state = useJournalStore.getState()
-  const { journalData, password, currentFilePath } = state
+export async function saveJournal(): Promise<{
+    success: boolean;
+    error?: string;
+}> {
+    const state = useJournalStore.getState();
+    const { journalData, password, currentFilePath } = state;
 
-  if (!journalData || !password) {
-    return { success: false, error: 'No journal is open' }
-  }
-
-  try {
-    let filePath = currentFilePath
-
-    // If no current file path, ask for save location
-    if (!filePath) {
-      const result = await window.electron.saveFileDialog()
-      if (!result) {
-        return { success: false, error: 'Save cancelled' }
-      }
-      filePath = result
-      useJournalStore.setState({ currentFilePath: filePath })
+    if (!journalData || !password) {
+        return { success: false, error: "No journal is open" };
     }
 
-    // Save journal using IPC
-    const result = await window.electron.saveJournal({
-      filePath,
-      password,
-      journalData
-    })
+    try {
+        let filePath = currentFilePath;
 
-    return result
-  } catch (error) {
-    return { success: false, error: (error as Error).message }
-  }
+        // If no current file path, ask for save location
+        if (!filePath) {
+            const result = await window.electron.saveFileDialog();
+            if (!result) {
+                return { success: false, error: "Save cancelled" };
+            }
+            filePath = result;
+            useJournalStore.setState({ currentFilePath: filePath });
+        }
+
+        // Save journal using IPC
+        const result = await window.electron.saveJournal({
+            filePath,
+            password,
+            journalData,
+        });
+
+        return result;
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
 }
 
-export async function exportToHTML(): Promise<{ success: boolean; error?: string }> {
-  const state = useJournalStore.getState()
-  const { journalData } = state
+export async function exportToHTML(): Promise<{
+    success: boolean;
+    error?: string;
+}> {
+    const state = useJournalStore.getState();
+    const { journalData } = state;
 
-  if (!journalData) {
-    return { success: false, error: 'No journal is open' }
-  }
+    if (!journalData) {
+        return { success: false, error: "No journal is open" };
+    }
 
-  try {
-    // Generate HTML
-    let html = `<!DOCTYPE html>
+    try {
+        // Generate HTML
+        let html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -119,45 +125,47 @@ export async function exportToHTML(): Promise<{ success: boolean; error?: string
 </head>
 <body>
   <h1>My Journal</h1>
-`
+`;
 
-    // Add entries (sorted by date)
-    const sortedEntries = [...journalData.en].sort(
-      (a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime()
-    )
+        // Add entries (sorted by date)
+        const sortedEntries = [...journalData.entries].sort(
+            (a, b) =>
+                new Date(b.entryDate).getTime() -
+                new Date(a.entryDate).getTime(),
+        );
 
-    sortedEntries.forEach((entry) => {
-      const date = new Date(entry.entryDate)
-      const dateStr = date.toDateString()
-      const contentHtml = converter.makeHtml(entry.content)
+        sortedEntries.forEach((entry) => {
+            const date = new Date(entry.entryDate);
+            const dateStr = date.toDateString();
+            const contentHtml = converter.makeHtml(entry.content);
 
-      html += `
+            html += `
   <div class="entry">
     <div class="entry-date">${dateStr}</div>
     <span class="entry-sentiment sentiment-${entry.sentiment}">${entry.sentiment}</span>
-    ${entry.nsfw ? '<span class="nsfw-badge">NSFW</span>' : ''}
+    ${entry.nsfw ? '<span class="nsfw-badge">NSFW</span>' : ""}
     <div class="entry-content">${contentHtml}</div>
-`
+`;
 
-      if (entry.attachment && entry.attachment.length > 0) {
-        html += '    <div class="entry-images">\n'
-        entry.attachment.forEach((img) => {
-          html += `      <img src="${img}" alt="Attachment" />\n`
-        })
-        html += '    </div>\n'
-      }
+            if (entry.attachments && entry.attachments.length > 0) {
+                html += '    <div class="entry-images">\n';
+                entry.attachments.forEach((img) => {
+                    html += `      <img src="${img}" alt="Attachment" />\n`;
+                });
+                html += "    </div>\n";
+            }
 
-      html += '  </div>\n'
-    })
+            html += "  </div>\n";
+        });
 
-    html += `
+        html += `
 </body>
-</html>`
+</html>`;
 
-    // Export using IPC
-    const result = await window.electron.exportHtml({ html })
-    return result
-  } catch (error) {
-    return { success: false, error: (error as Error).message }
-  }
+        // Export using IPC
+        const result = await window.electron.exportHtml({ html });
+        return result;
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
 }
