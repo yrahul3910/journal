@@ -1,46 +1,44 @@
 import Foundation
 
-/// Top-level decoded journal document (the archive's `data.json`).
-/// `en` is the historical key for the entries array; it becomes `entries` in the
-/// finalized 7.0 format, but the current test file still uses `en`, so we keep it.
+/// Top-level decoded journal document (the archive's `data.json`), 7.0 format.
 struct JournalData: Decodable {
     var version: Double?
-    var en: [JournalEntry]
+    var entries: [JournalEntry]
 }
 
 /// A single journal entry.
 ///
-/// `attachment` is a list of filenames stored under `images/` in the archive.
-/// Decoding stays tolerant of `entryDate` being a string or epoch number and of a
-/// missing `attachment`/`nsfw`, so one odd field never fails the whole load.
+/// `attachments` is a list of image references stored under `images/` in the
+/// archive. Decoding stays tolerant of `entryDate` being a string or epoch number
+/// and of a missing `attachments`/`nsfw`, so one odd field never fails the whole load.
 struct JournalEntry: Identifiable, Decodable {
     let id = UUID()
     var entryDate: String
     var content: String
     var sentiment: String
-    var attachment: [String]
+    var attachments: [String]
     var nsfw: Bool
 
-    /// Decoded image bytes for `attachment`, resolved against the archive at open
+    /// Decoded image bytes for `attachments`, resolved against the archive at open
     /// time. Not part of the JSON; populated by `JournalFile`.
     var images: [Data] = []
 
     private enum CodingKeys: String, CodingKey {
-        case entryDate, content, sentiment, attachment, nsfw
+        case entryDate, content, sentiment, attachments, nsfw
     }
 
     init(
         entryDate: String,
         content: String,
         sentiment: String,
-        attachment: [String] = [],
+        attachments: [String] = [],
         nsfw: Bool = false,
         images: [Data] = []
     ) {
         self.entryDate = entryDate
         self.content = content
         self.sentiment = sentiment
-        self.attachment = attachment
+        self.attachments = attachments
         self.nsfw = nsfw
         self.images = images
     }
@@ -59,7 +57,7 @@ struct JournalEntry: Identifiable, Decodable {
         content = (try? c.decode(String.self, forKey: .content)) ?? ""
         sentiment = (try? c.decode(String.self, forKey: .sentiment)) ?? "Neutral"
 
-        attachment = (try? c.decode([String].self, forKey: .attachment)) ?? []
+        attachments = (try? c.decode([String].self, forKey: .attachments)) ?? []
 
         nsfw = (try? c.decode(Bool.self, forKey: .nsfw)) ?? false
     }

@@ -49,7 +49,7 @@ final class JournalStore: ObservableObject {
                     try JournalFile.open(url: url, password: password)
                 }.value
 
-                let sorted = data.en.sorted {
+                let sorted = data.entries.sorted {
                     let lhs = JournalEntry.parseDate($0.entryDate) ?? .distantPast
                     let rhs = JournalEntry.parseDate($1.entryDate) ?? .distantPast
                     return lhs > rhs

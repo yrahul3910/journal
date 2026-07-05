@@ -44,9 +44,9 @@ enum JournalFile {
         }
 
         // Every attachment is a file under `images/`, referenced by name.
-        data.en = data.en.map { entry in
+        data.entries = data.entries.map { entry in
             var resolved = entry
-            resolved.images = entry.attachment.compactMap { reference in
+            resolved.images = entry.attachments.compactMap { reference in
                 let filename = reference.split(separator: "/").last.map(String.init) ?? reference
                 return files["images/" + filename]
             }
@@ -74,12 +74,12 @@ enum JournalFile {
                 entryDate: entry.entryDate,
                 content: entry.content,
                 sentiment: entry.sentiment,
-                attachment: refs,
+                attachments: refs,
                 nsfw: entry.nsfw
             ))
         }
 
-        let json = try JSONEncoder().encode(DiskJournal(en: diskEntries))
+        let json = try JSONEncoder().encode(DiskJournal(version: 7, entries: diskEntries))
         archiveFiles.insert((name: "data.json", data: json), at: 0)
 
         let tarball = Tar.create(archiveFiles)
@@ -113,13 +113,14 @@ enum JournalFile {
 /// On-disk `data.json` schema — the encodable counterpart of `JournalData`.
 /// Deliberately excludes the in-memory-only `id` / `images` fields.
 private struct DiskJournal: Encodable {
-    let en: [DiskEntry]
+    let version: Double
+    let entries: [DiskEntry]
 }
 
 private struct DiskEntry: Encodable {
     let entryDate: String
     let content: String
     let sentiment: String
-    let attachment: [String]
+    let attachments: [String]
     let nsfw: Bool
 }

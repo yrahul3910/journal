@@ -141,9 +141,9 @@ private struct EntryDetail: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                     }
-                } else if !entry.attachment.isEmpty {
+                } else if !entry.attachments.isEmpty {
                     Label(
-                        "Couldn't load ^[\(entry.attachment.count) attachment](inflect: true)",
+                        "Couldn't load ^[\(entry.attachments.count) attachment](inflect: true)",
                         systemImage: "exclamationmark.triangle"
                     )
                     .font(.callout)

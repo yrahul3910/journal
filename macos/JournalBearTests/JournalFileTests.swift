@@ -33,7 +33,7 @@ struct JournalFileTests {
 
     @Test func opensAndDecodesAllEntries() throws {
         let data = try Self.openFixture()
-        #expect(data.en.count == 2)
+        #expect(data.entries.count == 2)
     }
 
     @Test func resolvesImageAttachmentsAsValidJPEGs() throws {
@@ -41,7 +41,7 @@ struct JournalFileTests {
 
         // JournalFile.open returns file order; find the entry with attachments
         // rather than assuming an index.
-        let withImages = try #require(data.en.first { !$0.images.isEmpty })
+        let withImages = try #require(data.entries.first { !$0.images.isEmpty })
         #expect(withImages.images.count == 2)
 
         for image in withImages.images {
@@ -52,7 +52,7 @@ struct JournalFileTests {
 
     @Test func entryWithoutAttachmentsHasNoImages() throws {
         let data = try Self.openFixture()
-        #expect(data.en.contains { $0.images.isEmpty })
+        #expect(data.entries.contains { $0.images.isEmpty })
     }
 
     @Test func wrongPasswordThrows() throws {
@@ -72,7 +72,7 @@ struct JournalFileTests {
 
     @Test func savesAndReopensANewEntry() throws {
         let original = try Self.openFixture()
-        var entries = original.en
+        var entries = original.entries
         entries.append(JournalEntry(
             entryDate: "2030-01-02T03:04:05Z",
             content: "Round-trip test entry",
@@ -85,13 +85,13 @@ struct JournalFileTests {
         try JournalFile.save(entries, to: out, password: "round-trip-pw")
         let reopened = try JournalFile.open(url: out, password: "round-trip-pw")
 
-        #expect(reopened.en.count == original.en.count + 1)
-        #expect(reopened.en.contains { $0.content == "Round-trip test entry" })
+        #expect(reopened.entries.count == original.entries.count + 1)
+        #expect(reopened.entries.contains { $0.content == "Round-trip test entry" })
     }
 
     @Test func imageAttachmentsSurviveASaveRoundTrip() throws {
         let original = try Self.openFixture()
-        let withImages = try #require(original.en.first { !$0.images.isEmpty })
+        let withImages = try #require(original.entries.first { !$0.images.isEmpty })
 
         let out = Self.tempURL()
         defer { try? FileManager.default.removeItem(at: out) }
@@ -99,7 +99,7 @@ struct JournalFileTests {
         try JournalFile.save([withImages], to: out, password: "pw")
         let reopened = try JournalFile.open(url: out, password: "pw")
 
-        let entry = try #require(reopened.en.first)
+        let entry = try #require(reopened.entries.first)
         #expect(entry.images.count == withImages.images.count)
         #expect(entry.images.first?.prefix(3).elementsEqual([0xFF, 0xD8, 0xFF]) == true)
     }
