@@ -24,7 +24,7 @@
             "icon": "./build/icon.ico"
         }
     },
-    "version": "6.0.0",
+    "version": "7.0.0",
     "type": "module",
     "main": "out/main/index.js",
     "dependencies": {
@@ -41,7 +41,6 @@
         "@radix-ui/react-tabs": "^1.1.13",
         "@tailwindcss/typography": "^0.5.19",
         "@vitejs/plugin-react": "^6.0.0",
-        "vite": "8.0.14",
         "alertify.js": "^1.0.12",
         "async": "^3.2.6",
         "autoprefixer": "^10.4.24",
@@ -70,17 +69,25 @@
         "showdown": "^2.1.0",
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.4.0",
-        "targz": "^1.0.1",
-        "typescript": "^5.9.3",
+        "tar": "^7.5.16",
+        "typescript": "^7.0.1-rc",
+        "vite": "8.0.14",
+        "zod": "^4.4.3",
         "zustand": "^5.0.11"
     },
     "devDependencies": {
+        "@biomejs/biome": "^2.5.0",
         "@types/node": "^25.2.2",
+        "@types/owasp-password-strength-test": "^1.3.2",
         "@types/react": "^19.2.13",
         "@types/react-dom": "^19.2.3",
+        "@types/showdown": "^2.0.6",
+        "@types/tar": "^7.0.87",
         "electron": "^42.2.0",
         "electron-builder": "^26.8.1",
-        "tailwindcss": "3.4.17"
+        "jsdom": "^29.1.1",
+        "tailwindcss": "3.4.17",
+        "vitest": "^4.1.9"
     },
     "scripts": {
         "postinstall": "electron-builder install-app-deps",
@@ -93,6 +100,12 @@
         "dist-mac": "npm run build && electron-builder -m --arm64",
         "dist-linux": "npm run build && electron-builder -l",
         "dist-win": "npm run build && electron-builder -w --x64",
-        "ship": "npm run build && electron-builder -p always"
+        "ship": "npm run build && electron-builder -p always",
+        "check": "tsc --noEmit",
+        "lint": "biome check",
+        "lint:fix": "biome check --write",
+        "format": "biome format --write",
+        "test": "vitest run",
+        "test:watch": "vitest"
     }
 }
