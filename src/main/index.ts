@@ -7,10 +7,9 @@ import { rimraf } from "rimraf";
 import { z } from "zod";
 
 import {
-    JournalData,
+    type JournalData,
     JournalData51Schema,
     JournalDataSchema,
-    JournalEntry,
     migrate51to70,
 } from "../shared/journal";
 import * as archive from "./archive";
@@ -126,6 +125,25 @@ ipcMain.handle("save-file-dialog", async () => {
     return result.filePath;
 });
 
+// Read an image file referenced by a 7.0 attachment path and return it as a
+// data: URL for the renderer. Returns null if the file is missing so the caller
+// can drop the reference. B (file-serving over a protocol) will replace this.
+function loadImageAsDataUrl(imagesDir: string, ref: string): string | null {
+    const filename = ref.split("/").pop();
+    if (!filename) return null;
+
+    const fullPath = path.join(imagesDir, filename);
+    if (!fs.existsSync(fullPath)) {
+        console.warn(`[DECRYPT] Image not found: ${fullPath}`);
+        return null;
+    }
+
+    const ext = filename.split(".").pop()?.toLowerCase();
+    const mimeType =
+        ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
+    return `data:${mimeType};base64,${fs.readFileSync(fullPath).toString("base64")}`;
+}
+
 ipcMain.handle(
     "decrypt-journal",
     async (_event, args: { filePath: string; password: string }) => {
@@ -146,21 +164,7 @@ ipcMain.handle(
             await archive.decompress(`${tmp}/_jb.tar.gz`);
 
             try {
-                console.log(
-                    `[DECRYPT] Looking for journal.json in: ${tmp}/_jbfiles`,
-                );
-
-                // Check if the directory exists and list its contents
-                if (fs.existsSync(`${tmp}/_jbfiles`)) {
-                    const files = fs.readdirSync(`${tmp}/_jbfiles`);
-                    console.log("[DECRYPT] Files in _jbfiles:", files);
-                } else {
-                    console.log("[DECRYPT] _jbfiles directory does not exist!");
-                }
-
-                const journalPath = tmp + "/_jbfiles/data.json";
-
-                console.log("[DECRYPT] Reading journal from:", journalPath);
+                const journalPath = `${tmp}/_jbfiles/data.json`;
                 const rawContents = JSON.parse(
                     fs.readFileSync(journalPath, "utf8"),
                 );
@@ -170,153 +174,19 @@ ipcMain.handle(
                     ? v7Result.data
                     : migrate51to70(z.parse(JournalData51Schema, rawContents));
 
-                // Load image attachments from images directory
+                // The schema guarantees attachments is string[]. Each item is
+                // either an inline data: URL (from a migrated 5.1 journal) or a
+                // path into images/ (the 7.0 on-disk form). Resolve every path
+                // to a data: URL so the renderer only ever sees data: URLs.
                 const imagesDir = `${tmp}/_jbfiles/images`;
-                console.log(
-                    "[DECRYPT] Checking for images directory:",
-                    imagesDir,
-                );
-                console.log(
-                    "[DECRYPT] Images directory exists:",
-                    fs.existsSync(imagesDir),
-                );
-
-                if (fs.existsSync(imagesDir)) {
-                    let count = 0;
-                    data.entries.forEach((entry: JournalEntry, idx: number) => {
-                        if (entry.attachments) {
-                            const images: string[] = [];
-
-                            // Handle single string attachment
-                            if (typeof entry.attachments === "string") {
-                                // Check if it's already a data URL
-                                if (
-                                    entry.attachments.startsWith("data:image/")
-                                ) {
-                                    images.push(entry.attachments);
-                                } else if (
-                                    entry.attachments.startsWith("/9j/")
-                                ) {
-                                    // Raw JPEG base64 - add prefix
-                                    images.push(
-                                        "data:image/jpeg;base64," +
-                                            entry.attachments,
-                                    );
-                                } else if (
-                                    entry.attachments.startsWith("iVBOR")
-                                ) {
-                                    // Raw PNG base64 - add prefix
-                                    images.push(
-                                        "data:image/png;base64," +
-                                            entry.attachments,
-                                    );
-                                } else {
-                                    // Assume JPEG if we can't detect
-                                    images.push(
-                                        "data:image/jpeg;base64," +
-                                            entry.attachments,
-                                    );
-                                }
-                                console.log(
-                                    `[DECRYPT] Entry ${idx} converted single string attachment`,
-                                );
-                                entry.attachments = images;
-                            } else if (
-                                Array.isArray(entry.attachments) &&
-                                entry.attachments.length > 0
-                            ) {
-                                // Check if attachment contains paths or is already base64
-                                const firstItem = entry.attachments[0];
-                                if (
-                                    typeof firstItem === "string" &&
-                                    firstItem.includes("/_jbfiles/")
-                                ) {
-                                    // It's a path - load the actual files
-                                    entry.attachments.forEach(
-                                        (filePath: string) => {
-                                            // Convert relative path to absolute
-                                            const filename = filePath
-                                                .split("/")
-                                                .pop(); // Get just the filename
-                                            const fullPath =
-                                                tmp +
-                                                "/_jbfiles/images/" +
-                                                filename;
-                                            console.log(
-                                                `[DECRYPT] Loading image from path: ${fullPath}`,
-                                            );
-
-                                            if (fs.existsSync(fullPath)) {
-                                                const imgBuffer =
-                                                    fs.readFileSync(fullPath);
-                                                // Detect image type from extension
-                                                const ext = filename
-                                                    ?.split(".")
-                                                    .pop()
-                                                    ?.toLowerCase();
-                                                const mimeType =
-                                                    ext === "jpg" ||
-                                                    ext === "jpeg"
-                                                        ? "image/jpeg"
-                                                        : "image/png";
-                                                const base64 =
-                                                    `data:${mimeType};base64,` +
-                                                    imgBuffer.toString(
-                                                        "base64",
-                                                    );
-                                                console.log(
-                                                    `[DECRYPT] Loaded image ${filename}, size: ${imgBuffer.length} bytes`,
-                                                );
-                                                images.push(base64);
-                                            } else {
-                                                console.log(
-                                                    `[DECRYPT] Image not found: ${fullPath}`,
-                                                );
-                                            }
-                                        },
-                                    );
-                                } else if (
-                                    typeof entry.attachments === "number" ||
-                                    (Array.isArray(entry.attachments) &&
-                                        typeof entry.attachments[0] ===
-                                            "number")
-                                ) {
-                                    // It's a count - try the old naming pattern
-                                    const count =
-                                        typeof entry.attachments === "number"
-                                            ? entry.attachments
-                                            : entry.attachments.length;
-                                    for (
-                                        let imgIdx = 0;
-                                        imgIdx < count;
-                                        imgIdx++
-                                    ) {
-                                        const filename = `${idx}_${imgIdx}.png`;
-                                        const imgPath = `${imagesDir}/${filename}`;
-                                        if (fs.existsSync(imgPath)) {
-                                            const imgBuffer =
-                                                fs.readFileSync(imgPath);
-                                            const base64 =
-                                                "data:image/png;base64," +
-                                                imgBuffer.toString("base64");
-                                            images.push(base64);
-                                        }
-                                    }
-                                }
-
-                                console.log(
-                                    `[DECRYPT] Entry ${idx} loaded ${images.length} images`,
-                                );
-                                entry.attachments = images;
-                            }
-                        }
-                    });
-
-                    console.log(
-                        `${count} entries with string value for "attachments".`,
-                    );
-                } else {
-                    console.log("[DECRYPT] No images directory found");
+                for (const entry of data.entries) {
+                    entry.attachments = entry.attachments
+                        .map((att) =>
+                            att.startsWith("data:")
+                                ? att
+                                : loadImageAsDataUrl(imagesDir, att),
+                        )
+                        .filter((att): att is string => att !== null);
                 }
 
                 return { success: true, data };
