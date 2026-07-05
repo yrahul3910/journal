@@ -49,6 +49,15 @@ struct ContentView: View {
                 .help("Add a new entry")
                 .disabled(!store.canAddEntry)
             }
+            ToolbarItem {
+                Button {
+                    store.save()
+                } label: {
+                    Label("Save", systemImage: "square.and.arrow.down")
+                }
+                .help("Save changes (⌘S)")
+                .disabled(!store.hasUnsavedChanges || store.isSaving)
+            }
         }
         .overlay {
             if store.isLoading || store.isSaving {
@@ -57,6 +66,23 @@ struct ContentView: View {
                     .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
         }
+        .overlay(alignment: .bottom) {
+            if store.justSaved {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("Saved")
+                }
+                .font(.callout.weight(.medium))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.regularMaterial, in: Capsule())
+                .overlay(Capsule().stroke(.quaternary))
+                .padding(.bottom, 24)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: store.justSaved)
         .sheet(isPresented: $store.showPasswordPrompt) {
             PasswordPrompt()
                 .environmentObject(store)

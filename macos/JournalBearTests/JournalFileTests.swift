@@ -133,6 +133,32 @@ struct JournalFileTests {
         #expect(JournalEntry.parseDate("not a date") == nil)
     }
 
+    // MARK: - Store: staging vs. saving
+
+    @MainActor
+    @Test func addingEntryStagesInMemoryAndMarksDirty() {
+        let store = JournalStore()
+        #expect(store.hasUnsavedChanges == false)
+
+        store.addEntry(JournalEntry(
+            entryDate: "2020-01-01T00:00:00Z",
+            content: "hi",
+            sentiment: "Neutral"
+        ))
+
+        #expect(store.entries.count == 1)
+        #expect(store.hasUnsavedChanges == true)
+    }
+
+    @MainActor
+    @Test func savingWithNoOpenJournalIsANoOp() {
+        let store = JournalStore()
+        store.addEntry(JournalEntry(entryDate: "2020-01-01", content: "x", sentiment: "Neutral"))
+        // No file/password behind the store, so save can't clear the dirty flag.
+        store.save()
+        #expect(store.hasUnsavedChanges == true)
+    }
+
     @Test func savedFileFailsWithWrongPassword() throws {
         let entries = [JournalEntry(entryDate: "2030-01-01T00:00:00Z", content: "x", sentiment: "Neutral")]
         let out = Self.tempURL()

@@ -2,8 +2,9 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
-/// Compose a new journal entry. On save it's added to the open journal and the
-/// whole journal is re-encrypted to disk (see `JournalStore.addEntry`).
+/// Compose a new journal entry. On save it's staged into the open journal in
+/// memory (see `JournalStore.addEntry`); the journal is written to disk later
+/// when the user invokes Save (⌘S).
 struct NewEntryView: View {
     @EnvironmentObject var store: JournalStore
     @Environment(\.dismiss) private var dismiss
@@ -72,7 +73,7 @@ struct NewEntryView: View {
             HStack {
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
-                Button("Save", action: save)
+                Button("Add", action: add)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
             }
@@ -114,7 +115,7 @@ struct NewEntryView: View {
         }
     }
 
-    private func save() {
+    private func add() {
         let entry = JournalEntry(
             entryDate: ISO8601DateFormatter().string(from: date),
             content: content,
