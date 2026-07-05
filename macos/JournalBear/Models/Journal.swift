@@ -29,6 +29,22 @@ struct JournalEntry: Identifiable, Decodable {
         case entryDate, content, sentiment, attachment, nsfw
     }
 
+    init(
+        entryDate: String,
+        content: String,
+        sentiment: String,
+        attachment: [String] = [],
+        nsfw: Bool = false,
+        images: [Data] = []
+    ) {
+        self.entryDate = entryDate
+        self.content = content
+        self.sentiment = sentiment
+        self.attachment = attachment
+        self.nsfw = nsfw
+        self.images = images
+    }
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -50,6 +66,9 @@ struct JournalEntry: Identifiable, Decodable {
 }
 
 extension JournalEntry {
+    /// The mood options offered when composing an entry.
+    static let sentiments = ["Happy", "Excited", "Loved", "Neutral", "Sad", "Angry"]
+
     /// Best-effort human-readable date. Falls back to the raw stored value when the
     /// format isn't recognized, so we never hide data from the user.
     var displayDate: String {

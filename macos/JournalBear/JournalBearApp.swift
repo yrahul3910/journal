@@ -10,8 +10,11 @@ struct JournalBearApp: App {
                 .environmentObject(store)
         }
         .commands {
-            // Replace "New" with "Open Journal…" for this milestone (open-only).
             CommandGroup(replacing: .newItem) {
+                Button("New Entry") { store.showNewEntry = true }
+                    .keyboardShortcut("n", modifiers: .command)
+                    .disabled(!store.canAddEntry)
+                Divider()
                 Button("Open Journal…") { store.chooseFile() }
                     .keyboardShortcut("o", modifiers: .command)
             }

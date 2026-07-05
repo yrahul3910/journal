@@ -62,4 +62,56 @@ struct JournalFileTests {
             _ = try JournalFile.open(url: url, password: "definitely-the-wrong-password")
         }
     }
+
+    // MARK: - Write path (round-trip)
+
+    private static func tempURL() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("jb-roundtrip-\(UUID().uuidString).zjournal")
+    }
+
+    @Test func savesAndReopensANewEntry() throws {
+        let original = try Self.openFixture()
+        var entries = original.en
+        entries.append(JournalEntry(
+            entryDate: "2030-01-02T03:04:05Z",
+            content: "Round-trip test entry",
+            sentiment: "Happy"
+        ))
+
+        let out = Self.tempURL()
+        defer { try? FileManager.default.removeItem(at: out) }
+
+        try JournalFile.save(entries, to: out, password: "round-trip-pw")
+        let reopened = try JournalFile.open(url: out, password: "round-trip-pw")
+
+        #expect(reopened.en.count == original.en.count + 1)
+        #expect(reopened.en.contains { $0.content == "Round-trip test entry" })
+    }
+
+    @Test func imageAttachmentsSurviveASaveRoundTrip() throws {
+        let original = try Self.openFixture()
+        let withImages = try #require(original.en.first { !$0.images.isEmpty })
+
+        let out = Self.tempURL()
+        defer { try? FileManager.default.removeItem(at: out) }
+
+        try JournalFile.save([withImages], to: out, password: "pw")
+        let reopened = try JournalFile.open(url: out, password: "pw")
+
+        let entry = try #require(reopened.en.first)
+        #expect(entry.images.count == withImages.images.count)
+        #expect(entry.images.first?.prefix(3).elementsEqual([0xFF, 0xD8, 0xFF]) == true)
+    }
+
+    @Test func savedFileFailsWithWrongPassword() throws {
+        let entries = [JournalEntry(entryDate: "2030-01-01T00:00:00Z", content: "x", sentiment: "Neutral")]
+        let out = Self.tempURL()
+        defer { try? FileManager.default.removeItem(at: out) }
+
+        try JournalFile.save(entries, to: out, password: "correct-horse")
+        #expect(throws: JournalError.self) {
+            _ = try JournalFile.open(url: out, password: "wrong-horse")
+        }
+    }
 }

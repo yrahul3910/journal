@@ -66,7 +66,13 @@ The entries array is still read under the key `en` transitionally; 7.0 renames i
 to `entries`, switched over once a real 7.0 file exists to test against. A full
 format spec will live in a design doc in the repo root.
 
-Not yet implemented: full block Markdown, creating/editing/saving, search, statistics.
+Write path: **New Entry** (⌘N / toolbar) composes an entry (date, mood, Markdown
+content, image attachments, NSFW) and re-encrypts the whole journal back to the
+open file, in the same format the Electron app reads. Saving is verified by
+round-trip tests; cross-app interop (Electron opening a SwiftUI-saved file) hasn't
+been verified yet.
+
+Not yet implemented: editing/deleting entries, full block Markdown, search, statistics.
 
 `Core/` + `Models/Journal.swift` have no SwiftUI/AppKit dependencies, so the read
 pipeline can be exercised headlessly by compiling them with a small `main.swift`

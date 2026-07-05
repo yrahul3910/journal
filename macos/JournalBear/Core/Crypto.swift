@@ -58,4 +58,40 @@ enum Crypto {
         output.removeSubrange(decryptedCount..<output.count)
         return output
     }
+
+    /// Cryptographically secure random bytes (`SystemRandomNumberGenerator` is a
+    /// CSPRNG on Apple platforms). Used for fresh salt + IV on each save.
+    static func randomBytes(_ count: Int) -> Data {
+        var rng = SystemRandomNumberGenerator()
+        return Data((0..<count).map { _ in UInt8.random(in: .min ... .max, using: &rng) })
+    }
+
+    static func aesCBCEncrypt(plaintext: Data, key: Data, iv: Data) throws -> Data {
+        let bufferSize = plaintext.count + kCCBlockSizeAES128
+        var output = Data(count: bufferSize)
+        var encryptedCount = 0
+
+        let status = output.withUnsafeMutableBytes { outRaw -> Int32 in
+            plaintext.withUnsafeBytes { inRaw in
+                key.withUnsafeBytes { keyRaw in
+                    iv.withUnsafeBytes { ivRaw in
+                        CCCrypt(
+                            CCOperation(kCCEncrypt),
+                            CCAlgorithm(kCCAlgorithmAES),
+                            CCOptions(kCCOptionPKCS7Padding),
+                            keyRaw.baseAddress, key.count,
+                            ivRaw.baseAddress,
+                            inRaw.baseAddress, plaintext.count,
+                            outRaw.baseAddress, bufferSize,
+                            &encryptedCount
+                        )
+                    }
+                }
+            }
+        }
+
+        guard status == kCCSuccess else { throw JournalError.encryptionFailed }
+        output.removeSubrange(encryptedCount..<output.count)
+        return output
+    }
 }

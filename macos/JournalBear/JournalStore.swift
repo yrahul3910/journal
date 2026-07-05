@@ -8,10 +8,17 @@ final class JournalStore: ObservableObject {
     @Published var entries: [JournalEntry] = []
     @Published var documentName: String?
     @Published var isLoading = false
+    @Published var isSaving = false
     @Published var errorMessage: String?
     @Published var showPasswordPrompt = false
+    @Published var showNewEntry = false
 
     private var pendingURL: URL?
+    private var fileURL: URL?
+    private var password: String?
+
+    /// New entries can only be added to an already-open journal.
+    var canAddEntry: Bool { documentName != nil }
 
     /// Step 1: pick a `.zjournal` file, then prompt for its password.
     func chooseFile() {
@@ -50,6 +57,8 @@ final class JournalStore: ObservableObject {
 
                 entries = sorted
                 documentName = url.deletingPathExtension().lastPathComponent
+                fileURL = url
+                self.password = password
                 pendingURL = nil
             } catch {
                 errorMessage = (error as? JournalError)?.message ?? error.localizedDescription
@@ -61,5 +70,35 @@ final class JournalStore: ObservableObject {
     func cancelPassword() {
         showPasswordPrompt = false
         pendingURL = nil
+    }
+
+    /// Appends a new entry and persists the whole journal back to disk. The
+    /// in-memory list is only updated once the save succeeds, so memory and disk
+    /// stay consistent.
+    func addEntry(_ entry: JournalEntry) {
+        guard let url = fileURL, let password else { return }
+
+        var updated = entries
+        updated.append(entry)
+        updated.sort {
+            let lhs = JournalEntry.parseDate($0.entryDate) ?? .distantPast
+            let rhs = JournalEntry.parseDate($1.entryDate) ?? .distantPast
+            return lhs > rhs
+        }
+        let toSave = updated
+
+        isSaving = true
+        errorMessage = nil
+        Task {
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    try JournalFile.save(toSave, to: url, password: password)
+                }.value
+                entries = toSave
+            } catch {
+                errorMessage = (error as? JournalError)?.message ?? error.localizedDescription
+            }
+            isSaving = false
+        }
     }
 }

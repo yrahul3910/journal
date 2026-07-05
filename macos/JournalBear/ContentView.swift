@@ -40,16 +40,29 @@ struct ContentView: View {
                 }
                 .help("Open a journal")
             }
+            ToolbarItem {
+                Button {
+                    store.showNewEntry = true
+                } label: {
+                    Label("New Entry", systemImage: "square.and.pencil")
+                }
+                .help("Add a new entry")
+                .disabled(!store.canAddEntry)
+            }
         }
         .overlay {
-            if store.isLoading {
-                ProgressView("Opening…")
+            if store.isLoading || store.isSaving {
+                ProgressView(store.isSaving ? "Saving…" : "Opening…")
                     .padding(24)
                     .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
         }
         .sheet(isPresented: $store.showPasswordPrompt) {
             PasswordPrompt()
+                .environmentObject(store)
+        }
+        .sheet(isPresented: $store.showNewEntry) {
+            NewEntryView()
                 .environmentObject(store)
         }
         .alert(
