@@ -9,6 +9,11 @@ struct ContentView: View {
         NavigationSplitView {
             List(store.entries, selection: $selection) { entry in
                 EntryRow(entry: entry)
+                    .contentShape(Rectangle())
+                    .onDoubleClick {
+                        selection = entry.id
+                        store.showNewEntry = true
+                    }
             }
             .overlay {
                 if store.entries.isEmpty && !store.isLoading {
@@ -89,8 +94,20 @@ struct ContentView: View {
                 .environmentObject(store)
         }
         .sheet(isPresented: $store.showNewEntry) {
-            NewEntryView()
+            if let entry = store.entries.first(where: { $0.id == selection }) {
+                NewEntryView(
+                    editingID: entry.id,
+                    date: JournalEntry.parseDate(entry.entryDate) ?? Date(),
+                    sentiment: entry.sentiment,
+                    content: entry.content,
+                    images: entry.images,
+                    nsfw: entry.nsfw
+                )
                 .environmentObject(store)
+            } else {
+                NewEntryView()
+                    .environmentObject(store)
+            }
         }
         .alert(
             "Couldn't Open Journal",

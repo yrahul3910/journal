@@ -58,13 +58,7 @@ final class JournalStore: ObservableObject {
                     try JournalFile.open(url: url, password: password)
                 }.value
 
-                let sorted = data.entries.sorted {
-                    let lhs = JournalEntry.parseDate($0.entryDate) ?? .distantPast
-                    let rhs = JournalEntry.parseDate($1.entryDate) ?? .distantPast
-                    return lhs > rhs
-                }
-
-                entries = sorted
+                entries = sortedByDateDescending(data.entries)
                 documentName = url.deletingPathExtension().lastPathComponent
                 fileURL = url
                 self.password = password
@@ -87,16 +81,39 @@ final class JournalStore: ObservableObject {
     /// to disk until `save()` (Cmd-S), so the user can compose several entries and
     /// then commit or discard them together.
     func addEntry(_ entry: JournalEntry) {
+        entries = sortedByDateDescending(entries + [entry])
+        changeToken &+= 1
+        hasUnsavedChanges = true
+    }
+
+    /// Stage edits to an existing entry, matched by `id`. The entry's identity is
+    /// preserved (fields are copied onto the existing element) so any current
+    /// selection keeps pointing at it. Falls back to adding if `id` is gone.
+    /// Like `addEntry`, this only stages; disk isn't touched until `save()`.
+    func updateEntry(_ entry: JournalEntry, id: JournalEntry.ID) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else {
+            addEntry(entry)
+            return
+        }
         var updated = entries
-        updated.append(entry)
-        updated.sort {
+        updated[index].entryDate = entry.entryDate
+        updated[index].content = entry.content
+        updated[index].sentiment = entry.sentiment
+        updated[index].nsfw = entry.nsfw
+        updated[index].images = entry.images
+        entries = sortedByDateDescending(updated)
+        changeToken &+= 1
+        hasUnsavedChanges = true
+    }
+
+    /// Entries newest-first, the order used everywhere they're displayed. Entries
+    /// with an unparseable date sort to the end.
+    private func sortedByDateDescending(_ list: [JournalEntry]) -> [JournalEntry] {
+        list.sorted {
             let lhs = JournalEntry.parseDate($0.entryDate) ?? .distantPast
             let rhs = JournalEntry.parseDate($1.entryDate) ?? .distantPast
             return lhs > rhs
         }
-        entries = updated
-        changeToken &+= 1
-        hasUnsavedChanges = true
     }
 
     /// Persist all staged changes by re-encrypting the whole journal to its file.

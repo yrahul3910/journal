@@ -9,11 +9,15 @@ struct NewEntryView: View {
     @EnvironmentObject var store: JournalStore
     @Environment(\.dismiss) private var dismiss
 
-    @State private var date = Date()
-    @State private var sentiment = "Neutral"
-    @State private var content = ""
-    @State private var images: [Data] = []
-    @State private var nsfw = false
+    /// When set, the sheet edits the entry with this id in place instead of
+    /// staging a brand-new one. `nil` means compose a new entry.
+    var editingID: JournalEntry.ID? = nil
+
+    @State var date = Date()
+    @State var sentiment = "Neutral"
+    @State var content = ""
+    @State var images: [Data] = []
+    @State var nsfw = false
 
     private var canSave: Bool {
         !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -22,7 +26,7 @@ struct NewEntryView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("New Entry").font(.headline)
+                Text(editingID == nil ? "New Entry" : "Edit Entry").font(.headline)
                 Spacer()
             }
             .padding()
@@ -74,7 +78,7 @@ struct NewEntryView: View {
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
                     .glassButton()
-                Button("Add", action: add)
+                Button(editingID == nil ? "Add" : "Save", action: add)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
                     .glassButton(prominent: true)
@@ -125,7 +129,11 @@ struct NewEntryView: View {
             nsfw: nsfw,
             images: images
         )
-        store.addEntry(entry)
+        if let editingID {
+            store.updateEntry(entry, id: editingID)
+        } else {
+            store.addEntry(entry)
+        }
         dismiss()
     }
 }
