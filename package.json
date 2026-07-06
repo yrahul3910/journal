@@ -12,16 +12,16 @@
       "target": [
         "rpm"
       ],
-      "icon": "./build/icons",
+      "icon": "./icons",
       "category": "Office"
     },
     "mac": {
       "target": "dir",
-      "icon": "./build/icon.icns"
+      "icon": "./icons/icon.icns"
     },
     "win": {
       "target": "nsis",
-      "icon": "./build/icon.ico"
+      "icon": "./icons/icon.ico"
     }
   },
   "version": "7.0.0",
