@@ -73,9 +73,11 @@ struct NewEntryView: View {
             HStack {
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
+                    .glassButton()
                 Button("Add", action: add)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
+                    .glassButton(prominent: true)
             }
             .padding()
         }

@@ -10,7 +10,6 @@ struct ContentView: View {
             List(store.entries, selection: $selection) { entry in
                 EntryRow(entry: entry)
             }
-            .navigationTitle(store.documentName ?? "JournalBear")
             .overlay {
                 if store.entries.isEmpty && !store.isLoading {
                     ContentUnavailableView {
@@ -32,14 +31,26 @@ struct ContentView: View {
             }
         }
         .toolbar {
-            ToolbarItem {
+            ToolbarSpacer(.flexible)
+            
+            ToolbarItemGroup {
                 Button {
                     store.chooseFile()
                 } label: {
                     Label("Open", systemImage: "folder")
                 }
                 .help("Open a journal")
+                Button {
+                    store.save()
+                } label: {
+                    Label("Save", systemImage: "square.and.arrow.down")
+                }
+                .help("Save changes (⌘S)")
+                .disabled(!store.hasUnsavedChanges || store.isSaving)
             }
+            
+            ToolbarSpacer(.fixed)
+            
             ToolbarItem {
                 Button {
                     store.showNewEntry = true
@@ -48,15 +59,6 @@ struct ContentView: View {
                 }
                 .help("Add a new entry")
                 .disabled(!store.canAddEntry)
-            }
-            ToolbarItem {
-                Button {
-                    store.save()
-                } label: {
-                    Label("Save", systemImage: "square.and.arrow.down")
-                }
-                .help("Save changes (⌘S)")
-                .disabled(!store.hasUnsavedChanges || store.isSaving)
             }
         }
         .overlay {
@@ -76,8 +78,7 @@ struct ContentView: View {
                 .font(.callout.weight(.medium))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(.regularMaterial, in: Capsule())
-                .overlay(Capsule().stroke(.quaternary))
+                .glassCapsule()
                 .padding(.bottom, 24)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -151,7 +152,7 @@ private struct EntryDetail: View {
                         .font(.callout)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(.quaternary, in: Capsule())
+                        .glassCapsule()
                 }
 
                 Divider()
@@ -211,9 +212,11 @@ private struct PasswordPrompt: View {
 
             HStack {
                 Button("Cancel", role: .cancel) { store.cancelPassword() }
+                    .glassButton()
                 Button("Open") { store.submitPassword(password) }
                     .keyboardShortcut(.defaultAction)
                     .disabled(password.isEmpty)
+                    .glassButton(prominent: true)
             }
         }
         .padding(28)
