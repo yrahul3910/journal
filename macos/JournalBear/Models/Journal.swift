@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Top-level decoded journal document (the archive's `data.json`), 7.0 format.
 struct JournalData: Decodable {
@@ -66,6 +67,20 @@ struct JournalEntry: Identifiable, Decodable {
 extension JournalEntry {
     /// The mood options offered when composing an entry.
     static let sentiments = ["Happy", "Excited", "Loved", "Neutral", "Sad", "Angry"]
+
+    /// Dot color for the entry's mood, matching the Electron build's palette.
+    /// Unrecognized moods fall back to a neutral color.
+    var sentimentColor: Color {
+        switch sentiment {
+        case "Happy": Color(red: 0, green: 0.5, blue: 0)          // green
+        case "Angry": .red                                        // red
+        case "Sad": Color(red: 0.984, green: 0.792, blue: 0.016)  // #FBCA04
+        case "Neutral": .gray                                     // gray
+        case "Loved": Color(red: 1, green: 0.412, blue: 0.706)    // hotpink
+        case "Excited": Color(red: 0, green: 1, blue: 0)          // lime
+        default: .primary
+        }
+    }
 
     /// Best-effort human-readable date. Falls back to the raw stored value when the
     /// format isn't recognized, so we never hide data from the user.

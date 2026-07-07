@@ -98,6 +98,10 @@ private struct EntryRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
+                Circle()
+                    .fill(entry.sentimentColor)
+                    .frame(width: 8, height: 8)
+                    .accessibilityLabel("Mood: \(entry.sentiment)")
                 Text(entry.displayDate)
                     .font(.subheadline.weight(.semibold))
                 if !entry.attachments.isEmpty {
