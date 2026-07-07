@@ -153,7 +153,7 @@ private struct EntryDetail: View {
                 } label: {
                     Image(systemName: "pencil")
                 }
-                .buttonBorderShape(.circle)
+                .glassEffect(in: .circle)
                 .help("Edit this entry")
                 .disabled(entry == nil)
             }
