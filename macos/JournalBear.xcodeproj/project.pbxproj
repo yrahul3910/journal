@@ -17,7 +17,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		AA0000000000000000000006 /* JournalBear.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JournalBear.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000006 /* JournalBear for Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "JournalBear for Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0000000000000000000002 /* JournalBearTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JournalBearTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -64,7 +64,7 @@
 		AA0000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA0000000000000000000006 /* JournalBear.app */,
+				AA0000000000000000000006 /* JournalBear for Mac.app */,
 				BB0000000000000000000002 /* JournalBearTests.xctest */,
 			);
 			name = Products;
@@ -73,9 +73,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AA0000000000000000000005 /* JournalBear */ = {
+		AA0000000000000000000005 /* JournalBear for Mac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA000000000000000000000B /* Build configuration list for PBXNativeTarget "JournalBear" */;
+			buildConfigurationList = AA000000000000000000000B /* Build configuration list for PBXNativeTarget "JournalBear for Mac" */;
 			buildPhases = (
 				AA0000000000000000000007 /* Sources */,
 				AA0000000000000000000008 /* Frameworks */,
@@ -88,9 +88,9 @@
 			fileSystemSynchronizedGroups = (
 				AA0000000000000000000004 /* JournalBear */,
 			);
-			name = JournalBear;
+			name = "JournalBear for Mac";
 			productName = JournalBear;
-			productReference = AA0000000000000000000006 /* JournalBear.app */;
+			productReference = AA0000000000000000000006 /* JournalBear for Mac.app */;
 			productType = "com.apple.product-type.application";
 		};
 		BB0000000000000000000001 /* JournalBearTests */ = {
@@ -147,7 +147,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AA0000000000000000000005 /* JournalBear */,
+				AA0000000000000000000005 /* JournalBear for Mac */,
 				BB0000000000000000000001 /* JournalBearTests */,
 			);
 		};
@@ -190,7 +190,7 @@
 /* Begin PBXTargetDependency section */
 		BB000000000000000000000A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AA0000000000000000000005 /* JournalBear */;
+			target = AA0000000000000000000005 /* JournalBear for Mac */;
 			targetProxy = BB000000000000000000000B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -305,7 +305,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = JournalBear;
+				INFOPLIST_KEY_CFBundleDisplayName = "JournalBear for Mac";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "JournalBear needs access to the Desktop to open or save journals on the Desktop or its subfolders.";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "JournalBear needs access to the Documents folder to open or save journals in Documents or its subfolders.";
@@ -338,7 +338,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = JournalBear;
+				INFOPLIST_KEY_CFBundleDisplayName = "JournalBear for Mac";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "JournalBear needs access to the Desktop to open or save journals on the Desktop or its subfolders.";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "JournalBear needs access to the Documents folder to open or save journals in Documents or its subfolders.";
@@ -410,7 +410,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA000000000000000000000B /* Build configuration list for PBXNativeTarget "JournalBear" */ = {
+		AA000000000000000000000B /* Build configuration list for PBXNativeTarget "JournalBear for Mac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA000000000000000000000E /* Debug */,

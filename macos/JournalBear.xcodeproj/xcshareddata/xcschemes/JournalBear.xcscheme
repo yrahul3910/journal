@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AA0000000000000000000005"
-               BuildableName = "JournalBear.app"
-               BlueprintName = "JournalBear"
+               BuildableName = "JournalBear for Mac.app"
+               BlueprintName = "JournalBear for Mac"
                ReferencedContainer = "container:JournalBear.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -55,8 +55,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA0000000000000000000005"
-            BuildableName = "JournalBear.app"
-            BlueprintName = "JournalBear"
+            BuildableName = "JournalBear for Mac.app"
+            BlueprintName = "JournalBear for Mac"
             ReferencedContainer = "container:JournalBear.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -72,8 +72,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA0000000000000000000005"
-            BuildableName = "JournalBear.app"
-            BlueprintName = "JournalBear"
+            BuildableName = "JournalBear for Mac.app"
+            BlueprintName = "JournalBear for Mac"
             ReferencedContainer = "container:JournalBear.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
