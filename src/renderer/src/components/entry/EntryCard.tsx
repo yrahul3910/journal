@@ -57,10 +57,7 @@ export function EntryCard({ entry, isSelected, onClick }: EntryCardProps) {
                             </span>
                         )}
                         {hasAttachments && (
-                            <ImageIcon
-                                className="h-3 w-3 text-muted-foreground"
-                                title="Has attachments"
-                            />
+                            <ImageIcon className="h-3 w-3 text-muted-foreground" />
                         )}
                     </div>
 

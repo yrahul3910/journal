@@ -29,11 +29,7 @@ import { CalendarIcon, Smile, Eye } from "lucide-react";
 import { EmojiPicker } from "./EmojiPicker";
 import { FileDropZone } from "./FileDropZone";
 import { PreviewDialog } from "./PreviewDialog";
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import type { Sentiment, JournalEntry } from "@/types/journal";
 
 export function EditEntryDialog() {
@@ -206,160 +202,171 @@ export function EditEntryDialog() {
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && attemptClose()}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>
-                        {isNewEntry ? "New Entry" : "Update Entry"}
-                    </DialogTitle>
-                </DialogHeader>
+        <>
+            <Dialog
+                open={isOpen}
+                onOpenChange={(open) => !open && attemptClose()}
+            >
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {isNewEntry ? "New Entry" : "Update Entry"}
+                        </DialogTitle>
+                    </DialogHeader>
 
-                <div className="space-y-4">
-                    {error && (
-                        <p className="text-sm text-destructive">{error}</p>
-                    )}
+                    <div className="space-y-4">
+                        {error && (
+                            <p className="text-sm text-destructive">{error}</p>
+                        )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                        {/* Date Picker */}
-                        <div>
-                            <Label>Date</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start"
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {format(date, "PPP")}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={(d) => d && setDate(d)}
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Date Picker */}
+                            <div>
+                                <Label>Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-start"
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {format(date, "PPP")}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={date}
+                                            onSelect={(d) => d && setDate(d)}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            {/* Sentiment Selector */}
+                            <div>
+                                <Label>How are you feeling?</Label>
+                                <Select
+                                    value={sentiment}
+                                    onValueChange={(val) =>
+                                        setSentiment(val as Sentiment)
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Happy">
+                                            Happy 😊
+                                        </SelectItem>
+                                        <SelectItem value="Sad">
+                                            Sad 😢
+                                        </SelectItem>
+                                        <SelectItem value="Angry">
+                                            Angry 😠
+                                        </SelectItem>
+                                        <SelectItem value="Loved">
+                                            Loved 😍
+                                        </SelectItem>
+                                        <SelectItem value="Excited">
+                                            Excited 🎉
+                                        </SelectItem>
+                                        <SelectItem value="Neutral">
+                                            Neutral 😐
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        {/* Sentiment Selector */}
+                        {/* Entry Content */}
                         <div>
-                            <Label>How are you feeling?</Label>
-                            <Select
-                                value={sentiment}
-                                onValueChange={(val) =>
-                                    setSentiment(val as Sentiment)
+                            <Label>Your entry</Label>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                Supports Markdown: *italic*, **bold**,
+                                [link](url)
+                            </p>
+                            <Textarea
+                                ref={textareaRef}
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                placeholder="What's on your mind?"
+                                rows={12}
+                                className="font-mono"
+                            />
+                        </div>
+
+                        {/* Emoji Picker Toggle */}
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    setShowEmojiPicker(!showEmojiPicker)
                                 }
                             >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Happy">
-                                        Happy 😊
-                                    </SelectItem>
-                                    <SelectItem value="Sad">Sad 😢</SelectItem>
-                                    <SelectItem value="Angry">
-                                        Angry 😠
-                                    </SelectItem>
-                                    <SelectItem value="Loved">
-                                        Loved 😍
-                                    </SelectItem>
-                                    <SelectItem value="Excited">
-                                        Excited 🎉
-                                    </SelectItem>
-                                    <SelectItem value="Neutral">
-                                        Neutral 😐
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                                <Smile className="h-4 w-4 mr-2" />
+                                {showEmojiPicker ? "Hide" : "Add"} Emoji
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handlePreview}
+                            >
+                                <Eye className="h-4 w-4 mr-2" />
+                                Preview
+                            </Button>
+                        </div>
+
+                        {/* Emoji Picker */}
+                        {showEmojiPicker && (
+                            <Collapsible open={showEmojiPicker}>
+                                <CollapsibleContent>
+                                    <EmojiPicker onSelect={handleEmojiSelect} />
+                                </CollapsibleContent>
+                            </Collapsible>
+                        )}
+
+                        {/* File Drop Zone */}
+                        <div>
+                            <Label>Attachments</Label>
+                            <FileDropZone
+                                files={encodedImages}
+                                onChange={setEncodedImages}
+                            />
+                        </div>
+
+                        {/* NSFW Toggle */}
+                        <div className="flex items-center gap-2">
+                            <Button
+                                type="button"
+                                variant={nsfw ? "destructive" : "outline"}
+                                size="sm"
+                                onClick={() => setNsfw(!nsfw)}
+                            >
+                                {nsfw ? "NSFW Enabled" : "Mark as NSFW"}
+                            </Button>
+                            {nsfw && (
+                                <span className="text-xs text-muted-foreground">
+                                    This entry will be marked as sensitive
+                                    content
+                                </span>
+                            )}
                         </div>
                     </div>
 
-                    {/* Entry Content */}
-                    <div>
-                        <Label>Your entry</Label>
-                        <p className="text-xs text-muted-foreground mb-2">
-                            Supports Markdown: *italic*, **bold**, [link](url)
-                        </p>
-                        <Textarea
-                            ref={textareaRef}
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            placeholder="What's on your mind?"
-                            rows={12}
-                            className="font-mono"
-                        />
-                    </div>
-
-                    {/* Emoji Picker Toggle */}
-                    <div className="flex gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        >
-                            <Smile className="h-4 w-4 mr-2" />
-                            {showEmojiPicker ? "Hide" : "Add"} Emoji
+                    <DialogFooter>
+                        <Button variant="outline" onClick={attemptClose}>
+                            Cancel
                         </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handlePreview}
-                        >
-                            <Eye className="h-4 w-4 mr-2" />
-                            Preview
+                        <Button onClick={handleSubmit}>
+                            {isNewEntry ? "Add Entry" : "Update Entry"}
                         </Button>
-                    </div>
-
-                    {/* Emoji Picker */}
-                    {showEmojiPicker && (
-                        <Collapsible open={showEmojiPicker}>
-                            <CollapsibleContent>
-                                <EmojiPicker onSelect={handleEmojiSelect} />
-                            </CollapsibleContent>
-                        </Collapsible>
-                    )}
-
-                    {/* File Drop Zone */}
-                    <div>
-                        <Label>Attachments</Label>
-                        <FileDropZone
-                            files={encodedImages}
-                            onChange={setEncodedImages}
-                        />
-                    </div>
-
-                    {/* NSFW Toggle */}
-                    <div className="flex items-center gap-2">
-                        <Button
-                            type="button"
-                            variant={nsfw ? "destructive" : "outline"}
-                            size="sm"
-                            onClick={() => setNsfw(!nsfw)}
-                        >
-                            {nsfw ? "NSFW Enabled" : "Mark as NSFW"}
-                        </Button>
-                        {nsfw && (
-                            <span className="text-xs text-muted-foreground">
-                                This entry will be marked as sensitive content
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <Button variant="outline" onClick={attemptClose}>
-                        Cancel
-                    </Button>
-                    <Button onClick={handleSubmit}>
-                        {isNewEntry ? "Add Entry" : "Update Entry"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Confirm discarding unsaved changes before closing the editor */}
             <Dialog
@@ -394,6 +401,6 @@ export function EditEntryDialog() {
                 onOpenChange={setShowPreview}
                 content={content}
             />
-        </Dialog>
+        </>
     );
 }
