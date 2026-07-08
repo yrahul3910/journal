@@ -12,7 +12,7 @@ struct ContentView: View {
                     .contentShape(Rectangle())
                     .onDoubleClick {
                         selection = entry.id
-                        store.showNewEntry = true
+                        store.showNewEntry = .editing
                     }
             }
             .overlay {
@@ -57,8 +57,13 @@ struct ContentView: View {
             PasswordPrompt()
                 .environmentObject(store)
         }
-        .sheet(isPresented: $store.showNewEntry) {
-            if let entry = store.entries.first(where: { $0.id == selection }) {
+        .sheet(isPresented: Binding(
+            get: { store.showNewEntry != .closed },
+            set: { if !$0 { store.showNewEntry = .closed } }
+        )) {
+            if store.showNewEntry == .editing,
+               let entry = store.entries.first(where: { $0.id == selection })
+            {
                 NewEntryView(
                     editingID: entry.id,
                     date: JournalEntry.parseDate(entry.entryDate) ?? Date(),
@@ -72,6 +77,7 @@ struct ContentView: View {
                 NewEntryView()
                     .environmentObject(store)
             }
+
         }
         .alert(
             "Couldn't Open Journal",
@@ -149,7 +155,7 @@ private struct EntryDetail: View {
             ToolbarSpacer(.flexible)
             ToolbarItem {
                 Button {
-                    store.showNewEntry = true
+                    store.showNewEntry = .editing
                 } label: {
                     Image(systemName: "pencil")
                 }

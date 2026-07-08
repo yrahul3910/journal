@@ -2,6 +2,12 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
+enum NewEntryDialogState: Int {
+    case closed
+    case editing
+    case new
+}
+
 /// Observable app state. Owns the open/decrypt flow and the loaded entries.
 @MainActor
 final class JournalStore: ObservableObject {
@@ -11,7 +17,7 @@ final class JournalStore: ObservableObject {
     @Published var isSaving = false
     @Published var errorMessage: String?
     @Published var showPasswordPrompt = false
-    @Published var showNewEntry = false
+    @Published var showNewEntry = NewEntryDialogState.closed
 
     /// True when there are staged changes not yet written to disk. Drives the
     /// Save affordance's enabled state and the quit-confirmation prompt.

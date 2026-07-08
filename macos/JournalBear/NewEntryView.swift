@@ -19,8 +19,26 @@ struct NewEntryView: View {
     @State var images: [Data] = []
     @State var nsfw = false
 
+    // Snapshot the seeded values on appear so `isDirty` reflects only the
+    // user's edits, not the values the dialog opened with.
+    @State private var initialDate = Date()
+    @State private var initialSentiment = "Neutral"
+    @State private var initialContent = ""
+    @State private var initialImages: [Data] = []
+    @State private var initialNsfw = false
+
+    @State private var showDiscardConfirmation = false
+
     private var canSave: Bool {
         !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var isDirty: Bool {
+        date != initialDate ||
+        sentiment != initialSentiment ||
+        content != initialContent ||
+        images != initialImages ||
+        nsfw != initialNsfw
     }
 
     var body: some View {
@@ -76,7 +94,7 @@ struct NewEntryView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
+                Button("Cancel", role: .cancel) { cancel() }
                     .glassButton()
                 Button(editingID == nil ? "Add" : "Save", action: add)
                     .keyboardShortcut(.defaultAction)
@@ -86,6 +104,25 @@ struct NewEntryView: View {
             .padding()
         }
         .frame(width: 520, height: 640)
+        .onAppear {
+            initialDate = date
+            initialSentiment = sentiment
+            initialContent = content
+            initialImages = images
+            initialNsfw = nsfw
+        }
+        // Keep Escape from silently discarding unsaved edits; the Cancel
+        // button surfaces a confirmation instead.
+        .interactiveDismissDisabled(isDirty)
+        .alert(
+            "Discard changes?",
+            isPresented: $showDiscardConfirmation
+        ) {
+            Button("Discard Changes", role: .destructive) { dismiss() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your entry has unsaved changes. If you discard, they will be lost.")
+        }
     }
 
     @ViewBuilder
@@ -118,6 +155,14 @@ struct NewEntryView: View {
         guard panel.runModal() == .OK else { return }
         for url in panel.urls {
             if let data = try? Data(contentsOf: url) { images.append(data) }
+        }
+    }
+
+    private func cancel() {
+        if isDirty {
+            showDiscardConfirmation = true
+        } else {
+            dismiss()
         }
     }
 

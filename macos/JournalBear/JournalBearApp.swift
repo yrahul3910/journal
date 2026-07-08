@@ -14,7 +14,7 @@ struct JournalBearApp: App {
         }
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Entry") { store.showNewEntry = true }
+                Button("New Entry") { store.showNewEntry = .new }
                     .keyboardShortcut("n", modifiers: .command)
                     .disabled(!store.canAddEntry)
                 Divider()
