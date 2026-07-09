@@ -4,9 +4,10 @@ import AppKit
 struct ContentView: View {
     @EnvironmentObject var store: JournalStore
     @State private var selection: JournalEntry.ID?
+    @State private var columnVisibility = NavigationSplitViewVisibility.automatic
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             List(store.entries, selection: $selection) { entry in
                 EntryRow(entry: entry)
                     .contentShape(Rectangle())
@@ -15,6 +16,7 @@ struct ContentView: View {
                         store.showNewEntry = .editing
                     }
             }
+            .toolbar(removing: columnVisibility == NavigationSplitViewVisibility.all ? .sidebarToggle : nil)
             .overlay {
                 if store.entries.isEmpty && !store.isLoading {
                     ContentUnavailableView {
@@ -26,7 +28,8 @@ struct ContentView: View {
                     }
                 }
             }
-        } detail: {
+        }
+        detail: {
             EntryDetail(entry: store.entries.first(where: { $0.id == selection }))
         }
         .toolbar(removing: .title)
