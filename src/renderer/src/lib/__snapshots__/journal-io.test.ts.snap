@@ -49,14 +49,6 @@ exports[`exportToHTML > generates deterministic HTML for a journal (snapshot) 1`
       margin: 10px 0;
       border-radius: 8px;
     }
-    .nsfw-badge {
-      background-color: #f44336;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.8em;
-      margin-left: 10px;
-    }
   </style>
 </head>
 <body>
@@ -65,7 +57,6 @@ exports[`exportToHTML > generates deterministic HTML for a journal (snapshot) 1`
   <div class="entry">
     <div class="entry-date">Sun Mar 15 2026</div>
     <span class="entry-sentiment sentiment-Happy">Happy</span>
-    
     <div class="entry-content"><h1 id="trip">Trip</h1>
 <p>Great <strong>day</strong> out.</p></div>
     <div class="entry-images">
@@ -76,7 +67,6 @@ exports[`exportToHTML > generates deterministic HTML for a journal (snapshot) 1`
   <div class="entry">
     <div class="entry-date">Fri Jan 02 2026</div>
     <span class="entry-sentiment sentiment-Neutral">Neutral</span>
-    <span class="nsfw-badge">NSFW</span>
     <div class="entry-content"><p>A quiet start to the year.</p></div>
   </div>
 

@@ -22,7 +22,6 @@ export const JournalEntrySchema = z.object({
     content: z.string(),
     sentiment: SentimentSchema,
     attachments: z.array(z.string()),
-    nsfw: z.boolean(),
 });
 export type JournalEntry = z.infer<typeof JournalEntrySchema>;
 
@@ -39,7 +38,6 @@ export const JournalEntry51Schema = z.object({
     sentiment: Sentiment51Schema,
     // 5.1 used the singular `attachment` and treated it as optional.
     attachment: z.array(z.string()).or(z.string()).optional(),
-    nsfw: z.boolean().optional(),
 });
 export type JournalEntry51 = z.infer<typeof JournalEntry51Schema>;
 
@@ -63,7 +61,6 @@ export function migrate51to70(data: JournalData51): JournalData {
         content: entry.content,
         sentiment: entry.sentiment ?? "Neutral",
         attachments: normalizeAttachments(entry.entryDate, entry.attachment),
-        nsfw: entry.nsfw ?? false,
     }));
 
     // Diagnostic: do any 5.1 journals store attachments as file paths rather than

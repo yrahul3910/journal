@@ -17,7 +17,6 @@ struct NewEntryView: View {
     @State var sentiment = "Neutral"
     @State var content = ""
     @State var images: [Data] = []
-    @State var nsfw = false
 
     // Snapshot the seeded values on appear so `isDirty` reflects only the
     // user's edits, not the values the dialog opened with.
@@ -25,7 +24,6 @@ struct NewEntryView: View {
     @State private var initialSentiment = "Neutral"
     @State private var initialContent = ""
     @State private var initialImages: [Data] = []
-    @State private var initialNsfw = false
 
     @State private var showDiscardConfirmation = false
 
@@ -37,8 +35,7 @@ struct NewEntryView: View {
         date != initialDate ||
         sentiment != initialSentiment ||
         content != initialContent ||
-        images != initialImages ||
-        nsfw != initialNsfw
+        images != initialImages
     }
 
     var body: some View {
@@ -84,8 +81,6 @@ struct NewEntryView: View {
                             }
                         }
                     }
-
-                    Toggle("Mark as NSFW", isOn: $nsfw)
                 }
                 .padding()
             }
@@ -109,7 +104,6 @@ struct NewEntryView: View {
             initialSentiment = sentiment
             initialContent = content
             initialImages = images
-            initialNsfw = nsfw
         }
         // Keep Escape from silently discarding unsaved edits; the Cancel
         // button surfaces a confirmation instead.
@@ -171,7 +165,6 @@ struct NewEntryView: View {
             entryDate: ISO8601DateFormatter().string(from: date),
             content: content,
             sentiment: sentiment,
-            nsfw: nsfw,
             images: images
         )
         if let editingID {

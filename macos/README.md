@@ -67,7 +67,7 @@ to `entries`, switched over once a real 7.0 file exists to test against. A full
 format spec will live in a design doc in the repo root.
 
 Write path: **New Entry** (⌘N / toolbar) composes an entry (date, mood, Markdown
-content, image attachments, NSFW) and re-encrypts the whole journal back to the
+content, image attachments) and re-encrypts the whole journal back to the
 open file, in the same format the Electron app reads. Saving is verified by
 round-trip tests; cross-app interop (Electron opening a SwiftUI-saved file) hasn't
 been verified yet.

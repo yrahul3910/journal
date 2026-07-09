@@ -39,11 +39,6 @@ export function EntryViewer() {
                     </div>
                     <p className="text-sm text-muted-foreground">
                         Feeling: {selectedEntry.sentiment}
-                        {selectedEntry.nsfw && (
-                            <span className="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded">
-                                NSFW
-                            </span>
-                        )}
                     </p>
                 </div>
 

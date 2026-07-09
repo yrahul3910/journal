@@ -51,11 +51,6 @@ export function EntryCard({ entry, isSelected, onClick }: EntryCardProps) {
                         <p className="text-sm font-semibold">
                             {format(date, "MMM dd, yyyy")}
                         </p>
-                        {entry.nsfw && (
-                            <span className="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded">
-                                NSFW
-                            </span>
-                        )}
                         {hasAttachments && (
                             <ImageIcon className="h-3 w-3 text-muted-foreground" />
                         )}

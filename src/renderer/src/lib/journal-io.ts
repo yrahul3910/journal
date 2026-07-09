@@ -113,14 +113,6 @@ export async function exportToHTML(): Promise<{
       margin: 10px 0;
       border-radius: 8px;
     }
-    .nsfw-badge {
-      background-color: #f44336;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.8em;
-      margin-left: 10px;
-    }
   </style>
 </head>
 <body>
@@ -143,7 +135,6 @@ export async function exportToHTML(): Promise<{
   <div class="entry">
     <div class="entry-date">${dateStr}</div>
     <span class="entry-sentiment sentiment-${entry.sentiment}">${entry.sentiment}</span>
-    ${entry.nsfw ? '<span class="nsfw-badge">NSFW</span>' : ""}
     <div class="entry-content">${contentHtml}</div>
 `;
 

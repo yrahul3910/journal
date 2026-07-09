@@ -14,14 +14,12 @@ const fixture: JournalData = {
             content: "# Trip\n\nGreat **day** out.",
             sentiment: "Happy",
             attachments: ["data:image/png;base64,AAAA"],
-            nsfw: false,
         },
         {
             entryDate: "2026-01-02T12:00:00Z",
             content: "A quiet start to the year.",
             sentiment: "Neutral",
             attachments: [],
-            nsfw: true,
         },
     ],
 };

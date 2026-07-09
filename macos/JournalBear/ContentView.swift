@@ -69,8 +69,7 @@ struct ContentView: View {
                     date: JournalEntry.parseDate(entry.entryDate) ?? Date(),
                     sentiment: entry.sentiment,
                     content: entry.content,
-                    images: entry.images,
-                    nsfw: entry.nsfw
+                    images: entry.images
                 )
                 .environmentObject(store)
             } else {

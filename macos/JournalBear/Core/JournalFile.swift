@@ -74,8 +74,7 @@ enum JournalFile {
                 entryDate: entry.entryDate,
                 content: entry.content,
                 sentiment: entry.sentiment,
-                attachments: refs,
-                nsfw: entry.nsfw
+                attachments: refs
             ))
         }
 
@@ -122,5 +121,4 @@ private struct DiskEntry: Encodable {
     let content: String
     let sentiment: String
     let attachments: [String]
-    let nsfw: Bool
 }

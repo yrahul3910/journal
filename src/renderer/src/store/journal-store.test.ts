@@ -12,7 +12,6 @@ function entry(
         content: "",
         sentiment: "Neutral",
         attachments: [],
-        nsfw: false,
         ...partial,
     };
 }

@@ -11,21 +11,20 @@ struct JournalData: Decodable {
 ///
 /// `attachments` is a list of image references stored under `images/` in the
 /// archive. Decoding stays tolerant of `entryDate` being a string or epoch number
-/// and of a missing `attachments`/`nsfw`, so one odd field never fails the whole load.
-struct JournalEntry: Identifiable, Decodable {
+/// and of a missing `attachments`, so one odd field never fails the whole load.
+final class JournalEntry: Identifiable, Decodable, ObservableObject {
     let id = UUID()
-    var entryDate: String
+    @Published var entryDate: String
     var content: String
     var sentiment: String
     var attachments: [String]
-    var nsfw: Bool
 
     /// Decoded image bytes for `attachments`, resolved against the archive at open
     /// time. Not part of the JSON; populated by `JournalFile`.
     var images: [Data] = []
 
     private enum CodingKeys: String, CodingKey {
-        case entryDate, content, sentiment, attachments, nsfw
+        case entryDate, content, sentiment, attachments
     }
 
     init(
@@ -33,14 +32,12 @@ struct JournalEntry: Identifiable, Decodable {
         content: String,
         sentiment: String,
         attachments: [String] = [],
-        nsfw: Bool = false,
         images: [Data] = []
     ) {
         self.entryDate = entryDate
         self.content = content
         self.sentiment = sentiment
         self.attachments = attachments
-        self.nsfw = nsfw
         self.images = images
     }
 
@@ -59,8 +56,6 @@ struct JournalEntry: Identifiable, Decodable {
         sentiment = (try? c.decode(String.self, forKey: .sentiment)) ?? "Neutral"
 
         attachments = (try? c.decode([String].self, forKey: .attachments)) ?? []
-
-        nsfw = (try? c.decode(Bool.self, forKey: .nsfw)) ?? false
     }
 }
 

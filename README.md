@@ -47,8 +47,7 @@ The JSON file looks like this. The `en` key was required to maintain compatibili
             "sentiment": String,
             "entryDate": String,
             "content": String,
-            "attachment": [String],
-            "nsfw": boolean
+            "attachment": [String]
         }
     ]
 }

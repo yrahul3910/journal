@@ -49,7 +49,6 @@ export function EditEntryDialog() {
     const [date, setDate] = useState<Date>(new Date());
     const [sentiment, setSentiment] = useState<Sentiment>("Neutral");
     const [content, setContent] = useState("");
-    const [nsfw, setNsfw] = useState(false);
     const [error, setError] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
@@ -61,7 +60,6 @@ export function EditEntryDialog() {
         date: number;
         sentiment: Sentiment;
         content: string;
-        nsfw: boolean;
         images: string[];
     } | null>(null);
 
@@ -74,13 +72,11 @@ export function EditEntryDialog() {
             setDate(new Date(editingEntry.entryDate));
             setSentiment(editingEntry.sentiment);
             setContent(editingEntry.content);
-            setNsfw(editingEntry.nsfw || false);
             setEncodedImages(images);
             initialRef.current = {
                 date: new Date(editingEntry.entryDate).getTime(),
                 sentiment: editingEntry.sentiment,
                 content: editingEntry.content,
-                nsfw: editingEntry.nsfw || false,
                 images,
             };
         } else if (isOpen && isNewEntry) {
@@ -89,13 +85,11 @@ export function EditEntryDialog() {
             setDate(now);
             setSentiment("Neutral");
             setContent("");
-            setNsfw(false);
             setEncodedImages([]);
             initialRef.current = {
                 date: now.getTime(),
                 sentiment: "Neutral",
                 content: "",
-                nsfw: false,
                 images: [],
             };
         }
@@ -108,7 +102,6 @@ export function EditEntryDialog() {
             date.getTime() !== initial.date ||
             sentiment !== initial.sentiment ||
             content !== initial.content ||
-            nsfw !== initial.nsfw ||
             encodedImages.length !== initial.images.length ||
             encodedImages.some((img, i) => img !== initial.images[i])
         );
@@ -134,7 +127,6 @@ export function EditEntryDialog() {
             content,
             sentiment,
             attachments: encodedImages,
-            nsfw: nsfw,
         };
 
         if (isNewEntry) {
@@ -151,7 +143,6 @@ export function EditEntryDialog() {
         setDate(new Date());
         setSentiment("Neutral");
         setContent("");
-        setNsfw(false);
         setError("");
         setShowEmojiPicker(false);
         setShowDiscardConfirm(false);
@@ -338,23 +329,6 @@ export function EditEntryDialog() {
                             />
                         </div>
 
-                        {/* NSFW Toggle */}
-                        <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                variant={nsfw ? "destructive" : "outline"}
-                                size="sm"
-                                onClick={() => setNsfw(!nsfw)}
-                            >
-                                {nsfw ? "NSFW Enabled" : "Mark as NSFW"}
-                            </Button>
-                            {nsfw && (
-                                <span className="text-xs text-muted-foreground">
-                                    This entry will be marked as sensitive
-                                    content
-                                </span>
-                            )}
-                        </div>
                     </div>
 
                     <DialogFooter>
