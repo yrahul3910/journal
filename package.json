@@ -50,7 +50,6 @@
     "date-fns": "^4.4.0",
     "electron-updater": "^6.8.9",
     "electron-vite": "^5.0.0",
-    "emojify.js": "^1.1.0",
     "fs-extra": "^11.3.6",
     "lodash": "^4.18.1",
     "lucide-react": "^0.563.0",
