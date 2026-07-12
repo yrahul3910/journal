@@ -53,6 +53,9 @@ struct ContentView: View {
                         } actions: {
                             if store.documentName == nil {
                                 Button("Open Journal...") { store.chooseFile() }
+                                Button("New Journal...") { store.newJournal() }
+                            } else {
+                                Button("New Entry") { store.showNewEntry = .new }
                             }
                         }
                     } else if visibleEntries.isEmpty && searchCriteria.isActive {
@@ -117,6 +120,10 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.25), value: store.justSaved)
         .sheet(isPresented: $store.showPasswordPrompt) {
             PasswordPrompt()
+                .environmentObject(store)
+        }
+        .sheet(isPresented: $store.showNewJournalPrompt) {
+            NewJournalView()
                 .environmentObject(store)
         }
         .sheet(isPresented: Binding(

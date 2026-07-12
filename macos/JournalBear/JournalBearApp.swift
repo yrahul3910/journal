@@ -22,6 +22,8 @@ struct JournalBearApp: App {
                 Button("New Entry") { store.showNewEntry = .new }
                     .keyboardShortcut("n", modifiers: .command)
                     .disabled(!store.canAddEntry)
+                Button("New Journal…") { store.newJournal() }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
                 Divider()
                 Button("Open Journal…") { store.chooseFile() }
                     .keyboardShortcut("o", modifiers: .command)

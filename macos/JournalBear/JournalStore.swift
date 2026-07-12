@@ -17,6 +17,7 @@ final class JournalStore: ObservableObject {
     @Published var isSaving = false
     @Published var errorMessage: String?
     @Published var showPasswordPrompt = false
+    @Published var showNewJournalPrompt = false
     @Published var showNewEntry = NewEntryDialogState.closed
 
     /// True when there are staged changes not yet written to disk. Drives the
@@ -84,6 +85,48 @@ final class JournalStore: ObservableObject {
     func cancelPassword() {
         showPasswordPrompt = false
         pendingURL = nil
+    }
+
+    /// Start the new-journal flow: confirm away any unsaved changes in the
+    /// currently open journal, then show the create sheet.
+    func newJournal() {
+        guard hasUnsavedChanges else {
+            showNewJournalPrompt = true
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = "Save changes before creating a new journal?"
+        alert.informativeText =
+            "The open journal has unsaved changes. If you don't save, they will be lost."
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Discard")
+        alert.addButton(withTitle: "Cancel")
+
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: // Save
+            save { success in
+                if success { self.showNewJournalPrompt = true }
+            }
+        case .alertSecondButtonReturn: // Discard
+            showNewJournalPrompt = true
+        default: // Cancel
+            break
+        }
+    }
+
+    /// Replace the app state with a fresh, empty journal encrypted with
+    /// `password`. Like the Electron app, the new journal lives only in memory;
+    /// the first `save()` asks where the `.zjournal` file should go.
+    func createJournal(password: String) {
+        entries = []
+        documentName = "Untitled"
+        fileURL = nil
+        self.password = password
+        pendingURL = nil
+        showNewJournalPrompt = false
+        hasUnsavedChanges = true
+        changeToken = 0
     }
 
 #if DEBUG
@@ -167,7 +210,27 @@ final class JournalStore: ObservableObject {
     }
 
     private func performSave(completion: ((Bool) -> Void)?) {
-        guard let url = fileURL, let password else {
+        guard let password else {
+            completion?(false)
+            return
+        }
+
+        // A journal created in-app has no file yet; ask where to put it.
+        if fileURL == nil {
+            let panel = NSSavePanel()
+            if let type = UTType(filenameExtension: "zjournal") {
+                panel.allowedContentTypes = [type]
+            }
+            panel.nameFieldStringValue = documentName ?? "Untitled"
+            guard panel.runModal() == .OK, let chosen = panel.url else {
+                completion?(false)
+                return
+            }
+            fileURL = chosen
+            documentName = chosen.deletingPathExtension().lastPathComponent
+        }
+
+        guard let url = fileURL else {
             completion?(false)
             return
         }
