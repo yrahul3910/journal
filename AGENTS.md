@@ -1,3 +1,130 @@
+# JournalBear -- agent guide
+
+Two apps share this repo and the same `.zjournal` file format:
+
+- **Electron app** (repo root): TypeScript, React 19, Tailwind, zustand,
+  shadcn/Radix UI, built with electron-vite; Biome for lint/format; Vitest for
+  tests. Dependencies are managed with Bun (`bun install`, lockfile
+  `bun.lock` -- never `npm install`); scripts run with `npm run` or `bun run`.
+  Source in `src/` (`main`, `preload`, `renderer`, `shared`). See `README.md`
+  and `BUILD.md`.
+- **Native macOS app** (`macos/`): SwiftUI, macOS 26+, Swift Testing for unit
+  tests and XCUITest for UI tests. See `macos/README.md` for layout, build/test
+  commands, and the file format spec.
+
+A change to the shared file format must keep the two apps interoperable: check
+`src/main/encryption.ts` and `src/main/archive.ts` against
+`macos/JournalBear/Core/`.
+
+## Definition of done -- do not stop early
+
+Keep working until all of the following are true. Do not hand back partial
+work, do not declare success with failing checks, and do not stop to ask
+permission for steps this file already requires.
+
+1. The requested change works end to end.
+2. **Unit tests cover any new or changed functionality.** Always, not just when
+   asked.
+3. **UI tests cover any requested UI change or new feature with a UI.** Always.
+   - SwiftUI: XCUITest in `macos/JournalBearUITests/`.
+   - Electron: Vitest renderer tests (opt into jsdom with a
+     `@vitest-environment jsdom` docblock) exercising the component and store
+     behavior the change introduces.
+4. Formatter, linter, type checker, build, and the full test suite pass for the
+   stack you touched:
+   - Electron: `npm run format`, `npm run lint`, `npm run check`,
+     `npm run test`.
+   - macOS: the `xcodebuild test` invocation in `macos/README.md` (runs both
+     the unit and UI test targets).
+5. The mandatory review pass below has run and its findings are addressed.
+
+## Mandatory review pass
+
+Code that merely works is not the bar; the bar is code a senior engineer who
+cares about this codebase would sign off on. Before declaring any nontrivial
+change done:
+
+- Spawn a dedicated review agent on the full uncommitted diff of the working
+  tree. **Do not commit** to produce the diff, and never commit at all unless
+  the user explicitly asks.
+- The review agent must run at **high or xhigh reasoning effort, or higher**
+  (in Claude Code: the `code-review` skill at level `high` or above, or a
+  subagent set to that effort). Do not substitute a quick self-read for the
+  review agent.
+- Beyond correctness, the reviewer must check that the diff:
+  - is idiomatic for the language and stack it touches;
+  - does not overcomplicate the task;
+  - uses built-in or framework functionality where it exists (e.g. SwiftUI's
+    `.searchable` instead of a custom `TextField` plus filter plumbing);
+  - is organized sensibly: concerns, types, and views split into files where
+    the separation earns its keep -- neither one giant file nor a file per
+    function.
+- Apply the findings, re-run the checks in "Definition of done", and re-review
+  if the fixes were substantial.
+
+## Electron app rules
+
+On top of the general guide below:
+
+- No one-line functions with a single caller, no functions that exist only to
+  call another function, and no hand-rolled `isRecord`-style type-guard
+  scaffolding. Validate external data at the boundary with zod (already a
+  dependency) and trust the types everywhere else.
+- Reuse the shadcn/Radix primitives in `src/renderer/src/components/ui` and
+  lucide icons; do not hand-roll dialogs, popovers, dropdowns, or selects.
+- App state lives in the zustand store (`src/renderer/src/store`); do not add a
+  second state mechanism.
+- Crypto, tar, and filesystem work stay in the main process (`src/main`),
+  exposed to the renderer through the preload bridge; never move them into the
+  renderer.
+- Biome owns formatting and linting (`biome.json`); run `npm run lint:fix`
+  rather than arguing with it.
+
+## SwiftUI app rules
+
+On top of the general guide below:
+
+- Reach for the platform built-in before writing scaffolding: `.searchable`,
+  `confirmationDialog`, `NavigationSplitView`, `@FocusState`, `.task(id:)`,
+  `Date.FormatStyle`, `KeyPathComparator`, `.fileImporter`, and friends. A
+  custom implementation of something SwiftUI or Foundation already ships is a
+  defect, not a style choice.
+- Follow the existing architecture: one observable `JournalStore` plus local
+  `@State` in views. Do not introduce a view-model class per view, a Combine
+  pipeline where `.onChange` or `.task` suffices, or a protocol with a single
+  conforming type invented "for testability".
+- No `AnyView` type erasure (use `@ViewBuilder` or generics), no
+  `GeometryReader`/`PreferenceKey` hacks when a modifier exists, no `try!` or
+  force unwraps as escape hatches.
+- When a view body grows deep, extract meaningful subviews or move types under
+  `Models/` or `Core/` -- but do not shard every small stack into its own
+  `View`. `Core/` and `Models/Journal.swift` must stay free of SwiftUI/AppKit
+  imports so the read pipeline stays headless.
+- The Xcode project uses filesystem-synchronized groups: new files under
+  `JournalBear/`, `JournalBearTests/`, or `JournalBearUITests/` are picked up
+  automatically. Never edit `project.pbxproj` to add files.
+- Gotcha (macOS 26): the detail `ScrollView` and its toolbar must exist from
+  first render, or the toolbar's scroll edge effect goes opaque. Do not create
+  them conditionally after launch.
+
+## UI and UX conventions
+
+UI changes must behave the way most users expect. When the request leaves room
+for interpretation, resolve it toward the platform convention, not toward the
+smallest diff.
+
+- **Electron:** standard desktop-web behavior. Escape closes dialogs, Enter
+  submits the focused form, destructive actions get a confirmation, controls
+  get disabled and loading states, and focus lands somewhere sensible when
+  views change. Stay within the existing Tailwind/shadcn design language.
+- **SwiftUI (macOS now, iOS planned):** behave like a native Apple app per the
+  Human Interface Guidelines. Commands live in the menu bar with standard
+  shortcuts (via `.commands`), toolbar items sit in standard placements, search
+  goes where `.searchable` puts it, modal flows use sheets, destructive actions
+  use `confirmationDialog`, Return activates the default button and Escape
+  cancels. Prefer API that also exists on iOS when it costs nothing, since an
+  iOS port is planned.
+
 # Writing good code
 
 You are expected to write code at the level of a senior engineer who cares about
