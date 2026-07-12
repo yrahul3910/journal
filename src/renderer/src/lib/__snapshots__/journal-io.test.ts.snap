@@ -1,0 +1,75 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`exportToHTML > generates deterministic HTML for a journal (snapshot) 1`] = `
+"<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Journal Export</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .entry {
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .entry-date {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .entry-sentiment {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    .sentiment-Happy { background-color: #4caf50; color: white; }
+    .sentiment-Sad { background-color: #fbc02d; color: white; }
+    .sentiment-Angry { background-color: #f44336; color: white; }
+    .sentiment-Loved { background-color: #ff69b4; color: white; }
+    .sentiment-Excited { background-color: #00ff00; color: white; }
+    .sentiment-Neutral { background-color: #9e9e9e; color: white; }
+    .entry-content {
+      margin-top: 15px;
+    }
+    .entry-images {
+      margin-top: 15px;
+    }
+    .entry-images img {
+      max-width: 100%;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Journal</h1>
+
+  <div class="entry">
+    <div class="entry-date">Sun Mar 15 2026</div>
+    <span class="entry-sentiment sentiment-Happy">Happy</span>
+    <div class="entry-content"><h1 id="trip">Trip</h1>
+<p>Great <strong>day</strong> out.</p></div>
+    <div class="entry-images">
+      <img src="data:image/png;base64,AAAA" alt="Attachment" />
+    </div>
+  </div>
+
+  <div class="entry">
+    <div class="entry-date">Fri Jan 02 2026</div>
+    <span class="entry-sentiment sentiment-Neutral">Neutral</span>
+    <div class="entry-content"><p>A quiet start to the year.</p></div>
+  </div>
+
+</body>
+</html>"
+`;

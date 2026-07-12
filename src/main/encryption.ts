@@ -60,49 +60,54 @@ export const encryptFile = (
     path: string,
     outputPath: string,
     key: string,
-    func: (err?: Error) => void,
-): void => {
-    try {
-        const salt = crypto.randomBytes(SALT_LENGTH);
-        const iv = crypto.randomBytes(IV_LENGTH);
-        const derivedKey = deriveKey(key, salt);
+): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        try {
+            const salt = crypto.randomBytes(SALT_LENGTH);
+            const iv = crypto.randomBytes(IV_LENGTH);
+            const derivedKey = deriveKey(key, salt);
 
-        const cipher = crypto.createCipheriv(algorithm, derivedKey, iv);
-        const input = fs.createReadStream(path);
-        const output = fs.createWriteStream(outputPath);
+            const cipher = crypto.createCipheriv(algorithm, derivedKey, iv);
+            const input = fs.createReadStream(path);
+            const output = fs.createWriteStream(outputPath);
 
-        // Write salt and IV first
-        output.write(salt);
-        output.write(iv);
+            // Write salt and IV first
+            output.write(salt);
+            output.write(iv);
 
-        input.pipe(cipher).pipe(output);
+            input.pipe(cipher).pipe(output);
 
-        output.on("finish", () => {
-            console.log("[ENCRYPTION] File encrypted successfully");
-            func();
-        });
+            output.on("finish", () => {
+                console.log("[ENCRYPTION] File encrypted successfully");
+                resolve();
+            });
 
-        output.on("error", (err) => {
-            console.error("[ENCRYPTION] Encrypt output error:", err);
-            func(err);
-        });
+            input.on("error", (err) => {
+                console.error("[ENCRYPTION] Encrypt input error:", err);
+                reject(err);
+            });
 
-        cipher.on("error", (err) => {
-            console.error("[ENCRYPTION] Cipher error:", err);
-            func(err);
-        });
-    } catch (ex) {
-        console.error("[ENCRYPTION] Encrypt file error:", ex);
-        func(ex as Error);
-    }
+            output.on("error", (err) => {
+                console.error("[ENCRYPTION] Encrypt output error:", err);
+                reject(err);
+            });
+
+            cipher.on("error", (err) => {
+                console.error("[ENCRYPTION] Cipher error:", err);
+                reject(err);
+            });
+        } catch (ex) {
+            console.error("[ENCRYPTION] Encrypt file error:", ex);
+            reject(ex as Error);
+        }
+    });
 };
 
 export const decryptFile = (
     path: string,
     outputPath: string,
     key: string,
-    func: (err?: Error) => void,
-): void => {
+): Error | null => {
     try {
         console.log("[ENCRYPTION] Starting file decryption...");
         console.log("[ENCRYPTION] Input path:", path);
@@ -115,10 +120,10 @@ export const decryptFile = (
         // Read the entire file to detect format
         const fileContent = fs.readFileSync(path);
         console.log("[ENCRYPTION] File read, size:", fileContent.length);
-        tryNewFormatFromBuffer(fileContent, outputPath, key, func);
+        return tryNewFormatFromBuffer(fileContent, outputPath, key);
     } catch (ex) {
         console.error("[ENCRYPTION] Decrypt file error:", ex);
-        func(ex as Error);
+        return ex as Error;
     }
 };
 
@@ -126,20 +131,18 @@ const tryNewFormatFromBuffer = (
     fileBuffer: Buffer,
     outputPath: string,
     key: string,
-    func: (err?: Error) => void,
-): void => {
+): Error | null => {
     try {
         console.log("[ENCRYPTION] Trying new format from buffer...");
 
         if (fileBuffer.length < SALT_LENGTH + IV_LENGTH) {
             console.error("[ENCRYPTION] File too small for new format");
-            func(new Error("File too small or corrupted"));
-            return;
+            return new Error("File too small or corrupted");
         }
 
-        const salt = fileBuffer.slice(0, SALT_LENGTH);
-        const iv = fileBuffer.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
-        const encrypted = fileBuffer.slice(SALT_LENGTH + IV_LENGTH);
+        const salt = fileBuffer.subarray(0, SALT_LENGTH);
+        const iv = fileBuffer.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+        const encrypted = fileBuffer.subarray(SALT_LENGTH + IV_LENGTH);
 
         console.log("[ENCRYPTION] Extracted salt and IV from buffer");
 
@@ -154,13 +157,13 @@ const tryNewFormatFromBuffer = (
 
             console.log("[ENCRYPTION] Decrypted successfully (new format)");
             fs.writeFileSync(outputPath, decrypted);
-            func();
+            return null;
         } catch (err) {
             console.error("[ENCRYPTION] New format decipher error:", err);
-            func(err as Error);
+            return err as Error;
         }
     } catch (ex) {
         console.error("[ENCRYPTION] New format exception:", ex);
-        func(ex as Error);
+        return ex as Error;
     }
 };

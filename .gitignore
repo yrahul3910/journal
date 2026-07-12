@@ -65,3 +65,12 @@ JournalBear-*/
 electron-builder.yml
 .DS_Store
 out/
+
+# macOS native app (Xcode)
+macos/build/
+macos/**/xcuserdata/
+macos/**/*.xcuserstate
+DerivedData/
+
+# Local test journals
+*.zjournal

@@ -3,27 +3,29 @@ import {
     DialogContent,
     DialogDescription,
     DialogHeader,
-    DialogTitle
-} from '@/components/ui/dialog'
-import { useJournalStore } from '@/store/journal-store'
-import { VERSION_NUMBER } from '@/types/journal'
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { useJournalStore } from "@/store/journal-store";
+import { VERSION_NUMBER } from "@/types/journal";
 
 export function AboutDialog() {
-    const { activeDialog, closeDialog } = useJournalStore()
-    const isOpen = activeDialog === 'about'
+    const { activeDialog, closeDialog } = useJournalStore();
+    const isOpen = activeDialog === "about";
 
     return (
         <Dialog open={isOpen} onOpenChange={closeDialog}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>About JournalBear</DialogTitle>
-                    <DialogDescription>Version {VERSION_NUMBER}</DialogDescription>
+                    <DialogDescription>
+                        Version {VERSION_NUMBER}
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
                     <p className="text-sm">
-                        JournalBear is an encrypted journaling application that helps you keep your thoughts
-                        private and secure.
+                        JournalBear is an encrypted journaling application that
+                        helps you keep your thoughts private and secure.
                     </p>
 
                     <div>
@@ -60,5 +62,5 @@ export function AboutDialog() {
                 </div>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

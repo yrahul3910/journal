@@ -1,37 +1,37 @@
 {
-  "compilerOptions": {
-    "target": "es2025",
-    "useDefineForClassFields": true,
-    "lib": ["ES2025", "DOM", "DOM.Iterable"],
-    "module": "esnext",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
+    "compilerOptions": {
+        "target": "es2024",
+        "useDefineForClassFields": true,
+        "lib": ["ES2024", "DOM", "DOM.Iterable"],
+        "module": "esnext",
+        "skipLibCheck": true,
+        "esModuleInterop": true,
 
-    // Prep for TS7
-    "types": ["node"],
+        // Prep for TS7
+        "types": ["node"],
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedSideEffectImports": true,
 
-    /* Path Aliases */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/renderer/src/*"],
-      "@renderer/*": ["./src/renderer/src/*"]
-    }
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+        /* Path Aliases */
+        "paths": {
+            "@/*": ["./src/renderer/src/*"],
+            "@renderer/*": ["./src/renderer/src/*"],
+            "@shared/*": ["./src/shared/*"]
+        }
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "references": [{ "path": "./tsconfig.node.json" }]
 }
