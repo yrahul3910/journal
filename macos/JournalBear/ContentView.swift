@@ -5,32 +5,91 @@ struct ContentView: View {
     @EnvironmentObject var store: JournalStore
     @State private var selection: JournalEntry.ID?
     @State private var columnVisibility = NavigationSplitViewVisibility.automatic
+    @State private var searchText = ""
+    @State private var searchCriteria = EntrySearchCriteria()
+
+    private var visibleEntries: [JournalEntry] {
+        searchCriteria.filter(store.entries)
+    }
+
+    private var visibleEntryIDs: [JournalEntry.ID] {
+        visibleEntries.map(\.id)
+    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            List(store.entries, selection: $selection) { entry in
-                EntryRow(entry: entry)
-                    .contentShape(Rectangle())
-                    .onDoubleClick {
-                        selection = entry.id
-                        store.showNewEntry = .editing
-                    }
-            }
-            .toolbar(removing: columnVisibility == NavigationSplitViewVisibility.all ? .sidebarToggle : nil)
-            .overlay {
-                if store.entries.isEmpty && !store.isLoading {
-                    ContentUnavailableView {
-                        Label("No Journal Open", systemImage: "book.closed")
-                    } description: {
-                        Text("Open a .zjournal file to read your entries.")
-                    } actions: {
-                        Button("Open Journal…") { store.chooseFile() }
+            VStack(spacing: 0) {
+                if store.documentName != nil && !store.entries.isEmpty {
+                    EntrySearchControls(
+                        criteria: $searchCriteria,
+                        resultCount: visibleEntries.count,
+                        onShowAll: showAllEntries
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                }
+
+                List(visibleEntries, selection: $selection) { entry in
+                    EntryRow(entry: entry)
+                        .contentShape(Rectangle())
+                        .onDoubleClick {
+                            selection = entry.id
+                            store.showNewEntry = .editing
+                        }
+                }
+                .overlay {
+                    if store.entries.isEmpty && !store.isLoading {
+                        ContentUnavailableView {
+                            Label(
+                                store.documentName == nil ? "No Journal Open" : "No Entries",
+                                systemImage: store.documentName == nil ? "book.closed" : "book.pages"
+                            )
+                        } description: {
+                            if store.documentName == nil {
+                                Text("Open a .zjournal file to read your entries.")
+                            } else {
+                                Text("This journal does not have any entries yet.")
+                            }
+                        } actions: {
+                            if store.documentName == nil {
+                                Button("Open Journal...") { store.chooseFile() }
+                            }
+                        }
+                    } else if visibleEntries.isEmpty && searchCriteria.isActive {
+                        ContentUnavailableView {
+                            Label("No Matching Entries", systemImage: "magnifyingglass")
+                        } description: {
+                            Text("Try another search or change the filters.")
+                        } actions: {
+                            Button("Show All Entries", action: showAllEntries)
+                                .glassButton()
+                        }
                     }
                 }
             }
+            .toolbar(removing: columnVisibility == NavigationSplitViewVisibility.all ? .sidebarToggle : nil)
         }
         detail: {
             EntryDetail(entry: store.entries.first(where: { $0.id == selection }))
+        }
+        .searchable(text: $searchText, placement: .sidebar, prompt: "Search entries")
+        .onSubmit(of: .search, submitSearch)
+        .onKeyPress(.return) {
+            guard let editor = NSApp.keyWindow?.firstResponder as? NSTextView,
+                  editor.delegate is NSSearchField
+            else {
+                return .ignored
+            }
+
+            // The macOS 26 sidebar search field does not emit SwiftUI's search
+            // submit trigger when Return is pressed.
+            submitSearch()
+            return .handled
+        }
+        .onChange(of: searchText) {
+            if searchText.isEmpty {
+                searchCriteria.text = ""
+            }
         }
         .toolbar(removing: .title)
         .overlay {
@@ -94,11 +153,28 @@ struct ContentView: View {
         }
         .frame(minWidth: 820, minHeight: 520)
         .onChange(of: store.documentName) {
-            // Auto-select the first entry whenever a new journal is opened.
+            showAllEntries()
             selection = store.entries.first?.id
         }
+        .onChange(of: visibleEntryIDs) {
+            if selection.map({ visibleEntryIDs.contains($0) }) != true {
+                selection = visibleEntryIDs.first
+            }
+        }
+    }
+
+    private func submitSearch() {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        searchText = query
+        searchCriteria.text = query
+    }
+
+    private func showAllEntries() {
+        searchText = ""
+        searchCriteria = EntrySearchCriteria()
     }
 }
+
 
 private struct PasswordPrompt: View {
     @EnvironmentObject var store: JournalStore

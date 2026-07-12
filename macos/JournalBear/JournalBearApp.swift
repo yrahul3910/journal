@@ -10,7 +10,12 @@ struct JournalBearApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(store)
-                .onAppear { appDelegate.store = store }
+                .onAppear {
+                    appDelegate.store = store
+#if DEBUG
+                    store.loadUITestJournalIfConfigured()
+#endif
+                }
         }
         .commands {
             CommandGroup(replacing: .newItem) {

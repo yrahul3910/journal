@@ -38,6 +38,16 @@
                ReferencedContainer = "container:JournalBear.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "CC0000000000000000000001"
+               BuildableName = "JournalBearUITests.xctest"
+               BlueprintName = "JournalBearUITests"
+               ReferencedContainer = "container:JournalBear.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

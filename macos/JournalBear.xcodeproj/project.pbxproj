@@ -19,6 +19,7 @@
 /* Begin PBXFileReference section */
 		AA0000000000000000000006 /* JournalBear for Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "JournalBear for Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0000000000000000000002 /* JournalBearTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JournalBearTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC0000000000000000000002 /* JournalBearUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JournalBearUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -30,6 +31,11 @@
 		BB0000000000000000000003 /* JournalBearTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = JournalBearTests;
+			sourceTree = "<group>";
+		};
+		CC0000000000000000000003 /* JournalBearUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = JournalBearUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -49,6 +55,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC0000000000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -56,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				BB0000000000000000000003 /* JournalBearTests */,
+				CC0000000000000000000003 /* JournalBearUITests */,
 				AA0000000000000000000003 /* Products */,
 				AA0000000000000000000004 /* JournalBear */,
 			);
@@ -66,6 +80,7 @@
 			children = (
 				AA0000000000000000000006 /* JournalBear for Mac.app */,
 				BB0000000000000000000002 /* JournalBearTests.xctest */,
+				CC0000000000000000000002 /* JournalBearUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,6 +129,26 @@
 			productReference = BB0000000000000000000002 /* JournalBearTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		CC0000000000000000000001 /* JournalBearUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC0000000000000000000007 /* Build configuration list for PBXNativeTarget "JournalBearUITests" */;
+			buildPhases = (
+				CC0000000000000000000004 /* Sources */,
+				CC0000000000000000000005 /* Frameworks */,
+				CC0000000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CC0000000000000000000003 /* JournalBearUITests */,
+			);
+			name = JournalBearUITests;
+			productName = JournalBearUITests;
+			productReference = CC0000000000000000000002 /* JournalBearUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -128,6 +163,10 @@
 						CreatedOnToolsVersion = 26.5;
 					};
 					BB0000000000000000000001 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = AA0000000000000000000005;
+					};
+					CC0000000000000000000001 = {
 						CreatedOnToolsVersion = 26.5;
 						TestTargetID = AA0000000000000000000005;
 					};
@@ -149,6 +188,7 @@
 			targets = (
 				AA0000000000000000000005 /* JournalBear for Mac */,
 				BB0000000000000000000001 /* JournalBearTests */,
+				CC0000000000000000000001 /* JournalBearUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -168,6 +208,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC0000000000000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -179,6 +226,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BB0000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC0000000000000000000004 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -319,6 +373,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBear;
+				PRODUCT_MODULE_NAME = JournalBear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -352,6 +407,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBear;
+				PRODUCT_MODULE_NAME = JournalBear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -374,7 +430,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBearTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JournalBear.app/Contents/MacOS/JournalBear";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JournalBear for Mac.app/Contents/MacOS/JournalBear for Mac";
 			};
 			name = Debug;
 		};
@@ -394,7 +450,33 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBearTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JournalBear.app/Contents/MacOS/JournalBear";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JournalBear for Mac.app/Contents/MacOS/JournalBear for Mac";
+			};
+			name = Release;
+		};
+		CC0000000000000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBearUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "JournalBear for Mac";
+			};
+			name = Debug;
+		};
+		CC0000000000000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBearUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "JournalBear for Mac";
 			};
 			name = Release;
 		};
@@ -424,6 +506,15 @@
 			buildConfigurations = (
 				BB0000000000000000000008 /* Debug */,
 				BB0000000000000000000009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC0000000000000000000007 /* Build configuration list for PBXNativeTarget "JournalBearUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC0000000000000000000008 /* Debug */,
+				CC0000000000000000000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

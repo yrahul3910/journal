@@ -133,6 +133,48 @@ struct JournalFileTests {
         #expect(JournalEntry.parseDate("not a date") == nil)
     }
 
+    // MARK: - Search
+
+    @Test func searchesEntryContentAsCaseInsensitivePlainText() {
+        let entries = [
+            JournalEntry(entryDate: "2020-01-01", content: "A Happy memory", sentiment: "Happy"),
+            JournalEntry(entryDate: "2020-01-02", content: "Literal [brackets]", sentiment: "Neutral"),
+        ]
+
+        #expect(EntrySearchCriteria(text: "happy").filter(entries).map(\.content) == ["A Happy memory"])
+        #expect(EntrySearchCriteria(text: "[brackets]").filter(entries).map(\.content) == ["Literal [brackets]"])
+    }
+
+    @Test func filtersSearchResultsByMoodAndAttachments() {
+        let entries = [
+            JournalEntry(
+                entryDate: "2020-01-01",
+                content: "Trip with photos",
+                sentiment: "Happy",
+                attachments: ["photo.jpg"]
+            ),
+            JournalEntry(entryDate: "2020-01-02", content: "Quiet trip", sentiment: "Neutral"),
+            JournalEntry(entryDate: "2020-01-03", content: "Ordinary day", sentiment: "Happy"),
+        ]
+        let criteria = EntrySearchCriteria(
+            text: "trip",
+            sentiment: "Happy",
+            hasAttachments: true
+        )
+
+        #expect(criteria.filter(entries).map(\.content) == ["Trip with photos"])
+    }
+
+    @Test func emptySearchCriteriaReturnsAllEntries() {
+        let entries = [
+            JournalEntry(entryDate: "2020-01-01", content: "One", sentiment: "Happy"),
+            JournalEntry(entryDate: "2020-01-02", content: "Two", sentiment: "Sad"),
+        ]
+
+        #expect(EntrySearchCriteria().filter(entries).count == 2)
+        #expect(EntrySearchCriteria().isActive == false)
+    }
+
     // MARK: - Store: staging vs. saving
 
     @MainActor

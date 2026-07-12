@@ -31,6 +31,9 @@ final class JournalStore: ObservableObject {
     /// Bumped on every staged change so a save can tell whether more edits
     /// arrived while it was writing (and therefore must stay dirty).
     private var changeToken = 0
+#if DEBUG
+    private var didLoadUITestJournal = false
+#endif
 
     /// New entries can only be added to an already-open journal.
     var canAddEntry: Bool { documentName != nil }
@@ -82,6 +85,23 @@ final class JournalStore: ObservableObject {
         showPasswordPrompt = false
         pendingURL = nil
     }
+
+#if DEBUG
+    func loadUITestJournalIfConfigured() {
+        guard !didLoadUITestJournal else { return }
+        didLoadUITestJournal = true
+
+        let environment = ProcessInfo.processInfo.environment
+        guard let path = environment["JOURNALBEAR_UI_TEST_JOURNAL"],
+              let password = environment["JOURNALBEAR_UI_TEST_PASSWORD"]
+        else {
+            return
+        }
+
+        pendingURL = URL(fileURLWithPath: path)
+        submitPassword(password)
+    }
+#endif
 
     /// Stage a new entry in memory and mark the journal dirty. Nothing is written
     /// to disk until `save()` (Cmd-S), so the user can compose several entries and

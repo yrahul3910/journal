@@ -14,21 +14,23 @@ personal use.
 From the command line:
 ```sh
 DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" \
-  xcodebuild -project JournalBear.xcodeproj -target JournalBear \
+  xcodebuild -project JournalBear.xcodeproj -scheme JournalBear \
   -configuration Debug ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO \
   SYMROOT="$PWD/build" build
 # arm64 requires a signature to launch; ad-hoc sign the result:
-codesign --force --deep -s - build/Debug/JournalBear.app
-open build/Debug/JournalBear.app
+codesign --force --deep -s - "build/Debug/JournalBear for Mac.app"
+open "build/Debug/JournalBear for Mac.app"
 ```
 
 The project uses Xcode 16+ filesystem-synchronized groups, so new files added
-under `JournalBear/` (or `JournalBearTests/`) are picked up automatically — no
-`project.pbxproj` edits.
+under `JournalBear/`, `JournalBearTests/`, or `JournalBearUITests/` are picked up
+automatically — no `project.pbxproj` edits.
 
 ## Tests
-Swift Testing target `JournalBearTests` (hosted by the app). Run in Xcode with ⌘U,
-or from the command line:
+The `JournalBear` scheme runs the hosted Swift Testing target `JournalBearTests`
+and the `JournalBearUITests` target. The UI test verifies that pressing Return in
+the native search field filters the sidebar without requiring another filter.
+Run in Xcode with Cmd-U, or from the command line:
 ```sh
 DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" \
   xcodebuild test -project JournalBear.xcodeproj -scheme JournalBear \
@@ -72,7 +74,7 @@ open file, in the same format the Electron app reads. Saving is verified by
 round-trip tests; cross-app interop (Electron opening a SwiftUI-saved file) hasn't
 been verified yet.
 
-Not yet implemented: editing/deleting entries, full block Markdown, search, statistics.
+Not yet implemented: deleting entries, full block Markdown, statistics.
 
 `Core/` + `Models/Journal.swift` have no SwiftUI/AppKit dependencies, so the read
 pipeline can be exercised headlessly by compiling them with a small `main.swift`
