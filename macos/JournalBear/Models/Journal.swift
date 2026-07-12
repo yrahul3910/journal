@@ -84,16 +84,6 @@ extension JournalEntry {
         return date.formatted(date: .abbreviated, time: .omitted)
     }
 
-    /// Content rendered with inline Markdown. Whitespace/newlines are preserved.
-    /// Full block Markdown (headings, lists) is deferred to a later milestone.
-    var attributedContent: AttributedString {
-        let options = AttributedString.MarkdownParsingOptions(
-            interpretedSyntax: .inlineOnlyPreservingWhitespace
-        )
-        return (try? AttributedString(markdown: content, options: options))
-            ?? AttributedString(content)
-    }
-
     static func parseDate(_ raw: String) -> Date? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }

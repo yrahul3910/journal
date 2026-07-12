@@ -92,6 +92,18 @@ final class JournalStore: ObservableObject {
         didLoadUITestJournal = true
 
         let environment = ProcessInfo.processInfo.environment
+        if let content = environment["JOURNALBEAR_UI_TEST_ENTRY_CONTENT"] {
+            entries = [
+                JournalEntry(
+                    entryDate: "2026-01-01T00:00:00Z",
+                    content: content,
+                    sentiment: "Neutral"
+                )
+            ]
+            documentName = "UI Test Journal"
+            return
+        }
+
         guard let path = environment["JOURNALBEAR_UI_TEST_JOURNAL"],
               let password = environment["JOURNALBEAR_UI_TEST_PASSWORD"]
         else {

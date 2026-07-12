@@ -1,6 +1,8 @@
 import Testing
 import Foundation
+import SwiftUI
 @testable import JournalBear
+@testable import Textual
 
 /// Read-path regression tests against a real `.zjournal` file.
 ///
@@ -87,6 +89,73 @@ struct JournalFileTests {
 
         #expect(reopened.entries.count == original.entries.count + 1)
         #expect(reopened.entries.contains { $0.content == "Round-trip test entry" })
+    }
+
+    @Test func savesAndReopensStructuredMarkdownWithoutChangingSource() throws {
+        let markdown = """
+            # A Markdown heading
+
+            A paragraph with **bold text**, `inline code`, and a [link](https://example.com).
+
+            - First list item
+            - Second list item
+
+            > A block quote
+
+            ```swift
+            let rendered = true
+            ```
+
+            | Left | Right |
+            | --- | --- |
+            | one | two |
+
+            ![An image](file:///private/journal-image.jpg)
+            """
+        let out = Self.tempURL()
+        defer { try? FileManager.default.removeItem(at: out) }
+
+        try JournalFile.save(
+            [
+                JournalEntry(
+                    entryDate: "2030-01-02T03:04:05Z",
+                    content: markdown,
+                    sentiment: "Neutral"
+                )
+            ],
+            to: out,
+            password: "round-trip-pw"
+        )
+        let reopened = try JournalFile.open(url: out, password: "round-trip-pw")
+
+        let entry = try #require(reopened.entries.first)
+        #expect(entry.content == markdown)
+    }
+
+    @MainActor
+    @Test func blocksRemoteAndLocalMarkdownImageURLs() async throws {
+        let remoteURL = try #require(URL(string: "https://example.com/image.jpg"))
+        let localURL = URL(fileURLWithPath: "/private/journal-image.jpg")
+        let loader = DisabledMarkdownImageLoader()
+        let environment = ColorEnvironmentValues(
+            colorScheme: .light,
+            colorSchemeContrast: .standard
+        )
+
+        for url in [remoteURL, localURL] {
+            do {
+                _ = try await loader.attachment(
+                    for: url,
+                    text: "",
+                    environment: environment
+                )
+                Issue.record("The Markdown image loader accepted \(url.absoluteString)")
+            } catch let error as URLError {
+                #expect(error.code == .unsupportedURL)
+            } catch {
+                Issue.record("The Markdown image loader returned an unexpected error: \(error)")
+            }
+        }
     }
 
     @Test func imageAttachmentsSurviveASaveRoundTrip() throws {

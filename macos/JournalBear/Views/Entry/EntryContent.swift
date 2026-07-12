@@ -1,4 +1,6 @@
+import Foundation
 import SwiftUI
+import Textual
 
 struct EntryContent: View {
     let entry: JournalEntry
@@ -15,8 +17,9 @@ struct EntryContent: View {
             
             Divider()
             
-            Text(entry.attributedContent)
-                .textSelection(.enabled)
+            StructuredText(markdown: entry.content)
+                .textual.imageAttachmentLoader(DisabledMarkdownImageLoader())
+                .textual.textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             if !entry.images.isEmpty {
@@ -47,5 +50,17 @@ struct EntryContent: View {
             }
         }
         .padding(28)
+    }
+}
+
+/// Journal attachments are decrypted locally and shown below the entry. Do not
+/// fetch URLs from entry Markdown while viewing a private journal.
+struct DisabledMarkdownImageLoader: AttachmentLoader {
+    func attachment(
+        for _: URL,
+        text _: String,
+        environment _: ColorEnvironmentValues
+    ) async throws -> AnyAttachment {
+        throw URLError(.unsupportedURL)
     }
 }

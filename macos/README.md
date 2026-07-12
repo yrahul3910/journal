@@ -60,9 +60,12 @@ This matches the Electron app's `src/main/encryption.ts` and `archive.ts`.
 
 ## Status
 Targets the **7.0 format only** — no legacy fallbacks. Read path: opens and
-decrypts a `.zjournal`, lists entries, shows entry content (inline Markdown), and
-renders image attachments inline (every image is a plain file under `images/`).
+decrypts a `.zjournal`, lists entries, renders structured Markdown entry content
+with Textual, and renders image attachments inline (every image is a plain file
+under `images/`).
 Emoji shortcodes (`:smile:`) are intentionally unsupported — Unicode only.
+Markdown image URLs are intentionally not fetched; journal attachments are rendered
+from the encrypted archive.
 
 The entries array is still read under the key `en` transitionally; 7.0 renames it
 to `entries`, switched over once a real 7.0 file exists to test against. A full
@@ -74,7 +77,7 @@ open file, in the same format the Electron app reads. Saving is verified by
 round-trip tests; cross-app interop (Electron opening a SwiftUI-saved file) hasn't
 been verified yet.
 
-Not yet implemented: deleting entries, full block Markdown, statistics.
+Not yet implemented: deleting entries, statistics.
 
 `Core/` + `Models/Journal.swift` have no SwiftUI/AppKit dependencies, so the read
 pipeline can be exercised headlessly by compiling them with a small `main.swift`
