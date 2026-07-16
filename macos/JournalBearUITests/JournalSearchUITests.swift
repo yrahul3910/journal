@@ -22,11 +22,15 @@ final class JournalSearchUITests: XCTestCase {
         let matchingEntry = app.staticTexts[
             "This is a second entry on June 16. It has two images attached."
         ]
-        let nonmatchingContent =
-            "An entry on June 15.\n\n" +
-            "This has two paragraphs.:smile: \u{1F602} with a : smile : and a Unicode emoji.\n\n" +
-            "This has a \"Sad\" emotion."
-        let nonmatchingEntry = app.staticTexts[nonmatchingContent]
+        // Row previews are markdown-stripped with blocks joined by spaces, so
+        // match a distinctive prefix rather than the exact raw content. These
+        // texts surface the string as value (empty label) on macOS.
+        let nonmatchingEntry = app.staticTexts.matching(
+            NSPredicate(
+                format: "label CONTAINS %@ OR value CONTAINS %@",
+                "An entry on June 15.", "An entry on June 15."
+            )
+        ).firstMatch
         XCTAssertTrue(matchingEntry.waitForExistence(timeout: 5))
         XCTAssertTrue(nonmatchingEntry.exists)
 

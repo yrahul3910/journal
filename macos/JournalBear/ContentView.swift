@@ -21,6 +21,7 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             VStack(spacing: 0) {
+#if os(macOS)
                 if store.documentName != nil && !store.entries.isEmpty {
                     EntrySearchControls(
                         criteria: $searchCriteria,
@@ -30,6 +31,7 @@ struct ContentView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                 }
+#endif
 
                 List(visibleEntries, selection: $selection) { entry in
                     EntryRow(entry: entry)
@@ -74,9 +76,23 @@ struct ContentView: View {
             }
             .toolbar(removing: columnVisibility == NavigationSplitViewVisibility.all ? .sidebarToggle : nil)
 #if os(iOS)
+            // The list column is the whole screen here, so it carries the
+            // journal name and, mid-search, the match count. The filter menu
+            // moves from the macOS search-controls row into the toolbar.
+            .navigationTitle(store.documentName ?? "JournalBear")
+            .navigationSubtitle(
+                searchCriteria.isActive
+                    ? "\(visibleEntries.count) \(visibleEntries.count == 1 ? "entry" : "entries")"
+                    : ""
+            )
             // The New Entry / Save menu commands have no keyboard to live on
             // here, so they get toolbar buttons instead.
             .toolbar {
+                if store.documentName != nil && !store.entries.isEmpty {
+                    ToolbarItem(placement: .topBarLeading) {
+                        EntryFilterMenu(criteria: $searchCriteria)
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         store.showNewEntry = .new
@@ -120,7 +136,9 @@ struct ContentView: View {
                 searchCriteria.text = ""
             }
         }
+#if os(macOS)
         .toolbar(removing: .title)
+#endif
         .overlay {
             if store.isLoading || store.isSaving {
                 ProgressView(store.isSaving ? "Saving…" : "Opening…")
@@ -139,7 +157,12 @@ struct ContentView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .glassCapsule()
+#if os(macOS)
                 .padding(.bottom, 24)
+#else
+                // Clear the bottom-docked search field.
+                .padding(.bottom, 96)
+#endif
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
