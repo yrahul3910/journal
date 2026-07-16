@@ -20,6 +20,12 @@ struct JournalError: Error {
 /// `images/` directory holding every attachment as a plain image file.
 enum JournalFile {
     static func open(url: URL, password: String) throws -> JournalData {
+        // URLs from the system file pickers are security-scoped on iOS (and in
+        // sandboxed macOS builds); plain path URLs return false here and need
+        // no matching stop.
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
         let fileData = try Data(contentsOf: url)
         guard fileData.count > 32 else { throw JournalError.tooSmall }
 
@@ -60,6 +66,22 @@ enum JournalFile {
     /// format the Electron app reads: a gzipped USTAR of `data.json` + an `images/`
     /// directory, AES-256-CBC encrypted with a fresh salt + IV prepended.
     static func save(_ entries: [JournalEntry], to url: URL, password: String) throws {
+        let output = try encrypt(entries, password: password)
+
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+        do {
+            try output.write(to: url, options: .atomic)
+        } catch {
+            throw JournalError.saveFailed
+        }
+    }
+
+    /// Produces the complete `.zjournal` byte layout for `entries` without
+    /// touching disk, for callers that let the system write the file (the
+    /// save-location exporter for brand-new journals).
+    static func encrypt(_ entries: [JournalEntry], password: String) throws -> Data {
         var archiveFiles: [(name: String, data: Data)] = []
         var diskEntries: [DiskEntry] = []
 
@@ -92,12 +114,7 @@ enum JournalFile {
         var output = salt
         output.append(iv)
         output.append(ciphertext)
-
-        do {
-            try output.write(to: url, options: .atomic)
-        } catch {
-            throw JournalError.saveFailed
-        }
+        return output
     }
 
     private static func imageExtension(_ data: Data) -> String {

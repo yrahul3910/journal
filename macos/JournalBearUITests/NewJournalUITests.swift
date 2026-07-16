@@ -30,6 +30,42 @@ final class NewJournalUITests: XCTestCase {
     }
 
     @MainActor
+    func testNewJournalOverUnsavedChangesAsksFirst() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
+
+        // A freshly created journal is dirty until its first save.
+        app.typeKey("n", modifierFlags: [.command, .shift])
+        let passwordField = app.secureTextFields["Password"]
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 2))
+        passwordField.click()
+        passwordField.typeText("$Password123")
+        let confirmField = app.secureTextFields["Confirm Password"]
+        confirmField.click()
+        confirmField.typeText("$Password123")
+        app.buttons["Create"].click()
+        XCTAssertTrue(app.staticTexts["No Entries"].waitForExistence(timeout: 2))
+
+        // Requesting another new journal must ask about the unsaved changes.
+        app.typeKey("n", modifierFlags: [.command, .shift])
+        let prompt = app.staticTexts["Save changes before creating a new journal?"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 2))
+
+        // Cancel keeps the dirty journal open without showing the create sheet.
+        app.sheets.buttons["Cancel"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts["No Entries"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.secureTextFields["Password"].exists)
+
+        // Discard proceeds to the create sheet.
+        app.typeKey("n", modifierFlags: [.command, .shift])
+        XCTAssertTrue(prompt.waitForExistence(timeout: 2))
+        app.sheets.buttons["Discard"].firstMatch.click()
+        XCTAssertTrue(app.secureTextFields["Password"].waitForExistence(timeout: 2))
+    }
+
+    @MainActor
     func testRejectsWeakPassword() throws {
         let app = XCUIApplication()
         app.launch()

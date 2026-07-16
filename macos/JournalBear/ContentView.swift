@@ -147,6 +147,31 @@ struct ContentView: View {
             }
 
         }
+        .fileImporter(
+            isPresented: $store.showJournalImporter,
+            allowedContentTypes: [EncryptedJournalDocument.contentType]
+        ) { result in
+            store.journalImported(result)
+        }
+        .fileExporter(
+            isPresented: $store.showJournalExporter,
+            document: store.exportDocument,
+            contentTypes: [EncryptedJournalDocument.contentType],
+            defaultFilename: store.documentName ?? "Untitled",
+            onCompletion: { store.journalExported($0) },
+            onCancellation: { store.journalExportCancelled() }
+        )
+        .alert(
+            "Save changes before creating a new journal?",
+            isPresented: $store.showUnsavedChangesDialog
+        ) {
+            Button("Save") { store.saveThenNewJournal() }
+                .keyboardShortcut(.defaultAction)
+            Button("Discard", role: .destructive) { store.discardThenNewJournal() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The open journal has unsaved changes. If you don't save, they will be lost.")
+        }
         .alert(
             "Couldn't Open Journal",
             isPresented: Binding(

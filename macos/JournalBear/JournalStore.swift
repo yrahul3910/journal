@@ -1,6 +1,4 @@
 import SwiftUI
-import AppKit
-import UniformTypeIdentifiers
 
 enum NewEntryDialogState: Int {
     case closed
@@ -19,6 +17,14 @@ final class JournalStore: ObservableObject {
     @Published var showPasswordPrompt = false
     @Published var showNewJournalPrompt = false
     @Published var showNewEntry = NewEntryDialogState.closed
+    @Published var showJournalImporter = false
+    @Published var showJournalExporter = false
+    /// Asks whether to save/discard/cancel when a new journal is requested
+    /// while the open one has unsaved changes.
+    @Published var showUnsavedChangesDialog = false
+    /// Encrypted bytes staged for the exporter while it asks where a
+    /// brand-new journal's `.zjournal` file should go.
+    @Published private(set) var exportDocument: EncryptedJournalDocument?
 
     /// True when there are staged changes not yet written to disk. Drives the
     /// Save affordance's enabled state and the quit-confirmation prompt.
@@ -32,6 +38,10 @@ final class JournalStore: ObservableObject {
     /// Bumped on every staged change so a save can tell whether more edits
     /// arrived while it was writing (and therefore must stay dirty).
     private var changeToken = 0
+    /// The `changeToken` snapshot and caller completion for an in-flight
+    /// export, consumed when the exporter reports back.
+    private var exportToken = 0
+    private var exportCompletion: ((Bool) -> Void)?
 #if DEBUG
     private var didLoadUITestJournal = false
 #endif
@@ -39,20 +49,22 @@ final class JournalStore: ObservableObject {
     /// New entries can only be added to an already-open journal.
     var canAddEntry: Bool { documentName != nil }
 
-    /// Step 1: pick a `.zjournal` file, then prompt for its password.
+    /// Step 1: pick a `.zjournal` file, then prompt for its password. The
+    /// picking happens in the view layer's `fileImporter`, which reports back
+    /// through `journalImported`.
     func chooseFile() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.canChooseFiles = true
-        if let type = UTType(filenameExtension: "zjournal") {
-            panel.allowedContentTypes = [type]
-        }
+        showJournalImporter = true
+    }
 
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        pendingURL = url
-        errorMessage = nil
-        showPasswordPrompt = true
+    func journalImported(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            pendingURL = url
+            errorMessage = nil
+            showPasswordPrompt = true
+        case .failure(let error):
+            errorMessage = error.localizedDescription
+        }
     }
 
     /// Step 2: decrypt + decompress + parse off the main thread, then publish results.
@@ -88,31 +100,26 @@ final class JournalStore: ObservableObject {
     }
 
     /// Start the new-journal flow: confirm away any unsaved changes in the
-    /// currently open journal, then show the create sheet.
+    /// currently open journal (via the view layer's unsaved-changes alert),
+    /// then show the create sheet.
     func newJournal() {
-        guard hasUnsavedChanges else {
+        if hasUnsavedChanges {
+            showUnsavedChangesDialog = true
+        } else {
             showNewJournalPrompt = true
-            return
         }
+    }
 
-        let alert = NSAlert()
-        alert.messageText = "Save changes before creating a new journal?"
-        alert.informativeText =
-            "The open journal has unsaved changes. If you don't save, they will be lost."
-        alert.addButton(withTitle: "Save")
-        alert.addButton(withTitle: "Discard")
-        alert.addButton(withTitle: "Cancel")
-
-        switch alert.runModal() {
-        case .alertFirstButtonReturn: // Save
-            save { success in
-                if success { self.showNewJournalPrompt = true }
-            }
-        case .alertSecondButtonReturn: // Discard
-            showNewJournalPrompt = true
-        default: // Cancel
-            break
+    /// "Save" from the unsaved-changes alert: continue to the create sheet
+    /// only once the journal is actually on disk.
+    func saveThenNewJournal() {
+        save { success in
+            if success { self.showNewJournalPrompt = true }
         }
+    }
+
+    func discardThenNewJournal() {
+        showNewJournalPrompt = true
     }
 
     /// Replace the app state with a fresh, empty journal encrypted with
@@ -209,28 +216,17 @@ final class JournalStore: ObservableObject {
         performSave(completion: completion)
     }
 
+    /// Best-effort save when the scene moves to the background (iOS has no
+    /// quit hook to confirm unsaved changes). A journal without a file yet
+    /// can't be saved without presenting the exporter, so it stays staged in
+    /// memory instead.
+    func autosaveIfPossible() {
+        guard fileURL != nil else { return }
+        save()
+    }
+
     private func performSave(completion: ((Bool) -> Void)?) {
         guard let password else {
-            completion?(false)
-            return
-        }
-
-        // A journal created in-app has no file yet; ask where to put it.
-        if fileURL == nil {
-            let panel = NSSavePanel()
-            if let type = UTType(filenameExtension: "zjournal") {
-                panel.allowedContentTypes = [type]
-            }
-            panel.nameFieldStringValue = documentName ?? "Untitled"
-            guard panel.runModal() == .OK, let chosen = panel.url else {
-                completion?(false)
-                return
-            }
-            fileURL = chosen
-            documentName = chosen.deletingPathExtension().lastPathComponent
-        }
-
-        guard let url = fileURL else {
             completion?(false)
             return
         }
@@ -239,6 +235,31 @@ final class JournalStore: ObservableObject {
         let token = changeToken
         isSaving = true
         errorMessage = nil
+
+        // A journal created in-app has no file yet: encrypt to memory, then
+        // hand the bytes to the view layer's `fileExporter`, which asks where
+        // the `.zjournal` file should go, writes it, and reports back through
+        // `journalExported` / `journalExportCancelled`.
+        guard let url = fileURL else {
+            Task {
+                do {
+                    let data = try await Task.detached(priority: .userInitiated) {
+                        try JournalFile.encrypt(toSave, password: password)
+                    }.value
+                    isSaving = false
+                    exportDocument = EncryptedJournalDocument(data: data)
+                    exportToken = token
+                    exportCompletion = completion
+                    showJournalExporter = true
+                } catch {
+                    errorMessage = (error as? JournalError)?.message ?? error.localizedDescription
+                    isSaving = false
+                    completion?(false)
+                }
+            }
+            return
+        }
+
         Task {
             do {
                 try await Task.detached(priority: .userInitiated) {
@@ -255,6 +276,33 @@ final class JournalStore: ObservableObject {
                 completion?(false)
             }
         }
+    }
+
+    func journalExported(_ result: Result<URL, Error>) {
+        let completion = exportCompletion
+        exportCompletion = nil
+        exportDocument = nil
+
+        switch result {
+        case .success(let url):
+            fileURL = url
+            documentName = url.deletingPathExtension().lastPathComponent
+            if changeToken == exportToken { hasUnsavedChanges = false }
+            flashSaved()
+            completion?(true)
+        case .failure(let error):
+            errorMessage = error.localizedDescription
+            completion?(false)
+        }
+    }
+
+    /// The exporter was dismissed without picking a location; the journal
+    /// stays dirty in memory.
+    func journalExportCancelled() {
+        exportDocument = nil
+        let completion = exportCompletion
+        exportCompletion = nil
+        completion?(false)
     }
 
     private func flashSaved() {
