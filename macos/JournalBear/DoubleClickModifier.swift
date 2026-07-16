@@ -2,7 +2,8 @@
 import SwiftUI
 
 extension View {
-    /// Adds a double click handler this view (macOS only)
+    /// Adds a double click handler this view (macOS). A no-op on iOS, where
+    /// tapping a row already selects it and editing goes through the toolbar.
     ///
     /// Example
     /// ```
@@ -12,10 +13,15 @@ extension View {
     /// - Parameters:
     ///   - handler: Block invoked when a double click is detected
     func onDoubleClick(handler: @escaping () -> Void) -> some View {
+#if os(macOS)
         modifier(DoubleClickHandler(handler: handler))
+#else
+        self
+#endif
     }
 }
 
+#if os(macOS)
 struct DoubleClickHandler: ViewModifier {
     let handler: () -> Void
     func body(content: Content) -> some View {
@@ -52,3 +58,4 @@ class DoubleClickListeningView: NSView {
         }
     }
 }
+#endif

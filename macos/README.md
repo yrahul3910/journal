@@ -1,10 +1,12 @@
-# JournalBear — native macOS
+# JournalBear — native macOS & iOS
 
 A native SwiftUI build of JournalBear, maintained alongside the cross-platform
-Electron app. macOS only; uses native widgets and (on macOS 26+) Liquid Glass.
+Electron app. One multiplatform target builds for macOS and iOS/iPadOS (26+),
+using native widgets and Liquid Glass.
 
 ## Requirements
-- Xcode 26+ and macOS 26+ (Liquid Glass + the macOS 26 SDK).
+- Xcode 26+ and macOS 26+ (Liquid Glass + the 26 SDKs).
+- For iOS: the iOS 26 SDK / simulator runtime.
 
 ## Build & run
 Open `JournalBear.xcodeproj` in Xcode and press Run (⌘R). With **Team = None**,
@@ -22,13 +24,25 @@ codesign --force --deep -s - "build/Debug/JournalBear for Mac.app"
 open "build/Debug/JournalBear for Mac.app"
 ```
 
+For the iOS simulator (same scheme, different destination):
+```sh
+xcodebuild -project JournalBear.xcodeproj -scheme JournalBear \
+  -configuration Debug -destination 'generic/platform=iOS Simulator' build
+xcrun simctl boot "iPhone 17 Pro"
+xcrun simctl install "iPhone 17 Pro" "Build/Products/Debug-iphonesimulator/JournalBear.app"
+xcrun simctl launch "iPhone 17 Pro" com.yrahul.JournalBear
+```
+Running on a physical device requires setting a development team.
+
 The project uses Xcode 16+ filesystem-synchronized groups, so new files added
 under `JournalBear/`, `JournalBearTests/`, or `JournalBearUITests/` are picked up
 automatically — no `project.pbxproj` edits.
 
 ## Tests
 The `JournalBear` scheme runs the hosted Swift Testing target `JournalBearTests`
-and the `JournalBearUITests` target. The UI test verifies that pressing Return in
+and the `JournalBearUITests` target. Both test targets are macOS-only; the iOS
+build is currently verified by building for the simulator and launching with the
+`JOURNALBEAR_UI_TEST_*` environment hooks. The UI test verifies that pressing Return in
 the native search field filters the sidebar without requiring another filter.
 Run in Xcode with Cmd-U, or from the command line:
 ```sh

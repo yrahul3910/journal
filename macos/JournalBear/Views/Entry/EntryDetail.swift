@@ -36,6 +36,10 @@ struct EntryDetail: View {
             }
         }
         .toolbar(removing: .title)
+#if os(macOS)
+        // Part of the scroll-edge-effect recipe above; on iOS this would
+        // instead push the content under the status bar.
         .ignoresSafeArea(edges: .top)
+#endif
     }
 }

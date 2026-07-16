@@ -1,5 +1,7 @@
 import SwiftUI
+#if os(macOS)
 import AppKit
+#endif
 
 struct ContentView: View {
     @EnvironmentObject var store: JournalStore
@@ -71,12 +73,35 @@ struct ContentView: View {
                 }
             }
             .toolbar(removing: columnVisibility == NavigationSplitViewVisibility.all ? .sidebarToggle : nil)
+#if os(iOS)
+            // The New Entry / Save menu commands have no keyboard to live on
+            // here, so they get toolbar buttons instead.
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        store.showNewEntry = .new
+                    } label: {
+                        Label("New Entry", systemImage: "plus")
+                    }
+                    .disabled(!store.canAddEntry)
+                }
+                ToolbarItem {
+                    Button {
+                        store.save()
+                    } label: {
+                        Label("Save", systemImage: "square.and.arrow.down")
+                    }
+                    .disabled(!store.hasUnsavedChanges)
+                }
+            }
+#endif
         }
         detail: {
             EntryDetail(entry: store.entries.first(where: { $0.id == selection }))
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search entries")
         .onSubmit(of: .search, submitSearch)
+#if os(macOS)
         .onKeyPress(.return) {
             guard let editor = NSApp.keyWindow?.firstResponder as? NSTextView,
                   editor.delegate is NSSearchField
@@ -89,6 +114,7 @@ struct ContentView: View {
             submitSearch()
             return .handled
         }
+#endif
         .onChange(of: searchText) {
             if searchText.isEmpty {
                 searchCriteria.text = ""
@@ -183,14 +209,24 @@ struct ContentView: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+#if os(macOS)
         .frame(minWidth: 820, minHeight: 520)
+#endif
         .onChange(of: store.documentName) {
             showAllEntries()
+            // Auto-selecting is right for the Mac's always-visible detail
+            // column; on iPhone it would push the detail over the list.
+#if os(macOS)
             selection = store.entries.first?.id
+#endif
         }
         .onChange(of: visibleEntryIDs) {
             if selection.map({ visibleEntryIDs.contains($0) }) != true {
+#if os(macOS)
                 selection = visibleEntryIDs.first
+#else
+                selection = nil
+#endif
             }
         }
     }
@@ -222,7 +258,9 @@ private struct PasswordPrompt: View {
 
             SecureField("Password", text: $password)
                 .textFieldStyle(.roundedBorder)
+#if os(macOS)
                 .frame(width: 260)
+#endif
                 .onSubmit { store.submitPassword(password) }
 
             HStack {
@@ -235,6 +273,10 @@ private struct PasswordPrompt: View {
             }
         }
         .padding(28)
+#if os(macOS)
         .frame(width: 340)
+#else
+        .presentationDetents([.medium])
+#endif
     }
 }

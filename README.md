@@ -2,7 +2,7 @@
 A cross-platform journal application built with Electron and React, with AES-256 encryption. The renderer is written in TypeScript and React, styled with [Tailwind CSS](https://tailwindcss.com/) and [Radix UI](https://www.radix-ui.com/) primitives (shadcn-style components). State is managed with [Zustand](https://zustand-demo.pmnd.rs/), data is validated with [Zod](https://zod.dev/), and statistics are rendered with [Chart.js](https://www.chartjs.org/) and [D3](https://d3js.org/). Entries are written in Markdown (rendered with [react-markdown](https://github.com/remarkjs/react-markdown) and [remark-gfm](https://github.com/remarkjs/remark-gfm)).
 
 # Developing
-The app is built with [electron-vite](https://electron-vite.org/).
+The app is built with [electron-vite](https://electron-vite.org/). Dependencies are managed with [Bun](https://bun.sh/): run `bun install` to install them (the lockfile is `bun.lock`; don't use `npm install`). Scripts work with either `npm run` or `bun run`.
 
 * `npm run dev` starts the app in development mode with hot reload.
 * `npm run build` builds the main, preload, and renderer bundles.

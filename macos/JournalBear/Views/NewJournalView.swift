@@ -27,7 +27,9 @@ struct NewJournalView: View {
                 SecureField("Confirm Password", text: $confirmPassword)
                     .textFieldStyle(.roundedBorder)
             }
+#if os(macOS)
             .frame(width: 260)
+#endif
             .onSubmit(create)
 
             if let errorMessage {
@@ -35,7 +37,9 @@ struct NewJournalView: View {
                     .font(.callout)
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
+#if os(macOS)
                     .frame(width: 280)
+#endif
             }
 
             HStack {
@@ -48,7 +52,11 @@ struct NewJournalView: View {
             }
         }
         .padding(28)
+#if os(macOS)
         .frame(width: 340)
+#else
+        .presentationDetents([.medium])
+#endif
     }
 
     private func create() {

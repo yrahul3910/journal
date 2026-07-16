@@ -1,6 +1,8 @@
 import SwiftUI
-import AppKit
 import UniformTypeIdentifiers
+#if os(iOS)
+import PhotosUI
+#endif
 
 /// Compose a new journal entry. On save it's staged into the open journal in
 /// memory (see `JournalStore.addEntry`); the journal is written to disk later
@@ -26,6 +28,11 @@ struct NewEntryView: View {
     @State private var initialImages: [Data] = []
 
     @State private var showDiscardConfirmation = false
+#if os(macOS)
+    @State private var showImageImporter = false
+#else
+    @State private var photoSelection: [PhotosPickerItem] = []
+#endif
 
     private var canSave: Bool {
         !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -69,7 +76,11 @@ struct NewEntryView: View {
                         HStack {
                             Text("Attachments").font(.subheadline).foregroundStyle(.secondary)
                             Spacer()
-                            Button("Add Images…", action: addImages)
+#if os(macOS)
+                            Button("Add Images…") { showImageImporter = true }
+#else
+                            PhotosPicker("Add Images…", selection: $photoSelection, matching: .images)
+#endif
                         }
                         if !images.isEmpty {
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -98,7 +109,18 @@ struct NewEntryView: View {
             }
             .padding()
         }
+#if os(macOS)
         .frame(width: 520, height: 640)
+        .fileImporter(
+            isPresented: $showImageImporter,
+            allowedContentTypes: [.png, .jpeg],
+            allowsMultipleSelection: true
+        ) { result in
+            addImages(from: result)
+        }
+#else
+        .onChange(of: photoSelection) { loadPickedPhotos() }
+#endif
         .onAppear {
             initialDate = date
             initialSentiment = sentiment
@@ -121,9 +143,9 @@ struct NewEntryView: View {
 
     @ViewBuilder
     private func thumbnail(_ data: Data, index: Int) -> some View {
-        if let image = NSImage(data: data) {
+        if let image = PlatformImage(data: data) {
             ZStack(alignment: .topTrailing) {
-                Image(nsImage: image)
+                Image(platformImage: image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: 92, height: 92)
@@ -140,17 +162,40 @@ struct NewEntryView: View {
         }
     }
 
-    private func addImages() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = true
-        panel.canChooseDirectories = false
-        panel.canChooseFiles = true
-        panel.allowedContentTypes = [.png, .jpeg]
-        guard panel.runModal() == .OK else { return }
-        for url in panel.urls {
+#if os(macOS)
+    private func addImages(from result: Result<[URL], Error>) {
+        guard case .success(let urls) = result else { return }
+        for url in urls {
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             if let data = try? Data(contentsOf: url) { images.append(data) }
         }
     }
+#else
+    private func loadPickedPhotos() {
+        let items = photoSelection
+        photoSelection = []
+        guard !items.isEmpty else { return }
+        Task {
+            for item in items {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let normalized = normalizedImageData(data) {
+                    images.append(normalized)
+                }
+            }
+        }
+    }
+
+    /// The archive only carries PNG/JPEG (the Electron app reads it), so
+    /// photos picked in other formats (typically HEIC) are transcoded to JPEG.
+    private func normalizedImageData(_ data: Data) -> Data? {
+        let isPNG = data.count >= 4
+            && data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47
+        let isJPEG = data.count >= 2 && data[0] == 0xFF && data[1] == 0xD8
+        if isPNG || isJPEG { return data }
+        return UIImage(data: data)?.jpegData(compressionQuality: 0.9)
+    }
+#endif
 
     private func cancel() {
         if isDirty {

@@ -32,8 +32,8 @@ struct EntryContent: View {
                 .foregroundStyle(.secondary)
                 
                 ForEach(Array(entry.images.enumerated()), id: \.offset) { _, data in
-                    if let image = NSImage(data: data) {
-                        Image(nsImage: image)
+                    if let image = PlatformImage(data: data) {
+                        Image(platformImage: image)
                             .resizable()
                             .scaledToFit()
                             .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
