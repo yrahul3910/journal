@@ -225,13 +225,13 @@ struct ContentView: View {
             onCancellation: { store.journalExportCancelled() }
         )
         .alert(
-            "Save changes before creating a new journal?",
+            store.unsavedChangesPrompt,
             isPresented: $store.showUnsavedChangesDialog
         ) {
-            Button("Save") { store.saveThenNewJournal() }
+            Button("Save") { store.saveThenContinue() }
                 .keyboardShortcut(.defaultAction)
-            Button("Discard", role: .destructive) { store.discardThenNewJournal() }
-            Button("Cancel", role: .cancel) {}
+            Button("Discard", role: .destructive) { store.discardThenContinue() }
+            Button("Cancel", role: .cancel) { store.cancelUnsavedChanges() }
         } message: {
             Text("The open journal has unsaved changes. If you don't save, they will be lost.")
         }

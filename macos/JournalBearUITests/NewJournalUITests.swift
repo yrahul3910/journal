@@ -63,6 +63,36 @@ final class NewJournalUITests: XCTestCase {
     }
 
     @MainActor
+    func testOpeningAnotherJournalOverUnsavedChangesAsksFirst() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
+        createJournal(in: app)
+        XCTAssertTrue(app.staticTexts["No Entries"].waitForExistence(timeout: 2))
+
+        // Opening another journal over the dirty one must ask first.
+        app.startOpenJournal()
+        let prompt = app.staticTexts["Save changes before opening another journal?"]
+        XCTAssertTrue(prompt.waitForExistence(timeout: 2))
+
+        // Cancel keeps the dirty journal open without any file picker.
+        app.confirmationButton("Cancel").activate()
+        XCTAssertTrue(app.staticTexts["No Entries"].waitForExistence(timeout: 2))
+
+#if os(macOS)
+        // Discard proceeds to the open panel.
+        app.startOpenJournal()
+        XCTAssertTrue(prompt.waitForExistence(timeout: 2))
+        app.confirmationButton("Discard").activate()
+        let cancel = app.sheets.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+        cancel.click()
+        XCTAssertTrue(app.staticTexts["No Entries"].waitForExistence(timeout: 2))
+#endif
+    }
+
+    @MainActor
     func testRejectsWeakPassword() throws {
         let app = XCUIApplication()
         app.launch()

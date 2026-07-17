@@ -51,26 +51,27 @@ final class JournalStore: ObservableObject {
 
     /// Step 1: pick a `.zjournal` file, then prompt for its password. The
     /// picking happens in the view layer's `fileImporter`, which reports back
-    /// through `journalImported`.
+    /// through `journalImported`. Confirms away unsaved changes first.
     func chooseFile() {
-        showJournalImporter = true
+        requestReplacingJournal(.chooseFile)
     }
 
     func journalImported(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
-            openJournal(at: url)
+            // `chooseFile` already confirmed unsaved changes before the
+            // importer appeared; don't ask a second time.
+            perform(.openURL(url))
         case .failure(let error):
             errorMessage = error.localizedDescription
         }
     }
 
-    /// Begin opening `url` — from the importer, a Files-app/Finder open, or a
-    /// drag onto the app — by stashing it and asking for the password.
+    /// Begin opening `url` — from a Files-app/Finder open or a drag onto the
+    /// app — by stashing it and asking for the password. Confirms away
+    /// unsaved changes first.
     func openJournal(at url: URL) {
-        pendingURL = url
-        errorMessage = nil
-        showPasswordPrompt = true
+        requestReplacingJournal(.openURL(url))
     }
 
     /// Step 2: decrypt + decompress + parse off the main thread, then publish results.
@@ -109,23 +110,74 @@ final class JournalStore: ObservableObject {
     /// currently open journal (via the view layer's unsaved-changes alert),
     /// then show the create sheet.
     func newJournal() {
+        requestReplacingJournal(.newJournal)
+    }
+
+    /// Anything that replaces the open journal, deferred until the
+    /// unsaved-changes alert resolves.
+    private enum PendingAction {
+        case newJournal
+        case chooseFile
+        case openURL(URL)
+    }
+    private var pendingAction: PendingAction?
+
+    /// Title for the unsaved-changes alert, matching the action it guards.
+    var unsavedChangesPrompt: String {
+        switch pendingAction {
+        case .newJournal, nil:
+            "Save changes before creating a new journal?"
+        case .chooseFile, .openURL:
+            "Save changes before opening another journal?"
+        }
+    }
+
+    private func requestReplacingJournal(_ action: PendingAction) {
         if hasUnsavedChanges {
+            pendingAction = action
             showUnsavedChangesDialog = true
         } else {
+            perform(action)
+        }
+    }
+
+    private func perform(_ action: PendingAction) {
+        switch action {
+        case .newJournal:
             showNewJournalPrompt = true
+        case .chooseFile:
+            showJournalImporter = true
+        case .openURL(let url):
+            pendingURL = url
+            errorMessage = nil
+            showPasswordPrompt = true
         }
     }
 
-    /// "Save" from the unsaved-changes alert: continue to the create sheet
-    /// only once the journal is actually on disk.
-    func saveThenNewJournal() {
+    /// "Save" from the unsaved-changes alert: continue only once the journal
+    /// is actually on disk.
+    func saveThenContinue() {
         save { success in
-            if success { self.showNewJournalPrompt = true }
+            if success {
+                self.continuePendingAction()
+            } else {
+                self.pendingAction = nil
+            }
         }
     }
 
-    func discardThenNewJournal() {
-        showNewJournalPrompt = true
+    func discardThenContinue() {
+        continuePendingAction()
+    }
+
+    func cancelUnsavedChanges() {
+        pendingAction = nil
+    }
+
+    private func continuePendingAction() {
+        guard let action = pendingAction else { return }
+        pendingAction = nil
+        perform(action)
     }
 
     /// Replace the app state with a fresh, empty journal encrypted with

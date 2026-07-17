@@ -28,6 +28,22 @@ extension XCUIApplication {
 #endif
     }
 
+    /// Starts the open-journal flow: the ⌘O shortcut on macOS; on iOS the
+    /// empty-state button when no journal is open, else the toolbar's
+    /// journal menu.
+    func startOpenJournal() {
+#if os(macOS)
+        typeKey("o", modifierFlags: .command)
+#else
+        if buttons["Open Journal..."].exists {
+            buttons["Open Journal..."].tap()
+        } else {
+            buttons["Journal"].tap()
+            buttons["Open Journal…"].tap()
+        }
+#endif
+    }
+
     /// A button of the save/discard/cancel confirmation, which presents as a
     /// window sheet on macOS and an alert on iOS.
     func confirmationButton(_ title: String) -> XCUIElement {
