@@ -24,7 +24,7 @@ final class NewJournalUITests: XCTestCase {
     @MainActor
     func testCreatesEmptyJournalFromShortcut() throws {
         let app = XCUIApplication()
-        app.launch()
+        app.launchClean()
 
         XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
 
@@ -37,7 +37,7 @@ final class NewJournalUITests: XCTestCase {
     @MainActor
     func testNewJournalOverUnsavedChangesAsksFirst() throws {
         let app = XCUIApplication()
-        app.launch()
+        app.launchClean()
 
         XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
 
@@ -65,7 +65,7 @@ final class NewJournalUITests: XCTestCase {
     @MainActor
     func testOpeningAnotherJournalOverUnsavedChangesAsksFirst() throws {
         let app = XCUIApplication()
-        app.launch()
+        app.launchClean()
 
         XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
         createJournal(in: app)
@@ -95,7 +95,7 @@ final class NewJournalUITests: XCTestCase {
     @MainActor
     func testRejectsWeakPassword() throws {
         let app = XCUIApplication()
-        app.launch()
+        app.launchClean()
 
         XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
 

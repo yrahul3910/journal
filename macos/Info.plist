@@ -23,6 +23,11 @@
 	</array>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<!-- Journals are encrypted with standard algorithms (AES-256 via
+	     CommonCrypto) to protect the user's own data, which falls under the
+	     App Store's exempt-encryption categories. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

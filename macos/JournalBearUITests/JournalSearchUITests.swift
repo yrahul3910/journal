@@ -20,7 +20,7 @@ final class JournalSearchUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["JOURNALBEAR_UI_TEST_JOURNAL"] = fixtureURL.path
         app.launchEnvironment["JOURNALBEAR_UI_TEST_PASSWORD"] = "$Password123"
-        app.launch()
+        app.launchClean()
 
         let matchingEntry = app.staticTexts[
             "This is a second entry on June 16. It has two images attached."

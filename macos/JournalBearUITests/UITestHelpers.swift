@@ -1,5 +1,15 @@
 import XCTest
 
+extension XCUIApplication {
+    /// Launch with macOS window restoration disabled: a previous run's
+    /// killed instance would otherwise restore its window next to the fresh
+    /// one, making every element query ambiguous.
+    func launchClean() {
+        launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        launch()
+    }
+}
+
 extension XCUIElement {
     /// Click on macOS, tap on iOS.
     func activate() {

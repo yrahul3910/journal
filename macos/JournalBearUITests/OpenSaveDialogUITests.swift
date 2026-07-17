@@ -14,7 +14,7 @@ final class OpenSaveDialogUITests: XCTestCase {
         throw XCTSkip("The iOS pickers are out-of-process; only the macOS panels are driven here.")
 #else
         let app = XCUIApplication()
-        app.launch()
+        app.launchClean()
 
         XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
         app.buttons["Open Journal..."].click()
@@ -33,7 +33,7 @@ final class OpenSaveDialogUITests: XCTestCase {
         throw XCTSkip("The iOS pickers are out-of-process; only the macOS panels are driven here.")
 #else
         let app = XCUIApplication()
-        app.launch()
+        app.launchClean()
 
         XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 5))
 

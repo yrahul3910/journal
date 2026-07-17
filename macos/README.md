@@ -8,6 +8,8 @@ using native widgets and Liquid Glass.
 - Xcode 26+ and macOS 26+ (Liquid Glass + the 26 SDKs).
 - For iOS: the iOS 26 SDK / simulator runtime.
 
+App Store releases are covered separately in [PUBLISHING.md](PUBLISHING.md).
+
 ## Build & run
 Open `JournalBear.xcodeproj` in Xcode and press Run (⌘R). With **Team = None**,
 Xcode signs "to run locally" — no Apple Developer Program / $99 fee needed for

@@ -26,7 +26,7 @@ final class EntryMarkdownUITests: XCTestCase {
             | --- | --- |
             | Markdown Test Cell | Another Cell |
             """
-        app.launch()
+        app.launchClean()
 
 #if os(iOS)
         // No auto-selection on iPhone; open the entry from the list.
