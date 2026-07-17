@@ -1,6 +1,6 @@
 # Publishing JournalBear (iOS)
 
-How to ship the native app to the App Store. All commands run from `macos/`.
+How to ship the native app to the App Store. All commands run from `swiftui/`.
 For day-to-day building and testing, see [README.md](README.md).
 
 ## One-time setup (already done, recorded here for posterity)
@@ -22,7 +22,7 @@ For day-to-day building and testing, see [README.md](README.md).
   - The 1024pt app icon is PNG (`1024x1024.png`) — App Store validation
     rejects JPEG icons.
   - The `.zjournal` UTI is exported and registered for Files/Finder opens
-    (see `Info.plist` at the repo `macos/` root, merged into the generated
+    (see `Info.plist` at the repo `swiftui/` root, merged into the generated
     plist at build time).
 
 ## Every release
@@ -166,8 +166,16 @@ prompt (the privacy story). Existing shots live in `../screenshots/`.
 >
 > Your thoughts belong to you. JournalBear just keeps them safe.
 
-Other App Store Connect fields: App Privacy is "Data Not Collected"; a
-privacy policy URL is required even so (a short static page is fine).
+Other App Store Connect fields: App Privacy is "Data Not Collected". The
+URLs come from the static site in the repo's root `docs/` folder, served by
+GitHub Pages (Settings → Pages → Deploy from branch → `master` / `/docs`):
+
+- Privacy Policy URL: https://yrahul3910.github.io/journal/privacy.html
+- Support URL: https://yrahul3910.github.io/journal/support.html
+- Marketing URL (optional): https://yrahul3910.github.io/journal/
+
+After the app is approved, swap the landing page's "Coming soon" button for
+Apple's official App Store badge and the real store link.
 
 ## macOS distribution (later)
 

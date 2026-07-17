@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JournalBear — private, encrypted journaling</title>
+  <meta name="description" content="JournalBear is a private, encrypted journal that lives in a single file only you can open. Markdown entries, moods, photos, and search — fully offline.">
+  <link rel="icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <img src="icon.png" alt="">
+      <span class="name">JournalBear</span>
+      <nav>
+        <a href="privacy.html">Privacy</a>
+        <a href="support.html">Support</a>
+        <a href="https://github.com/yrahul3910/journal">GitHub</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div>
+        <h1>Your journal, sealed in a file only you can open.</h1>
+        <p class="lede">
+          JournalBear keeps your writing in a single AES-256-encrypted file.
+          No account, no cloud, no tracking — your journal never leaves your
+          device unless you move it yourself.
+        </p>
+        <!-- Once the app is live, replace this with Apple's official
+             "Download on the App Store" badge and the real store link. -->
+        <a class="btn" href="#">Coming soon to the App&nbsp;Store</a>
+        <a class="btn secondary" href="https://github.com/yrahul3910/journal/releases">Desktop builds</a>
+      </div>
+      <img class="shot" src="screenshot.png"
+           alt="JournalBear on iPhone showing a list of journal entries with dates and mood indicators">
+    </section>
+
+    <section class="features">
+      <div class="card">
+        <h3>Encrypted by default</h3>
+        <p>AES-256 encryption with a key derived from your password (PBKDF2).
+        Nothing is ever stored or sent in the clear.</p>
+      </div>
+      <div class="card">
+        <h3>Write in Markdown</h3>
+        <p>Headings, lists, quotes, tables, and code blocks render beautifully
+        as you read your entries back.</p>
+      </div>
+      <div class="card">
+        <h3>Moods &amp; photos</h3>
+        <p>Tag each entry with how the day felt, and attach photos straight
+        from your library.</p>
+      </div>
+      <div class="card">
+        <h3>Find anything</h3>
+        <p>Full-text search across your whole journal, with filters for mood
+        and attachments.</p>
+      </div>
+      <div class="card">
+        <h3>One portable file</h3>
+        <p>Your entire journal is a single .zjournal file. Keep it in Files,
+        back it up anywhere, open it on your desktop.</p>
+      </div>
+      <div class="card">
+        <h3>Offline, always</h3>
+        <p>No account, no analytics, no data collection. The app never touches
+        the network.</p>
+      </div>
+    </section>
+
+    <section class="strip">
+      <p><strong>Your password is the only key.</strong><br>
+      Nobody — including us — can read your journal or recover a forgotten
+      password.</p>
+    </section>
+
+    <footer class="site">
+      <p>
+        <a href="privacy.html">Privacy Policy</a> ·
+        <a href="support.html">Support</a> ·
+        <a href="https://github.com/yrahul3910/journal">Source on GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

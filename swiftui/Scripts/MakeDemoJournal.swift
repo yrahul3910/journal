@@ -1,7 +1,7 @@
 // Builds the fictional demo journal used for App Store screenshots.
 // All content is invented; regenerate the file any time with:
 //
-//   cd macos
+//   cd swiftui
 //   xcrun swiftc Scripts/MakeDemoJournal.swift JournalBear/Core/*.swift \
 //     JournalBear/Models/Journal.swift -o /tmp/make_demo
 //   /tmp/make_demo "../My Journal.zjournal"
