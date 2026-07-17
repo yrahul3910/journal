@@ -10,6 +10,9 @@ final class OpenSaveDialogUITests: XCTestCase {
 
     @MainActor
     func testOpenJournalPresentsFilePicker() throws {
+#if !os(macOS)
+        throw XCTSkip("The iOS pickers are out-of-process; only the macOS panels are driven here.")
+#else
         let app = XCUIApplication()
         app.launch()
 
@@ -21,10 +24,14 @@ final class OpenSaveDialogUITests: XCTestCase {
         cancel.click()
 
         XCTAssertTrue(app.staticTexts["No Journal Open"].waitForExistence(timeout: 2))
+#endif
     }
 
     @MainActor
     func testSavingNewJournalPresentsLocationPickerAndSurvivesCancel() throws {
+#if !os(macOS)
+        throw XCTSkip("The iOS pickers are out-of-process; only the macOS panels are driven here.")
+#else
         let app = XCUIApplication()
         app.launch()
 
@@ -54,5 +61,6 @@ final class OpenSaveDialogUITests: XCTestCase {
         XCTAssertTrue(cancel.waitForExistence(timeout: 5))
         cancel.click()
         XCTAssertTrue(app.staticTexts["No Entries"].waitForExistence(timeout: 2))
+#endif
     }
 }

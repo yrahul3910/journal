@@ -109,6 +109,16 @@ struct ContentView: View {
                     }
                     .disabled(!store.hasUnsavedChanges)
                 }
+                // Menu commands are the only journal-switching affordance on
+                // macOS; this menu is their equivalent once a journal is open.
+                ToolbarItem {
+                    Menu {
+                        Button("New Journal…") { store.newJournal() }
+                        Button("Open Journal…") { store.chooseFile() }
+                    } label: {
+                        Label("Journal", systemImage: "ellipsis.circle")
+                    }
+                }
             }
 #endif
         }
@@ -201,6 +211,10 @@ struct ContentView: View {
             allowedContentTypes: [EncryptedJournalDocument.contentType]
         ) { result in
             store.journalImported(result)
+        }
+        // .zjournal files opened from Files (in place) or Finder.
+        .onOpenURL { url in
+            store.openJournal(at: url)
         }
         .fileExporter(
             isPresented: $store.showJournalExporter,

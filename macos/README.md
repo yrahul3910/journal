@@ -40,9 +40,15 @@ automatically — no `project.pbxproj` edits.
 
 ## Tests
 The `JournalBear` scheme runs the hosted Swift Testing target `JournalBearTests`
-and the `JournalBearUITests` target. Both test targets are macOS-only; the iOS
-build is currently verified by building for the simulator and launching with the
-`JOURNALBEAR_UI_TEST_*` environment hooks. The UI test verifies that pressing Return in
+and the `JournalBearUITests` target. Both run on macOS and the iOS simulator:
+```sh
+xcodebuild test -project JournalBear.xcodeproj -scheme JournalBear \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
+Tests that drive macOS-only UI (the file panels, the sidebar-search Return-key
+workaround) skip themselves on iOS via `XCTSkip`. UI tests fail their first
+launch if an Xcode-debugged instance of the app is already running — quit it
+first. The UI test verifies that pressing Return in
 the native search field filters the sidebar without requiring another filter.
 Run in Xcode with Cmd-U, or from the command line:
 ```sh

@@ -59,12 +59,18 @@ final class JournalStore: ObservableObject {
     func journalImported(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
-            pendingURL = url
-            errorMessage = nil
-            showPasswordPrompt = true
+            openJournal(at: url)
         case .failure(let error):
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Begin opening `url` — from the importer, a Files-app/Finder open, or a
+    /// drag onto the app — by stashing it and asking for the password.
+    func openJournal(at url: URL) {
+        pendingURL = url
+        errorMessage = nil
+        showPasswordPrompt = true
     }
 
     /// Step 2: decrypt + decompress + parse off the main thread, then publish results.

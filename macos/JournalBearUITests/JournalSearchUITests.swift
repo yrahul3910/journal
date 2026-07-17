@@ -7,6 +7,9 @@ final class JournalSearchUITests: XCTestCase {
 
     @MainActor
     func testReturnSubmitsSearchWithoutFilters() throws {
+#if !os(macOS)
+        throw XCTSkip("Exercises the macOS 26 sidebar search Return-key workaround.")
+#else
         let fixtureURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -47,5 +50,6 @@ final class JournalSearchUITests: XCTestCase {
         XCTAssertTrue(resultCount.waitForExistence(timeout: 2))
         XCTAssertTrue(matchingEntry.exists)
         XCTAssertFalse(nonmatchingEntry.exists)
+#endif
     }
 }

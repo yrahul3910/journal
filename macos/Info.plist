@@ -4,7 +4,25 @@
 <dict>
 	<!-- Merged into the generated Info.plist (GENERATE_INFOPLIST_FILE stays on).
 	     Declares the .zjournal type so the file pickers on both platforms
-	     resolve it to a stable identity instead of a dynamic type. -->
+	     resolve it to a stable identity instead of a dynamic type, and
+	     registers the app to open it from Files (in place) and Finder. -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>JournalBear Journal</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.yrahul.journalbear.zjournal</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
