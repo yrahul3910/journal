@@ -1,4 +1,3 @@
-
 # Logs
 logs
 *.log
@@ -74,3 +73,4 @@ DerivedData/
 
 # Local test journals
 *.zjournal
+build/
