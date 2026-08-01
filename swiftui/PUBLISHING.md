@@ -63,6 +63,32 @@ For day-to-day building and testing, see [README.md](README.md).
    the review notes that journals are created in-app (no demo file or login
    needed by the reviewer).
 
+## Installing on your own iPhone (no TestFlight)
+
+With the paid membership, development-signed installs last as long as the
+provisioning profile (about a year), not 7 days. One-time phone prep:
+enable Developer Mode (Settings → Privacy & Security → Developer Mode,
+requires a restart) and tap Trust when the phone is first plugged in.
+
+Reuse the Release archive from step 3 above, then export it
+development-signed and push it over USB/Wi-Fi:
+
+```sh
+xcodebuild -exportArchive -archivePath Build/JournalBear-iOS.xcarchive \
+  -exportPath Build/DeviceExport \
+  -exportOptionsPlist Scripts/exportOptionsDevice.plist \
+  -allowProvisioningUpdates -allowProvisioningDeviceRegistration
+
+xcrun devicectl list devices
+xcrun devicectl device install app \
+  --device "<identifier from the list>" Build/DeviceExport/JournalBear.ipa
+```
+
+If the first launch shows "Untrusted Developer", approve it under
+Settings → General → VPN & Device Management. When the profile expires,
+re-run the export and install again — app data is preserved across
+reinstalls.
+
 ## Screenshots
 
 Capture on the **iPhone 17 Pro Max** simulator — its native 1320×2868 is the
