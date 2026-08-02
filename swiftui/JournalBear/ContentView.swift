@@ -212,10 +212,14 @@ struct ContentView: View {
         ) { result in
             store.journalImported(result)
         }
-        // .zjournal files opened from Files (in place) or Finder.
+#if os(iOS)
+        // .zjournal files opened from Files (in place). On macOS these
+        // arrive via AppDelegate.application(_:open:) instead, which keeps
+        // WindowGroup from spawning a second window for the open event.
         .onOpenURL { url in
             store.openJournal(at: url)
         }
+#endif
         .fileExporter(
             isPresented: $store.showJournalExporter,
             document: store.exportDocument,
