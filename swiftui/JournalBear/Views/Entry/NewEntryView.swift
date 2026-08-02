@@ -143,22 +143,23 @@ struct NewEntryView: View {
 
     @ViewBuilder
     private func thumbnail(_ data: Data, index: Int) -> some View {
-        if let image = PlatformImage(data: data) {
-            ZStack(alignment: .topTrailing) {
-                Image(platformImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 92, height: 92)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                Button {
-                    images.remove(at: index)
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.white, .black.opacity(0.6))
-                }
-                .buttonStyle(.plain)
-                .padding(4)
+        ZStack(alignment: .topTrailing) {
+            AttachmentImage(
+                data: data,
+                cacheKey: AttachmentImage.cacheKey(scope: "editor", index: index, data: data),
+                maxPixelSize: 300,
+                contentMode: .fill
+            )
+            .frame(width: 92, height: 92)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            Button {
+                images.remove(at: index)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.white, .black.opacity(0.6))
             }
+            .buttonStyle(.plain)
+            .padding(4)
         }
     }
 

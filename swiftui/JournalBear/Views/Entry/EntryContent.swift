@@ -31,14 +31,16 @@ struct EntryContent: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 
-                ForEach(Array(entry.images.enumerated()), id: \.offset) { _, data in
-                    if let image = PlatformImage(data: data) {
-                        Image(platformImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
+                ForEach(Array(entry.images.enumerated()), id: \.offset) { index, data in
+                    AttachmentImage(
+                        data: data,
+                        cacheKey: AttachmentImage.cacheKey(
+                            scope: entry.id.uuidString, index: index, data: data
+                        )
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .accessibilityIdentifier("entry-attachment-\(index)")
                 }
             } else if !entry.attachments.isEmpty {
                 Label(
