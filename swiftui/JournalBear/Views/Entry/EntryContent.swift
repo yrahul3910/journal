@@ -4,7 +4,10 @@ import Textual
 
 struct EntryContent: View {
     let entry: JournalEntry
-    
+#if os(iOS)
+    @State private var preview: AttachmentPreview?
+#endif
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(entry.displayDate)
@@ -32,15 +35,30 @@ struct EntryContent: View {
                 .foregroundStyle(.secondary)
                 
                 ForEach(Array(entry.images.enumerated()), id: \.offset) { index, data in
-                    AttachmentImage(
-                        data: data,
-                        cacheKey: AttachmentImage.cacheKey(
-                            scope: entry.id.uuidString, index: index, data: data
+                    Button {
+#if os(macOS)
+                        AttachmentPreviewWindowController.shared.show(
+                            images: entry.images,
+                            cacheScope: entry.id.uuidString,
+                            startAt: index
                         )
-                    )
+#else
+                        preview = AttachmentPreview(index: index)
+#endif
+                    } label: {
+                        AttachmentImage(
+                            data: data,
+                            cacheKey: AttachmentImage.cacheKey(
+                                scope: entry.id.uuidString, index: index, data: data
+                            )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
                     .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                     .accessibilityIdentifier("entry-attachment-\(index)")
+                    .accessibilityLabel("Attachment \(index + 1)")
+                    .help("View full size")
                 }
             } else if !entry.attachments.isEmpty {
                 Label(
@@ -52,6 +70,15 @@ struct EntryContent: View {
             }
         }
         .padding(28)
+#if os(iOS)
+        .fullScreenCover(item: $preview) { preview in
+            AttachmentPreviewView(
+                images: entry.images,
+                cacheScope: entry.id.uuidString,
+                startAt: preview.index
+            )
+        }
+#endif
     }
 }
 

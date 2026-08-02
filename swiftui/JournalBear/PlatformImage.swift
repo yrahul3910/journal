@@ -27,6 +27,28 @@ extension PlatformImage {
 #endif
     }
 
+    /// Reads the pixel dimensions from the image header without decoding,
+    /// accounting for EXIF rotation. Nil for undecodable data.
+    static func pixelSize(of data: Data) -> CGSize? {
+        let options = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, options),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, options)
+                as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
+              let height = properties[kCGImagePropertyPixelHeight] as? CGFloat
+        else {
+            return nil
+        }
+
+        // Orientations 5-8 are the 90°-rotated ones, where the displayed
+        // width and height swap.
+        if let orientation = properties[kCGImagePropertyOrientation] as? UInt32,
+           orientation >= 5 {
+            return CGSize(width: height, height: width)
+        }
+        return CGSize(width: width, height: height)
+    }
+
     static func downsampledCGImage(from data: Data, maxPixelSize: CGFloat) -> CGImage? {
         let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
         guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {

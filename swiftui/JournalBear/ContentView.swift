@@ -219,6 +219,12 @@ struct ContentView: View {
         .onOpenURL { url in
             store.openJournal(at: url)
         }
+#else
+        // Lightbox windows show decrypted attachments; don't let them
+        // outlive the journal they came from.
+        .onChange(of: store.documentName) {
+            AttachmentPreviewWindowController.shared.close()
+        }
 #endif
         .fileExporter(
             isPresented: $store.showJournalExporter,

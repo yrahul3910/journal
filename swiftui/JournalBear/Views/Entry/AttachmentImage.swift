@@ -1,3 +1,4 @@
+import CryptoKit
 import SwiftUI
 
 /// Renders one attachment's image bytes, decoding off the main thread at a
@@ -14,20 +15,38 @@ struct AttachmentImage: View {
     @State private var failed = false
 
     // Decoded images for recently viewed entries, so re-selecting an entry
-    // shows its attachments without a placeholder flash.
+    // shows its attachments without a placeholder flash. Cost-bounded since
+    // preview-sized decodes of photo libraries add up quickly.
     private static let cache: NSCache<NSString, PlatformImage> = {
         let cache = NSCache<NSString, PlatformImage>()
         cache.countLimit = 60
+        cache.totalCostLimit = 256 * 1024 * 1024
         return cache
     }()
 
     /// Key for the decode cache and the view's task identity. Includes the
-    /// data's size and a prefix hash so replacing an image at the same
-    /// position (editing an entry, removing an editor thumbnail) doesn't
-    /// serve the stale decode.
+    /// data's size and a digest of both ends of the bytes so replacing an
+    /// image at the same position (editing an entry, removing an editor
+    /// thumbnail) doesn't serve the stale decode. Distinct photos from the
+    /// same camera share their header bytes, so a prefix alone can collide;
+    /// their trailing compressed bytes and exact length don't. Hashing is
+    /// capped rather than full-content because this runs in `body` on the
+    /// main thread — the very stall this view exists to avoid.
     static func cacheKey(scope: String, index: Int, data: Data) -> String {
-        "\(scope)-\(index)-\(data.count)-\(data.prefix(128).hashValue)"
+        var hasher = SHA256()
+        hasher.update(data: data.prefix(hashSampleBytes))
+        hasher.update(data: data.suffix(hashSampleBytes))
+        let digest = hasher.finalize().prefix(8)
+            .map { String(format: "%02x", $0) }
+            .joined()
+        return "\(scope)-\(index)-\(data.count)-\(digest)"
     }
+
+    private static let hashSampleBytes = 64 * 1024
+
+    // The same bytes can be decoded at different sizes (entry detail vs. the
+    // enlarged preview), so the pixel cap is part of the cache identity.
+    private var decodeKey: String { "\(cacheKey)-\(Int(maxPixelSize))" }
 
     var body: some View {
         Group {
@@ -41,8 +60,8 @@ struct AttachmentImage: View {
                     .overlay { ProgressView() }
             }
         }
-        .task(id: cacheKey) {
-            if let cached = Self.cache.object(forKey: cacheKey as NSString) {
+        .task(id: decodeKey) {
+            if let cached = Self.cache.object(forKey: decodeKey as NSString) {
                 image = cached
                 return
             }
@@ -56,7 +75,8 @@ struct AttachmentImage: View {
             }.value
 
             if let decoded {
-                Self.cache.setObject(decoded, forKey: cacheKey as NSString)
+                let cost = Int(decoded.size.width * decoded.size.height) * 4
+                Self.cache.setObject(decoded, forKey: decodeKey as NSString, cost: cost)
                 image = decoded
             } else {
                 failed = true
