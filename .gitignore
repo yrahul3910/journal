@@ -66,9 +66,9 @@ electron-builder.yml
 out/
 
 # macOS native app (Xcode)
-macos/build/
-macos/**/xcuserdata/
-macos/**/*.xcuserstate
+**/build/
+**/xcuserdata/
+**/*.xcuserstate
 DerivedData/
 
 # Local test journals
