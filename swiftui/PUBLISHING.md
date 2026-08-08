@@ -17,8 +17,10 @@ For day-to-day building and testing, see [README.md](README.md).
   - `ITSAppUsesNonExemptEncryption = NO` — journals use standard AES-256 via
     CommonCrypto to protect the user's own data, which is exempt from export
     documentation. This skips the compliance questionnaire on every upload.
-  - `TARGETED_DEVICE_FAMILY = 1` — iPhone-only, so no iPad screenshots are
-    required. Revisit for a native iPad release.
+  - `TARGETED_DEVICE_FAMILY = 1,2` — iPhone and iPad. An App Store submission
+    with iPad in the family requires iPad screenshots alongside the iPhone
+    ones. A build made when this was `1` installs on an iPad but runs
+    letterboxed in iPhone compatibility mode.
   - The 1024pt app icon is PNG (`1024x1024.png`) — App Store validation
     rejects JPEG icons.
   - The `.zjournal` UTI is exported and registered for Files/Finder opens
@@ -63,15 +65,22 @@ For day-to-day building and testing, see [README.md](README.md).
    the review notes that journals are created in-app (no demo file or login
    needed by the reviewer).
 
-## Installing on your own iPhone (no TestFlight)
+## Installing on your own iPhone or iPad (no TestFlight)
 
 With the paid membership, development-signed installs last as long as the
-provisioning profile (about a year), not 7 days. One-time phone prep:
+provisioning profile (about a year), not 7 days. One-time device prep:
 enable Developer Mode (Settings → Privacy & Security → Developer Mode,
-requires a restart) and tap Trust when the phone is first plugged in.
+requires a restart) and tap Trust when the device is first plugged in.
 
-Reuse the Release archive from step 3 above, then export it
-development-signed and push it over USB/Wi-Fi:
+Re-run step 3 to build a **fresh** archive first. `-exportArchive` only
+re-signs and repackages whatever is already in the `.xcarchive`; it does not
+rebuild, so exporting a stale archive silently ships the code and the
+Info.plist from whenever that archive was made. (This bit us once: an
+archive predating `TARGETED_DEVICE_FAMILY = 1,2` kept installing on the iPad
+as a letterboxed iPhone app, while Run from Xcode — which always builds
+fresh — behaved correctly.)
+
+Then export the archive development-signed and push it over USB/Wi-Fi:
 
 ```sh
 xcodebuild -exportArchive -archivePath Build/JournalBear-iOS.xcarchive \

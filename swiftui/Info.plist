@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Merged into the generated Info.plist (GENERATE_INFOPLIST_FILE stays on).
-	     Declares the .zjournal type so the file pickers on both platforms
-	     resolve it to a stable identity instead of a dynamic type, and
-	     registers the app to open it from Files (in place) and Finder. -->
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -21,24 +17,17 @@
 			</array>
 		</dict>
 	</array>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<!-- Journals are encrypted with standard algorithms (AES-256 via
-	     CommonCrypto) to protect the user's own data, which falls under the
-	     App Store's exempt-encryption categories. -->
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.yrahul.journalbear.zjournal</string>
-			<key>UTTypeDescription</key>
-			<string>JournalBear Journal</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
 			</array>
+			<key>UTTypeDescription</key>
+			<string>JournalBear Journal</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.yrahul.journalbear.zjournal</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>

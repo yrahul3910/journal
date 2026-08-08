@@ -30,10 +30,12 @@ struct EntryDetail: View {
                 } label: {
                     Image(systemName: "pencil")
                 }
-                .glassEffect(in: .circle)
+                .buttonBorderShape(.circle)
+                .buttonStyle(.glass)
                 .help("Edit this entry")
                 .disabled(entry == nil)
             }
+            .sharedBackgroundVisibility(.hidden)
         }
         .toolbar(removing: .title)
 #if os(macOS)

@@ -6,9 +6,32 @@ import AppKit
 struct ContentView: View {
     @EnvironmentObject var store: JournalStore
     @State private var selection: JournalEntry.ID?
+    // .automatic hides the sidebar on an iPad in portrait; the Mac and the
+    // iPad both want both columns from launch, and the value is ignored at
+    // compact width, where the split view collapses to a stack.
+#if os(macOS)
     @State private var columnVisibility = NavigationSplitViewVisibility.automatic
+#else
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
+#endif
     @State private var searchText = ""
     @State private var searchCriteria = EntrySearchCriteria()
+#if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+#endif
+
+    // At compact width the split view collapses to a stack, so the detail is
+    // pushed over the list rather than sitting beside it, and the search field
+    // docks to the bottom of the screen instead of living in the sidebar.
+#if os(macOS)
+    private var isCompactWidth: Bool { false }
+#else
+    private var isCompactWidth: Bool { horizontalSizeClass == .compact }
+#endif
+
+    private var savedToastBottomPadding: CGFloat {
+        isCompactWidth ? 96 : 24
+    }
 
     private var visibleEntries: [JournalEntry] {
         searchCriteria.filter(store.entries)
@@ -74,7 +97,9 @@ struct ContentView: View {
                     }
                 }
             }
+#if os(macOS)
             .toolbar(removing: columnVisibility == NavigationSplitViewVisibility.all ? .sidebarToggle : nil)
+#endif
 #if os(iOS)
             // The list column is the whole screen here, so it carries the
             // journal name and, mid-search, the match count. The filter menu
@@ -167,12 +192,7 @@ struct ContentView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .glassCapsule()
-#if os(macOS)
-                .padding(.bottom, 24)
-#else
-                // Clear the bottom-docked search field.
-                .padding(.bottom, 96)
-#endif
+                .padding(.bottom, savedToastBottomPadding)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -261,19 +281,15 @@ struct ContentView: View {
 #endif
         .onChange(of: store.documentName) {
             showAllEntries()
-            // Auto-selecting is right for the Mac's always-visible detail
-            // column; on iPhone it would push the detail over the list.
-#if os(macOS)
-            selection = store.entries.first?.id
-#endif
+            // Auto-selecting is right wherever the detail column is always
+            // visible; at compact width it would push the detail over the list.
+            if !isCompactWidth {
+                selection = store.entries.first?.id
+            }
         }
         .onChange(of: visibleEntryIDs) {
             if selection.map({ visibleEntryIDs.contains($0) }) != true {
-#if os(macOS)
-                selection = visibleEntryIDs.first
-#else
-                selection = nil
-#endif
+                selection = isCompactWidth ? nil : visibleEntryIDs.first
             }
         }
     }
