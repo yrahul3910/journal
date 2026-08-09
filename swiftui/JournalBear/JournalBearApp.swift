@@ -1,6 +1,8 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#else
+import UIKit
 #endif
 
 @main
@@ -38,6 +40,19 @@ struct JournalBearApp: App {
 #endif
 #if DEBUG
                 store.loadUITestJournalIfConfigured()
+#if os(iOS)
+                if ProcessInfo.processInfo.environment[
+                    "JOURNALBEAR_UI_TEST_SIMULATE_DEVICE_LOCK"
+                ] == "1" {
+                    Task { @MainActor in
+                        await Task.yield()
+                        NotificationCenter.default.post(
+                            name: UIApplication.protectedDataWillBecomeUnavailableNotification,
+                            object: nil
+                        )
+                    }
+                }
+#endif
 #endif
             }
 #if os(iOS)
@@ -45,6 +60,13 @@ struct JournalBearApp: App {
             // can be saved whenever the app heads to the background.
             .onChange(of: scenePhase) {
                 if scenePhase == .background { store.autosaveIfPossible() }
+            }
+            .onReceive(
+                NotificationCenter.default.publisher(
+                    for: UIApplication.protectedDataWillBecomeUnavailableNotification
+                )
+            ) { _ in
+                store.lock()
             }
 #endif
     }
@@ -57,14 +79,21 @@ struct JournalBearApp: App {
                 .disabled(!store.canAddEntry)
             Button("New Journal…") { store.newJournal() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+                .disabled(store.isLocked)
             Divider()
             Button("Open Journal…") { store.chooseFile() }
                 .keyboardShortcut("o", modifiers: .command)
+                .disabled(store.isLocked)
         }
         CommandGroup(replacing: .saveItem) {
             Button("Save") { store.save() }
                 .keyboardShortcut("s", modifiers: .command)
-                .disabled(!store.hasUnsavedChanges)
+                .disabled(!store.hasUnsavedChanges || store.isLocked)
+        }
+        CommandGroup(after: .saveItem) {
+            Button("Lock Journal") { store.lock() }
+                .keyboardShortcut("l", modifiers: [.command, .control])
+                .disabled(!store.canLock)
         }
     }
 }

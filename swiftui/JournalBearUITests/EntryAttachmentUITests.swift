@@ -7,6 +7,42 @@ final class EntryAttachmentUITests: XCTestCase {
 
 #if !os(macOS)
     @MainActor
+    func testLockingClosesTheAttachmentPreview() throws {
+        let fixtureURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("test_journal.zjournal")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fixtureURL.path))
+
+        let app = XCUIApplication()
+        app.launchEnvironment["JOURNALBEAR_UI_TEST_JOURNAL"] = fixtureURL.path
+        app.launchEnvironment["JOURNALBEAR_UI_TEST_PASSWORD"] = "$Password123"
+        app.launchEnvironment["JOURNALBEAR_UI_TEST_LOCK_ATTACHMENT_PREVIEW"] = "1"
+        app.launchClean()
+
+        let row = app.cells.containing(
+            NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@",
+                        "second entry on June 16", "second entry on June 16")
+        ).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.tap()
+
+        let firstAttachment = app.descendants(matching: .any)["entry-attachment-0"]
+        XCTAssertTrue(firstAttachment.waitForExistence(timeout: 5))
+        var swipes = 0
+        while !firstAttachment.isHittable && swipes < 5 {
+            app.swipeUp()
+            swipes += 1
+        }
+        firstAttachment.tap()
+
+        XCTAssertTrue(app.staticTexts["Journal Locked"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["attachment-preview"].exists)
+        XCTAssertEqual(app.secureTextFields.matching(identifier: "journal-lock-screen").count, 1)
+    }
+
+    @MainActor
     func testTappingAnAttachmentOpensThePreviewSheet() throws {
         let fixtureURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

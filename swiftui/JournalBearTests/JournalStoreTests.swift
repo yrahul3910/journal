@@ -59,3 +59,47 @@ struct JournalStoreUnsavedChangesTests {
         #expect(store.hasUnsavedChanges)
     }
 }
+
+@MainActor
+struct JournalStoreLockTests {
+    @Test func journalMustBeOpenBeforeItCanLock() {
+        let store = JournalStore()
+
+        #expect(!store.canLock)
+        store.lock()
+        #expect(!store.isLocked)
+    }
+
+    @Test func correctPasswordUnlocksAndWrongPasswordDoesNot() {
+        let store = JournalStore()
+        store.createJournal(password: "$Password123")
+        let entry = JournalEntry(
+            entryDate: "2026-08-08T12:00:00Z",
+            content: "An unsaved entry",
+            sentiment: "Neutral"
+        )
+        store.addEntry(entry)
+
+        #expect(store.canLock)
+        store.lock()
+        #expect(store.isLocked)
+        #expect(store.entries.count == 1)
+        #expect(store.entries.first?.id == entry.id)
+        #expect(store.entries.first?.content == entry.content)
+        #expect(store.hasUnsavedChanges)
+        #expect(!store.canAddEntry)
+        #expect(!store.canLock)
+
+        #expect(!store.unlock(with: "wrong"))
+        #expect(store.isLocked)
+
+        #expect(store.unlock(with: "$Password123"))
+        #expect(!store.isLocked)
+        #expect(store.entries.count == 1)
+        #expect(store.entries.first?.id == entry.id)
+        #expect(store.entries.first?.content == entry.content)
+        #expect(store.hasUnsavedChanges)
+        #expect(store.canAddEntry)
+        #expect(store.canLock)
+    }
+}

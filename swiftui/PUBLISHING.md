@@ -8,7 +8,8 @@ For day-to-day building and testing, see [README.md](README.md).
 - **Team**: the Apple Developer Program membership lives on team `7CMVH392CF`
   (the old Personal Team, upgraded in place). The project pins it for device
   builds via `DEVELOPMENT_TEAM[sdk=iphoneos*]`; macOS and simulator builds
-  stay team-less ("Sign to Run Locally").
+  stay team-less ("Sign to Run Locally") unless a team is passed explicitly,
+  as in [README.md](README.md) and the macOS section below.
 - **Certificates**: Apple Development, Apple Distribution, and Developer ID
   Application, all managed by Xcode (Settings → Accounts → Manage
   Certificates). If they're missing on a new machine, download them there.
@@ -212,11 +213,65 @@ GitHub Pages (Settings → Pages → Deploy from branch → `master` / `/docs`):
 After the app is approved, swap the landing page's "Coming soon" button for
 Apple's official App Store badge and the real store link.
 
-## macOS distribution (later)
+## macOS distribution (Developer ID)
 
-The Developer ID Application certificate enables notarized direct
-distribution of the Mac app (archive → `xcrun notarytool submit` → staple),
-matching how the Electron app ships. Hardened runtime is already enabled.
-The Mac App Store would additionally require adopting App Sandbox — feasible
-(all file access already goes through user-selected pickers with
-security-scoped handling) but a separate work item.
+Notarized direct distribution of the Mac app, matching how the Electron app
+ships — a notarized build opens on any Mac with no right-click → Open dance.
+Hardened runtime is already enabled (`ENABLE_HARDENED_RUNTIME = YES`). The Mac
+App Store would additionally require adopting App Sandbox — feasible (all file
+access already goes through user-selected pickers with security-scoped
+handling) but a separate work item.
+
+For merely running local Mac builds, none of this is needed: the ad-hoc
+signature in [README.md](README.md) never expires.
+
+One-time, store an app-specific password (appleid.apple.com → Sign-In and
+Security → App-Specific Passwords) in a notarytool keychain profile:
+
+```sh
+xcrun notarytool store-credentials AC_PASSWORD \
+  --apple-id <apple-id> --team-id 7CMVH392CF \
+  --password <app-specific-password>
+```
+
+Then per release:
+
+1. **Archive** — build it fresh; the stale-archive trap above applies here too,
+   since `-exportArchive` re-signs but never rebuilds:
+   ```sh
+   xcodebuild -project JournalBear.xcodeproj -scheme JournalBear \
+     -configuration Release -destination 'generic/platform=macOS' \
+     -archivePath Build/JournalBear-mac.xcarchive \
+     -allowProvisioningUpdates archive
+   ```
+2. **Export** Developer ID-signed:
+   ```sh
+   xcodebuild -exportArchive \
+     -archivePath Build/JournalBear-mac.xcarchive \
+     -exportPath Build/MacExport \
+     -exportOptionsPlist Scripts/exportOptionsMac.plist \
+     -allowProvisioningUpdates
+   ```
+3. **Notarize, then staple.** Notarization uploads a zip, but the ticket is
+   stapled onto the `.app` — so re-zip afterwards, and distribute *that* zip:
+   ```sh
+   ditto -c -k --keepParent "Build/MacExport/JournalBear for Mac.app" \
+     Build/JournalBear-mac.zip
+   xcrun notarytool submit Build/JournalBear-mac.zip \
+     --keychain-profile AC_PASSWORD --wait
+   xcrun stapler staple "Build/MacExport/JournalBear for Mac.app"
+   ditto -c -k --keepParent "Build/MacExport/JournalBear for Mac.app" \
+     Build/JournalBear-mac-notarized.zip
+   ```
+   On rejection, `xcrun notarytool log <submission-id> --keychain-profile
+   AC_PASSWORD` gives the per-binary reasons.
+4. **Verify** what a user's Mac will check:
+   ```sh
+   spctl -a -vv -t exec "Build/MacExport/JournalBear for Mac.app"
+   xcrun stapler validate "Build/MacExport/JournalBear for Mac.app"
+   ```
+
+Developer ID Application certificates last 5 years; Apple Development and
+Apple Distribution last 1. Because Developer ID signatures are timestamped,
+builds already shipped keep validating after the certificate expires — a
+current certificate is only needed to sign new ones.

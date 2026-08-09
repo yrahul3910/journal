@@ -134,6 +134,16 @@ struct ContentView: View {
                     }
                     .disabled(!store.hasUnsavedChanges)
                 }
+                if isCompactWidth {
+                    ToolbarItem {
+                        Button {
+                            store.lock()
+                        } label: {
+                            Label("Lock Journal", systemImage: "lock")
+                        }
+                        .disabled(!store.canLock)
+                    }
+                }
                 // Menu commands are the only journal-switching affordance on
                 // macOS; this menu is their equivalent once a journal is open.
                 ToolbarItem {
@@ -200,10 +210,12 @@ struct ContentView: View {
         .sheet(isPresented: $store.showPasswordPrompt) {
             PasswordPrompt()
                 .environmentObject(store)
+                .journalLockOverlay()
         }
         .sheet(isPresented: $store.showNewJournalPrompt) {
             NewJournalView()
                 .environmentObject(store)
+                .journalLockOverlay()
         }
         .sheet(isPresented: Binding(
             get: { store.showNewEntry != .closed },
@@ -220,9 +232,11 @@ struct ContentView: View {
                     images: entry.images
                 )
                 .environmentObject(store)
+                .journalLockOverlay()
             } else {
                 NewEntryView()
                     .environmentObject(store)
+                    .journalLockOverlay()
             }
 
         }
@@ -292,6 +306,21 @@ struct ContentView: View {
                 selection = isCompactWidth ? nil : visibleEntryIDs.first
             }
         }
+        .journalLockOverlay(
+            showsLockScreen: !store.showPasswordPrompt
+                && !store.showNewJournalPrompt
+                && store.showNewEntry == .closed
+        )
+#if os(macOS)
+        .toolbarVisibility(store.isLocked ? .hidden : .automatic, for: .windowToolbar)
+        .onChange(of: store.isLocked) {
+            if store.isLocked {
+                AttachmentPreviewWindowController.shared.close()
+            }
+        }
+#else
+        .toolbarVisibility(store.isLocked ? .hidden : .automatic, for: .navigationBar)
+#endif
     }
 
     private func submitSearch() {

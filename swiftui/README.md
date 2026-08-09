@@ -26,6 +26,33 @@ codesign --force --deep -s - "build/Debug/JournalBear for Mac.app"
 open "build/Debug/JournalBear for Mac.app"
 ```
 
+### Signing the Mac build with a team
+The ad-hoc signature above never expires, so a Developer Program membership
+isn't needed to keep local Mac builds working — the 7-day-vs-a-year distinction
+is an iOS *provisioning profile* thing (see [PUBLISHING.md](PUBLISHING.md)).
+What a team buys on macOS is a **stable code identity**: an ad-hoc signature
+gets a new hash every build, so macOS treats each build as a different app and
+resets its TCC permission grants (Files & Folders, Full Disk Access) along with
+any keychain items. Signing with the team's Apple Development certificate keeps
+them across rebuilds.
+
+The project pins the team for iOS device builds only
+(`DEVELOPMENT_TEAM[sdk=iphoneos*]`), so macOS stays team-less unless asked. In
+Xcode, set Team on the macOS destination under Signing & Capabilities. From the
+command line, drop `CODE_SIGNING_ALLOWED=NO` and the separate `codesign` step:
+```sh
+DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" \
+  xcodebuild -project JournalBear.xcodeproj -scheme JournalBear \
+  -configuration Debug ONLY_ACTIVE_ARCH=YES \
+  DEVELOPMENT_TEAM=7CMVH392CF CODE_SIGN_STYLE=Automatic \
+  -allowProvisioningUpdates SYMROOT="$PWD/build" build
+open "build/Debug/JournalBear for Mac.app"
+```
+Apple Development certificates last a year; renew under Xcode → Settings →
+Accounts → Manage Certificates. For a build to keep around or hand to someone
+else, use the notarized Developer ID flow in [PUBLISHING.md](PUBLISHING.md) —
+that signature is timestamped and stays valid past the certificate's expiry.
+
 For the iOS simulator (same scheme, different destination):
 ```sh
 xcodebuild -project JournalBear.xcodeproj -scheme JournalBear \
@@ -59,6 +86,9 @@ DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" \
   -destination 'platform=macOS,arch=arm64' \
   CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=""
 ```
+Those overrides keep the test run ad-hoc signed on purpose, even when a team is
+available — nothing here needs a real identity, and skipping profile resolution
+is faster.
 The read-path tests open `test_journal.zjournal` from the repo root (gitignored;
 its password is embedded in the test). When the write path lands, add round-trip
 tests that build → save → reopen → assert, so no committed fixture or password

@@ -1,8 +1,12 @@
 import Foundation
 import SwiftUI
 import Textual
+#if os(iOS)
+import UIKit
+#endif
 
 struct EntryContent: View {
+    @EnvironmentObject private var store: JournalStore
     let entry: JournalEntry
 #if os(iOS)
     @State private var preview: AttachmentPreview?
@@ -77,6 +81,23 @@ struct EntryContent: View {
                 cacheScope: entry.id.uuidString,
                 startAt: preview.index
             )
+#if DEBUG
+            .onAppear {
+                if ProcessInfo.processInfo.environment[
+                    "JOURNALBEAR_UI_TEST_LOCK_ATTACHMENT_PREVIEW"
+                ] == "1" {
+                    NotificationCenter.default.post(
+                        name: UIApplication.protectedDataWillBecomeUnavailableNotification,
+                        object: nil
+                    )
+                }
+            }
+#endif
+        }
+        .onChange(of: store.isLocked) {
+            if store.isLocked {
+                preview = nil
+            }
         }
 #endif
     }

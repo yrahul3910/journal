@@ -19,6 +19,7 @@ final class JournalStore: ObservableObject {
     @Published var showNewEntry = NewEntryDialogState.closed
     @Published var showJournalImporter = false
     @Published var showJournalExporter = false
+    @Published private(set) var isLocked = false
     /// Asks whether to save/discard/cancel when a new journal is requested
     /// while the open one has unsaved changes.
     @Published var showUnsavedChangesDialog = false
@@ -47,7 +48,21 @@ final class JournalStore: ObservableObject {
 #endif
 
     /// New entries can only be added to an already-open journal.
-    var canAddEntry: Bool { documentName != nil }
+    var canAddEntry: Bool { documentName != nil && !isLocked }
+
+    var canLock: Bool { documentName != nil && password != nil && !isLocked }
+
+    func lock() {
+        guard canLock else { return }
+        isLocked = true
+    }
+
+    @discardableResult
+    func unlock(with candidate: String) -> Bool {
+        guard isLocked, candidate == password else { return false }
+        isLocked = false
+        return true
+    }
 
     /// Step 1: pick a `.zjournal` file, then prompt for its password. The
     /// picking happens in the view layer's `fileImporter`, which reports back
@@ -209,6 +224,7 @@ final class JournalStore: ObservableObject {
                 )
             ]
             documentName = "UI Test Journal"
+            password = environment["JOURNALBEAR_UI_TEST_PASSWORD"]
             return
         }
 

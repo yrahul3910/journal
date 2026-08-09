@@ -126,6 +126,13 @@ struct NewEntryView: View {
             initialSentiment = sentiment
             initialContent = content
             initialImages = images
+#if DEBUG
+            if let testDraft = ProcessInfo.processInfo.environment[
+                "JOURNALBEAR_UI_TEST_ENTRY_DRAFT"
+            ] {
+                content = testDraft
+            }
+#endif
         }
         // Keep Escape from silently discarding unsaved edits; the Cancel
         // button surfaces a confirmation instead.

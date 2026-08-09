@@ -24,18 +24,32 @@ struct EntryDetail: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .toolbar {
             ToolbarSpacer(.flexible)
+#if os(iOS)
+            ToolbarItem {
+                Button {
+                    store.lock()
+                } label: {
+                    Label("Lock Journal", systemImage: "lock")
+                }
+                .disabled(!store.canLock)
+            }
+#endif
             ToolbarItem {
                 Button {
                     store.showNewEntry = .editing
                 } label: {
-                    Image(systemName: "pencil")
+                    Label("Edit Entry", systemImage: "pencil")
                 }
+#if os(macOS)
                 .buttonBorderShape(.circle)
                 .buttonStyle(.glass)
+#endif
                 .help("Edit this entry")
                 .disabled(entry == nil)
             }
+#if os(macOS)
             .sharedBackgroundVisibility(.hidden)
+#endif
         }
         .toolbar(removing: .title)
 #if os(macOS)
