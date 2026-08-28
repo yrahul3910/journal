@@ -24,6 +24,7 @@ struct AttachmentPreviewView: View {
     @State private var index: Int
 #if os(iOS)
     @State private var dragOffset: CGFloat = 0
+    @State private var zoomedPages: Set<Int> = []
 #endif
     private let maxContentSize: CGSize
 #if os(macOS)
@@ -99,11 +100,22 @@ struct AttachmentPreviewView: View {
                             scope: cacheScope, index: pageIndex,
                             data: images[pageIndex]
                         ),
-                        maxPixelSize: previewPixelSize
+                        maxPixelSize: previewPixelSize,
+                        enablesZoom: true,
+                        accessibilityIdentifier: "attachment-preview-image-\(pageIndex)",
+                        accessibilityLabel: "Attachment \(pageIndex + 1)",
+                        onDismiss: close,
+                        onZoomChange: { isZoomed in
+                            if isZoomed {
+                                zoomedPages.insert(pageIndex)
+                                dragOffset = 0
+                            } else {
+                                zoomedPages.remove(pageIndex)
+                            }
+                        }
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .contentShape(Rectangle())
-                    .onTapGesture { close() }
                     .tag(pageIndex)
                 }
             }
@@ -128,11 +140,13 @@ struct AttachmentPreviewView: View {
     private var dragToDismiss: some Gesture {
         DragGesture()
             .onChanged { value in
+                guard !zoomedPages.contains(index) else { return }
                 if abs(value.translation.height) > abs(value.translation.width) {
                     dragOffset = value.translation.height
                 }
             }
             .onEnded { value in
+                guard !zoomedPages.contains(index) else { return }
                 if abs(value.translation.height) > 120 {
                     close()
                 } else {

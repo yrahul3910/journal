@@ -78,6 +78,40 @@ final class EntryAttachmentUITests: XCTestCase {
         XCTAssertTrue(previewImage.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["1 of 2"].waitForExistence(timeout: 2))
 
+        let zoomableImage = app.descendants(matching: .any)["attachment-preview-image-0"]
+        XCTAssertTrue(zoomableImage.waitForExistence(timeout: 5))
+        XCTAssertEqual(zoomableImage.value as? String, "Fit to screen")
+        zoomableImage.pinch(withScale: 2, velocity: 1)
+        let zoomed = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Zoomed"),
+            object: zoomableImage
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [zoomed], timeout: 2), .completed)
+
+        zoomableImage.doubleTap()
+        let fitted = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Fit to screen"),
+            object: zoomableImage
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [fitted], timeout: 2), .completed)
+
+        zoomableImage.pinch(withScale: 2, velocity: 1)
+        let zoomedAgain = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Zoomed"),
+            object: zoomableImage
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [zoomedAgain], timeout: 2), .completed)
+
+        zoomableImage.swipeLeft()
+        XCTAssertTrue(app.staticTexts["1 of 2"].exists)
+        zoomableImage.swipeDown()
+        XCTAssertTrue(previewImage.exists)
+
+        app.buttons["Close"].tap()
+        XCTAssertTrue(previewImage.waitForNonExistence(timeout: 5))
+        firstAttachment.tap()
+        XCTAssertTrue(previewImage.waitForExistence(timeout: 5))
+
         // Swiping pages between attachments.
         previewImage.swipeLeft()
         XCTAssertTrue(app.staticTexts["2 of 2"].waitForExistence(timeout: 2))
@@ -88,7 +122,7 @@ final class EntryAttachmentUITests: XCTestCase {
         add(screenshot)
 
         // Tapping the image dismisses, like the Electron modal.
-        previewImage.tap()
+        app.descendants(matching: .any)["attachment-preview-image-1"].tap()
         XCTAssertTrue(previewImage.waitForNonExistence(timeout: 5))
     }
 #endif

@@ -10,6 +10,13 @@ struct AttachmentImage: View {
     let cacheKey: String
     var maxPixelSize: CGFloat = 1600
     var contentMode: ContentMode = .fit
+#if os(iOS)
+    var enablesZoom = false
+    var accessibilityIdentifier: String?
+    var accessibilityLabel: String?
+    var onDismiss: (() -> Void)?
+    var onZoomChange: ((Bool) -> Void)?
+#endif
 
     @State private var image: PlatformImage?
     @State private var failed = false
@@ -51,9 +58,25 @@ struct AttachmentImage: View {
     var body: some View {
         Group {
             if let image {
+#if os(iOS)
+                if enablesZoom {
+                    ZoomableAttachmentImage(
+                        image: image,
+                        accessibilityIdentifier: accessibilityIdentifier,
+                        accessibilityLabel: accessibilityLabel,
+                        onDismiss: onDismiss,
+                        onZoomChange: onZoomChange
+                    )
+                } else {
+                    Image(platformImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: contentMode)
+                }
+#else
                 Image(platformImage: image)
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
+#endif
             } else if !failed {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(.quaternary)

@@ -514,7 +514,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JournalBear for Mac.app/Contents/MacOS/JournalBear for Mac";
 				"TEST_HOST[sdk=iphoneos*]" = "$(BUILT_PRODUCTS_DIR)/JournalBear.app/JournalBear";
 				"TEST_HOST[sdk=iphonesimulator*]" = "$(BUILT_PRODUCTS_DIR)/JournalBear.app/JournalBear";
@@ -550,7 +550,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JournalBear for Mac.app/Contents/MacOS/JournalBear for Mac";
 				"TEST_HOST[sdk=iphoneos*]" = "$(BUILT_PRODUCTS_DIR)/JournalBear.app/JournalBear";
 				"TEST_HOST[sdk=iphonesimulator*]" = "$(BUILT_PRODUCTS_DIR)/JournalBear.app/JournalBear";
@@ -569,7 +569,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = "JournalBear for Mac";
 			};
 			name = Debug;
@@ -586,7 +586,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = "JournalBear for Mac";
 			};
 			name = Release;
