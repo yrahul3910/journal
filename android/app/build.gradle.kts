@@ -22,6 +22,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { compose = true }
+    testOptions.unitTests.all {
+        it.systemProperty(
+            "journalbear.interopOutput",
+            layout.buildDirectory.file("interop-android.zjournal").get().asFile.absolutePath,
+        )
+    }
     lint { warningsAsErrors = true }
     packaging { resources.excludes += "META-INF/DEPENDENCIES" }
 }

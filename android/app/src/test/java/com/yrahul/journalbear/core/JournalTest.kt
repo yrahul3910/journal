@@ -4,10 +4,25 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class JournalTest {
+    @Test
+    fun attachmentAndEntryEqualityCompareImageContent() {
+        val image = Attachment("photo.jpg", byteArrayOf(1, 2, 3))
+        val copy = image.copy(bytes = image.bytes.copyOf())
+        assertEquals(image, copy)
+        assertEquals(image.hashCode(), copy.hashCode())
+        assertEquals(1, setOf(image, copy).size)
+        assertNotEquals(image, image.copy(name = "other.jpg"))
+        assertNotEquals(image, image.copy(bytes = byteArrayOf(1, 2, 4)))
+        val entry = JournalEntry("2026-01-01", "Photo", images = listOf(image))
+        assertEquals(entry, entry.copy(images = listOf(copy)))
+        assertEquals(entry.hashCode(), entry.copy(images = listOf(copy)).hashCode())
+    }
+
     @Test
     fun parsesDateFormsWithoutShiftingLocalCalendarDates() {
         assertEquals(Instant.parse("2024-01-01T00:00:00Z"), parseJournalDate("1704067200"))

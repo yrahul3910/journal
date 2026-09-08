@@ -48,7 +48,9 @@ class JournalFileTest {
         assertEquals("# Shared journal\n\nHello from Swift.", loaded.single().content)
         assertEquals("Loved", loaded.single().sentiment)
         assertEquals(1, loaded.single().images.size)
-        File("build/interop-android.zjournal").writeBytes(JournalFile.encrypt(loaded, secret))
+        val output = File(checkNotNull(System.getProperty("journalbear.interopOutput")))
+        output.parentFile?.mkdirs()
+        output.writeBytes(JournalFile.encrypt(loaded, secret))
     }
 
     @Test
@@ -93,6 +95,22 @@ class JournalFileTest {
         assertEquals("1704067200000", entry.entryDate)
         assertEquals("Neutral", entry.sentiment)
         assertEquals(emptyList<Attachment>(), entry.images)
+    }
+
+    @Test
+    fun rejectsUnknownMoodsAndAcceptsEverySharedMood() {
+        listOf("Joyful", "happy", "").forEach { mood ->
+            val json =
+                """{"version":7,"entries":[{"entryDate":"2026-01-01","content":"Test","sentiment":"$mood"}]}"""
+            assertThrows(JournalException::class.java) {
+                JournalFile.open(archive(listOf("data.json" to json.encodeToByteArray())), password)
+            }
+        }
+        JournalEntry.sentiments.forEach { mood ->
+            val bytes =
+                JournalFile.encrypt(listOf(JournalEntry("2026-01-01", "Test", mood)), password)
+            assertEquals(mood, JournalFile.open(bytes, password).single().sentiment)
+        }
     }
 
     @Test

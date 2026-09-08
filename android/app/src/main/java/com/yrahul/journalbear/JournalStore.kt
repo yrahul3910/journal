@@ -1,7 +1,6 @@
 package com.yrahul.journalbear
 
 import android.app.Application
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,14 +15,14 @@ import com.yrahul.journalbear.core.readLimited
 import java.io.IOException
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class EntryDraft(
     val content: String = "",
-    val date: LocalDate = LocalDate.now(),
+    private val initialDate: LocalDate = LocalDate.now(),
+    val date: LocalDate = initialDate,
     val sentiment: String = "Neutral",
     val images: List<Attachment> = emptyList(),
 ) {
@@ -32,7 +31,7 @@ data class EntryDraft(
             content.isNotEmpty() ||
                 images.isNotEmpty() ||
                 sentiment != "Neutral" ||
-                date != LocalDate.now()
+                date != initialDate
 }
 
 class JournalStore(application: Application) : AndroidViewModel(application) {
@@ -155,19 +154,7 @@ class JournalStore(application: Application) : AndroidViewModel(application) {
                                 .openInputStream(uri)
                                 ?.use { it.readLimited(JournalFile.MAX_IMAGE_BYTES) }
                                 ?: throw JournalException("An image could not be opened.")
-                        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-                        if (bounds.outWidth <= 0 || bounds.outHeight <= 0)
-                            throw JournalException("This image format is not supported.")
-                        val extension =
-                            when (bounds.outMimeType) {
-                                "image/png" -> "png"
-                                "image/webp" -> "webp"
-                                "image/heif",
-                                "image/heic" -> "heic"
-                                else -> "jpg"
-                            }
-                        Attachment("${UUID.randomUUID()}.$extension", bytes)
+                        prepareImageAttachment(bytes)
                     }
                 }
             draft = current.copy(images = current.images + images)
@@ -197,7 +184,7 @@ class JournalStore(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveCopy(uri: Uri?) {
+    fun saveAs(uri: Uri?) {
         if (uri == null) return
         if (documentName == null) {
             error = "The app restarted while choosing a location. Please reopen your journal."
@@ -264,10 +251,12 @@ class JournalStore(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 operation()
-            } catch (failure: IOException) {
-                error = failure.message ?: "The file operation failed. Please try again."
+            } catch (failure: JournalException) {
+                error = failure.message
+            } catch (_: IOException) {
+                error = "The file operation failed. Please try again."
             } catch (failure: SecurityException) {
-                error = "Access to the file was denied. Choose a writable location using Save copy."
+                error = "Access to the file was denied. Choose a writable location using Save as."
             } finally {
                 hasRecovery = storage.hasRecovery
                 isBusy = false

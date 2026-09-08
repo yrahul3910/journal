@@ -1,0 +1,1 @@
+`green.heic` is a synthetic 32 x 16 solid-green image encoded using Apple's ImageIO HEIC encoder with orientation 6 (90 degrees clockwise). Its displayed dimensions are 16 x 32. It tests conversion and orientation preservation without using a personal photo.

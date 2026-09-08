@@ -72,10 +72,10 @@ fun JournalApp(store: JournalStore) {
             ActivityResultContracts.CreateDocument("application/octet-stream"),
             store::create,
         )
-    val saveCopy =
+    val saveAs =
         rememberLauncherForActivityResult(
             ActivityResultContracts.CreateDocument("application/octet-stream"),
-            store::saveCopy,
+            store::saveAs,
         )
 
     val draft = store.draft
@@ -126,7 +126,7 @@ fun JournalApp(store: JournalStore) {
                                 !store.isBusy &&
                                     (draft.content.isNotBlank() || draft.images.isNotEmpty()),
                             onClick = {
-                                if (store.needsSaveLocation) saveCopy.launch("Journal.zjournal")
+                                if (store.needsSaveLocation) saveAs.launch("Journal.zjournal")
                                 else store.saveEntry()
                             },
                         ) {
@@ -142,10 +142,10 @@ fun JournalApp(store: JournalStore) {
                                 onDismissRequest = { showMenu = false },
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Save copy") },
+                                    text = { Text("Save as") },
                                     onClick = {
                                         showMenu = false
-                                        saveCopy.launch("Journal.zjournal")
+                                        saveAs.launch("Journal.zjournal")
                                     },
                                 )
                                 if (draft == null)
@@ -228,7 +228,7 @@ fun JournalApp(store: JournalStore) {
                 Text(
                     message +
                         if (store.hasRecovery)
-                            "\n\nAn encrypted recovery copy is kept on this device. Retry saving, or choose Save copy."
+                            "\n\nAn encrypted recovery copy is kept on this device. Retry saving, or choose Save as."
                         else ""
                 )
             },

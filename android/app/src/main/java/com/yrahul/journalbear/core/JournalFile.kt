@@ -92,6 +92,8 @@ object JournalFile {
             }
         if (disk.version != 7.0) throw JournalException("Only journal format 7.0 is supported.")
         return disk.entries.map { entry ->
+            if (entry.sentiment !in JournalEntry.sentiments)
+                throw JournalException("The journal contains an unsupported mood.")
             JournalEntry(
                 entry.entryDate,
                 entry.content,

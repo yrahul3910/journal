@@ -8,8 +8,8 @@ Open this directory in Android Studio, allow Gradle to sync, choose a device, an
 
 - Android Studio with its bundled JDK. The Gradle daemon configuration pins Java 25; app bytecode targets Java 17.
 - Android SDK Platform 37 for compilation, Build-Tools 36.0.0, and Platform-Tools.
-- An Android 16 emulator or physical device for UI tests. This workspace has the `JournalBear_API_36` emulator.
-- Gradle 9.7.1 through the checked-in wrapper, Android Gradle Plugin 9.1.1, Kotlin Compose/serialization plugins 2.3.20.
+- An Android 16 emulator or physical device for UI tests.
+- Gradle 9.7.1 through the checked-in wrapper, Android Gradle Plugin 9.4.0, Kotlin Compose/serialization plugins 2.3.20.
 
 Compile SDK 37 is required by the Compose dependencies. `targetSdk` remains 36, and `minSdk` remains 26. These settings have separate purposes.
 
@@ -31,13 +31,13 @@ The last command needs a running emulator or connected device. Debug APK: `app/b
 - Create a journal with a password and choose its location using Android's document picker.
 - Open an existing 7.0 `.zjournal` and enter its password.
 - Search entry content, dates, and moods; read Markdown and attached images.
-- Add an entry with a date, mood, text, and photos from the system photo picker.
-- Tap **Save entry** to encrypt and write the journal. **Save copy** writes to a new location.
+- Add an entry with a date, mood, text, and photos from the system photo picker. PNG/JPEG files are preserved; other supported formats are converted to JPEG at 90% quality, sampled to at most 4096 pixels per side.
+- Tap **Save entry** to encrypt and write the journal. **Save as** saves the journal, including a nonempty draft, to a new location and makes that file the open journal. Subsequent saves update that file.
 - **Close journal** clears the open journal and password from app state.
 
 New journal passwords require at least eight characters and confirmation. Existing journals accept their original password without a new length requirement. Passwords and plaintext journal data are never intentionally written to app storage or Android saved-instance state. A draft survives activity recreation, such as rotation, but an unsaved draft does not survive process termination. Save the entry before leaving the app.
 
-If a provider write fails or is interrupted, a complete encrypted replacement remains in the app's private no-backup directory. Retry the save, use **Save copy**, or reopen the app and choose **Recover journal** with the same password. Recovery data is removed after a successful, verified write. Clearing app data or uninstalling removes this private recovery copy.
+If a provider write fails or is interrupted, a complete encrypted replacement remains in the app's private no-backup directory. Retry the save, use **Save as**, or reopen the app and choose **Recover journal** with the same password. Recovery data is removed after a successful, verified write. Clearing app data or uninstalling removes this private recovery copy.
 
 If a recovery copy cannot be unlocked, **Discard recovery copy** offers a confirmation before permanently removing it. This restores the normal Open/Create actions and does not remove saved journal files.
 

@@ -120,15 +120,16 @@ class JournalAppTest {
     }
 
     @Test
-    fun photoPickerAttachmentSurvivesSaveAndReopen() {
+    @SdkSuppress(minSdkVersion = 30)
+    fun webpPhotoPickerAttachmentSurvivesSaveAndReopenAsJpeg() {
         val resolver = compose.activity.contentResolver
         val imageUri =
             checkNotNull(
                 resolver.insert(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     ContentValues().apply {
-                        put(MediaStore.Images.Media.DISPLAY_NAME, "JournalBear-test-photo.png")
-                        put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                        put(MediaStore.Images.Media.DISPLAY_NAME, "JournalBear-test-photo.webp")
+                        put(MediaStore.Images.Media.MIME_TYPE, "image/webp")
                     },
                 )
             )
@@ -137,7 +138,7 @@ class JournalAppTest {
                 eraseColor(android.graphics.Color.GREEN)
             }
         resolver.openOutputStream(imageUri)?.use {
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+            bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 100, it)
         }
         bitmap.recycle()
         val filename = "JournalBear-photo-${UUID.randomUUID()}.zjournal"
@@ -168,7 +169,16 @@ class JournalAppTest {
             try {
                 val loaded = JournalFile.open(readDownload(filename), password.toCharArray())
                 assertEquals(1, loaded.single().images.size)
-                assertTrue(loaded.single().images.single().bytes.isNotEmpty())
+                val image = loaded.single().images.single()
+                assertTrue(image.name.endsWith(".jpg"))
+                assertEquals(0xff, image.bytes[0].toInt() and 0xff)
+                assertEquals(0xd8, image.bytes[1].toInt() and 0xff)
+                compose.onNodeWithContentDescription("Journal options").performClick()
+                compose.onNodeWithText("Close journal").performClick()
+                openJournal(filename, password)
+                awaitText("Photo entry")
+                compose.onNodeWithText("Photo entry").performClick()
+                compose.onNodeWithContentDescription("Journal photo").assertIsDisplayed()
             } finally {
                 device.executeShellCommand("rm /sdcard/Download/$filename")
             }
@@ -177,11 +187,46 @@ class JournalAppTest {
         }
     }
 
+    @Test
+    fun saveAsIncludesTheDraftAndSubsequentSavesUseTheNewFile() {
+        val original = "JournalBear-original-${UUID.randomUUID()}.zjournal"
+        val copy = "JournalBear-copy-${UUID.randomUUID()}.zjournal"
+        try {
+            createJournal(original)
+            compose.onNodeWithText("New entry", useUnmergedTree = true).performClick()
+            compose.onNodeWithText("What's on your mind?").performTextInput("Included draft")
+            compose.onNodeWithContentDescription("Journal options").performClick()
+            compose.onNodeWithText("Save as").performClick()
+            chooseSaveLocation(copy)
+            awaitText("Entry saved")
+            compose.onNodeWithContentDescription("Back").performClick()
+            compose.onNodeWithText(copy.removeSuffix(".zjournal")).assertIsDisplayed()
+            compose.onNodeWithText("New entry", useUnmergedTree = true).performClick()
+            compose.onNodeWithText("What's on your mind?").performTextInput("Saved to the new file")
+            compose.onNodeWithText("Save entry").performClick()
+            compose.waitUntil(15_000) {
+                compose.onAllNodes(hasText("Save entry")).fetchSemanticsNodes().isEmpty()
+            }
+            assertTrue(JournalFile.open(readDownload(original), password.toCharArray()).isEmpty())
+            assertEquals(
+                listOf("Included draft", "Saved to the new file"),
+                JournalFile.open(readDownload(copy), password.toCharArray()).map { it.content },
+            )
+        } finally {
+            device.executeShellCommand("rm -f /sdcard/Download/$original /sdcard/Download/$copy")
+        }
+    }
+
     private fun createJournal(filename: String) {
         compose.onNodeWithText("Create journal").performClick()
         compose.onNodeWithText("Password").performTextInput(password)
         compose.onNodeWithText("Confirm password").performTextInput(password)
         compose.onNodeWithText("Choose location").performClick()
+        chooseSaveLocation(filename)
+        awaitText("Your story starts here")
+    }
+
+    private fun chooseSaveLocation(filename: String) {
         val title = device.wait(Until.findObject(By.clazz("android.widget.EditText")), 10_000)
         checkNotNull(title) { "System save picker did not open" }.text = filename
         val save =
@@ -190,7 +235,6 @@ class JournalAppTest {
                 5_000,
             )
         checkNotNull(save) { "System save picker did not show Save" }.click()
-        awaitText("Your story starts here")
     }
 
     private fun openJournal(filename: String, candidate: String) {

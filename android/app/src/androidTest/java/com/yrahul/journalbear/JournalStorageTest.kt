@@ -36,7 +36,7 @@ class JournalStorageTest {
                 assertNotNull(freshStore.error)
                 assertFalse(freshStore.isBusy)
                 freshStore.dismissError()
-                freshStore.saveCopy(Uri.fromFile(destination))
+                freshStore.saveAs(Uri.fromFile(destination))
                 assertNotNull(freshStore.error)
                 assertFalse(freshStore.isBusy)
             }
@@ -47,7 +47,7 @@ class JournalStorageTest {
     }
 
     @Test
-    fun saveCopyWithEmptyDraftWritesAValidJournalAndPreservesDraft() = runBlocking {
+    fun saveAsWithEmptyDraftWritesAValidJournalAndPreservesDraft() = runBlocking {
         val original = File(application.cacheDir, "${UUID.randomUUID()}.zjournal")
         val copy = File(application.cacheDir, "${UUID.randomUUID()}.zjournal")
         val store = withContext(Dispatchers.Main) { JournalStore(application) }
@@ -59,7 +59,7 @@ class JournalStorageTest {
             awaitIdle(store)
             withContext(Dispatchers.Main) {
                 store.startEntry()
-                store.saveCopy(Uri.fromFile(copy))
+                store.saveAs(Uri.fromFile(copy))
             }
             awaitIdle(store)
             assertNotNull(store.draft)
@@ -122,7 +122,7 @@ class JournalStorageTest {
                 store.saveEntry()
             }
             awaitIdle(store)
-            assertNotNull(store.error)
+            assertEquals("The file operation failed. Please try again.", store.error)
             assertEquals("Keep this draft", store.draft?.content)
             assertTrue(store.entries.isEmpty())
             assertTrue(store.hasRecovery)

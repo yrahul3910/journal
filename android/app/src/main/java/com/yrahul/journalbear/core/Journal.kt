@@ -10,7 +10,12 @@ import java.time.format.DateTimeParseException
 import java.time.format.FormatStyle
 import java.util.UUID
 
-data class Attachment(val name: String, val bytes: ByteArray)
+data class Attachment(val name: String, val bytes: ByteArray) {
+    override fun equals(other: Any?): Boolean =
+        other is Attachment && name == other.name && bytes.contentEquals(other.bytes)
+
+    override fun hashCode(): Int = 31 * name.hashCode() + bytes.contentHashCode()
+}
 
 data class JournalEntry(
     val entryDate: String,

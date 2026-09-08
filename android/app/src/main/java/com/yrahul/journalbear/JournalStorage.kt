@@ -47,9 +47,9 @@ class JournalStorage(private val context: Context) {
             throw error
         }
         context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) }
-            ?: throw JournalException("This location cannot be written. Try saving a copy.")
+            ?: throw JournalException("This location cannot be written. Try Save as.")
         if (!read(uri).contentEquals(bytes))
-            throw JournalException("The saved file could not be verified. Try saving a copy.")
+            throw JournalException("The saved file could not be verified. Try Save as.")
         recovery.delete()
     }
 }
