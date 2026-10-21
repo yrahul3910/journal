@@ -21,7 +21,11 @@ Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
 let container: HTMLDivElement;
 let root: Root;
 const onAdd = vi.fn();
-const onReadingChange = vi.fn();
+const onImportingChange = vi.fn();
+const importAttachment = vi.fn(
+    async (path: string) =>
+        `journalbear://attachments/${path.split("/").pop()}`,
+);
 
 function renderDropZone(files: string[] = []) {
     act(() =>
@@ -30,13 +34,19 @@ function renderDropZone(files: string[] = []) {
                 files={files}
                 onAdd={onAdd}
                 onRemove={vi.fn()}
-                onReadingChange={onReadingChange}
+                onImportingChange={onImportingChange}
             />,
         ),
     );
 }
 
 beforeEach(() => {
+    vi.stubGlobal("electron", {
+        // Files dragged from a web page have no path on disk.
+        getPathForFile: (file: File) =>
+            file.name === "dragged.png" ? "" : `/picked/${file.name}`,
+        importAttachment,
+    });
     container = document.createElement("div");
     document.body.append(container);
     root = createRoot(container);
@@ -47,8 +57,10 @@ afterEach(() => {
     act(() => root.unmount());
     container.remove();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     onAdd.mockReset();
-    onReadingChange.mockReset();
+    onImportingChange.mockReset();
+    importAttachment.mockClear();
 });
 
 async function pickFiles(files: File[]) {
@@ -65,7 +77,7 @@ async function pickFiles(files: File[]) {
 }
 
 describe("FileDropZone", () => {
-    it("adds images and videos, holding every video as MP4", async () => {
+    it("imports images and MP4/MOV videos by path and rejects other files", async () => {
         const toastError = vi.spyOn(toast, "error");
 
         await pickFiles([
@@ -73,49 +85,31 @@ describe("FileDropZone", () => {
             new File(["mov"], "clip.mov", { type: "video/quicktime" }),
             new File(["webm"], "clip.webm", { type: "video/webm" }),
             new File(["txt"], "notes.txt", { type: "text/plain" }),
+            new File(["png"], "dragged.png", { type: "image/png" }),
         ]);
 
         await vi.waitFor(() => expect(onAdd).toHaveBeenCalledOnce());
-        expect(onAdd).toHaveBeenCalledWith([
-            `data:image/png;base64,${btoa("png")}`,
-            `data:video/mp4;base64,${btoa("mov")}`,
+        expect(importAttachment.mock.calls).toEqual([
+            ["/picked/photo.png"],
+            ["/picked/clip.mov"],
         ]);
-        expect(onReadingChange.mock.calls).toEqual([[true], [false]]);
+        expect(onAdd).toHaveBeenCalledWith([
+            "journalbear://attachments/photo.png",
+            "journalbear://attachments/clip.mov",
+        ]);
+        expect(onImportingChange.mock.calls).toEqual([[true], [false]]);
         expect(toastError.mock.calls).toEqual([
             ["clip.webm isn't an image or an MP4 or MOV video."],
             ["notes.txt isn't an image or an MP4 or MOV video."],
+            [
+                "dragged.png isn't saved on this computer. Save it, then attach the file.",
+            ],
         ]);
     });
 
-    it("rejects videos over 256 MB without reading them", async () => {
+    it("keeps the files that import when another one fails", async () => {
         const toastError = vi.spyOn(toast, "error");
-        const readAsDataURL = vi.spyOn(FileReader.prototype, "readAsDataURL");
-        const video = new File(["mp4"], "long.mp4", { type: "video/mp4" });
-        Object.defineProperty(video, "size", { value: 256 * 1024 * 1024 + 1 });
-
-        await pickFiles([video]);
-
-        expect(toastError).toHaveBeenCalledWith(
-            "long.mp4 is larger than 256 MB.",
-        );
-        expect(readAsDataURL).not.toHaveBeenCalled();
-        expect(onAdd).not.toHaveBeenCalled();
-        expect(onReadingChange).not.toHaveBeenCalled();
-    });
-
-    it("keeps the files that read when another one fails", async () => {
-        const toastError = vi.spyOn(toast, "error");
-        const read = FileReader.prototype.readAsDataURL;
-
-        vi.spyOn(FileReader.prototype, "readAsDataURL").mockImplementation(
-            function (this: FileReader, blob: Blob) {
-                if (blob.type === "video/mp4") {
-                    this.dispatchEvent(new Event("error"));
-                } else {
-                    read.call(this, blob);
-                }
-            },
-        );
+        importAttachment.mockRejectedValueOnce(new Error("copy failed"));
 
         await pickFiles([
             new File(["mp4"], "clip.mp4", { type: "video/mp4" }),
@@ -124,16 +118,16 @@ describe("FileDropZone", () => {
 
         await vi.waitFor(() => expect(onAdd).toHaveBeenCalledOnce());
         expect(onAdd).toHaveBeenCalledWith([
-            `data:image/png;base64,${btoa("png")}`,
+            "journalbear://attachments/photo.png",
         ]);
         expect(toastError).toHaveBeenCalledWith(
-            "Couldn't read one or more of the selected files.",
+            "Couldn't add one or more of the selected files.",
         );
     });
 
     it("previews videos as muted video thumbnails and images as images", () => {
-        const image = "data:image/png;base64,AAAA";
-        const video = "data:video/mp4;base64,AAAA";
+        const image = "journalbear://attachments/photo.png";
+        const video = "journalbear://attachments/clip.mp4";
         renderDropZone([image, video]);
 
         expect(container.querySelector("img")?.getAttribute("src")).toBe(image);

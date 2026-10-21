@@ -15,7 +15,7 @@ const fixture: JournalData = {
             sentiment: "Happy",
             attachments: [
                 "data:image/png;base64,AAAA",
-                "data:video/mp4;base64,AAAA",
+                "journalbear://attachments/clip.mp4",
             ],
         },
         {

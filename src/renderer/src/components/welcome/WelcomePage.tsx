@@ -23,7 +23,6 @@ export function WelcomePage() {
             useJournalStore.setState({
                 currentFilePath: result.filePath,
                 currentFileVersion: result.fileVersion,
-                encryptedData: result.encryptedData,
                 viewMode: "journal",
             });
             openDialog("decrypt");

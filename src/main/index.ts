@@ -2,7 +2,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, protocol } from "electron";
 import { rimraf } from "rimraf";
 import { z } from "zod";
 
@@ -13,10 +13,42 @@ import {
     migrate51to70,
 } from "../shared/journal";
 import * as archive from "./archive";
-import { readAttachment, writeAttachment } from "./attachments";
+import {
+    ATTACHMENT_SCHEME,
+    exportAttachments,
+    importAttachment,
+    resolveAttachment,
+    serveAttachment,
+} from "./attachments";
 import * as encryption from "./encryption";
+import { saveJournal } from "./save";
 
 let mainWindow: BrowserWindow | null = null;
+
+// This process's scratch space for the open journal's decrypted files, which
+// the renderer loads through the attachment scheme while the journal is open.
+// Each process gets its own, so a second app instance can't delete them, and
+// the pid in the name lets a later launch clean up after a crash.
+const SESSION_PREFIX = "_jbsession-";
+const sessionRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), `${SESSION_PREFIX}${process.pid}-`),
+);
+const sessionFilesDir = path.join(sessionRoot, "files");
+const sessionImagesDir = path.join(sessionFilesDir, "images");
+
+// `stream` lets <video> read the files progressively instead of buffering
+// them whole.
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: ATTACHMENT_SCHEME,
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            stream: true,
+        },
+    },
+]);
 
 function createWindow() {
     console.log("[MAIN] Creating window...");
@@ -103,12 +135,10 @@ ipcMain.handle("open-file-dialog", async () => {
 
     const filePath = result.filePaths[0];
     const fileVersion = filePath.endsWith("zjournal") ? 5.1 : 7.0;
-    const encryptedData = fs.readFileSync(filePath).toString();
 
     return {
         filePath,
         fileVersion,
-        encryptedData,
     };
 });
 
@@ -130,23 +160,23 @@ ipcMain.handle(
     "decrypt-journal",
     async (_event, args: { filePath: string; password: string }) => {
         const { filePath, password } = args;
-        const tmp = os.tmpdir();
+        const archivePath = path.join(sessionRoot, "journal.tar.gz");
 
         try {
             // decrypt -> decompress -> read JSON
-            const err = encryption.decryptFile(
+            const err = await encryption.decryptFile(
                 filePath,
-                `${tmp}//_jb.tar.gz`,
+                archivePath,
                 password,
             );
             if (err) {
                 return new Error("Wrong password or corrupted file");
             }
 
-            await archive.decompress(`${tmp}/_jb.tar.gz`);
+            await archive.decompress(archivePath, sessionFilesDir);
 
             try {
-                const journalPath = `${tmp}/_jbfiles/data.json`;
+                const journalPath = path.join(sessionFilesDir, "data.json");
                 const rawContents = JSON.parse(
                     fs.readFileSync(journalPath, "utf8"),
                 );
@@ -159,14 +189,13 @@ ipcMain.handle(
                 // The schema guarantees attachments is string[]. Each item is
                 // either an inline data: URL (from a migrated 5.1 journal) or a
                 // path into images/ (the 7.0 on-disk form). Resolve every path
-                // to a data: URL so the renderer only ever sees data: URLs.
-                const imagesDir = `${tmp}/_jbfiles/images`;
+                // to the attachment URL the renderer loads the file from.
                 for (const entry of data.entries) {
                     entry.attachments = entry.attachments
                         .map((att) =>
                             att.startsWith("data:")
                                 ? att
-                                : readAttachment(imagesDir, att),
+                                : resolveAttachment(sessionImagesDir, att),
                         )
                         .filter((att): att is string => att !== null);
                 }
@@ -178,69 +207,23 @@ ipcMain.handle(
             }
         } catch (err) {
             return { success: false, error: (err as Error).message };
+        } finally {
+            fs.rmSync(archivePath, { force: true });
         }
     },
 );
 
 ipcMain.handle(
     "save-journal",
-    async (
+    (
         _event,
-        args: { filePath: string; password: string; journalData: any },
-    ) => {
-        const { filePath, password, journalData } = args;
-        const tmp = os.tmpdir();
-
-        try {
-            // Clean up temp directories
-            await rimraf(`${tmp}/_jbimages`);
-            await rimraf(`${tmp}/_jbfiles`);
-            await rimraf(`${tmp}/_jb.tar.gz`);
-
-            // Create temp directories
-            fs.mkdirSync(`${tmp}/_jbfiles`, { recursive: true });
-            fs.mkdirSync(`${tmp}/_jbimages`, { recursive: true });
-
-            // Create images directory inside _jbfiles
-            fs.mkdirSync(`${tmp}/_jbfiles/images`, { recursive: true });
-
-            // Write each attachment into images/ and store its path in place
-            // of the in-memory data: URL.
-            journalData.entries.forEach((entry: any) => {
-                if (entry.attachments && entry.attachments.length > 0) {
-                    // Use timestamp-based naming for better compatibility
-                    const timestamp = entry.entryDate || Date.now();
-                    entry.attachments = entry.attachments.map(
-                        (attachment: string, index: number) =>
-                            writeAttachment(
-                                `${tmp}/_jbfiles/images`,
-                                `${timestamp}_${index}`,
-                                attachment,
-                            ),
-                    );
-                }
-            });
-
-            // Write journal JSON with updated attachment paths
-            fs.writeFileSync(
-                tmp + "/_jbfiles/data.json",
-                JSON.stringify(journalData),
-            );
-
-            // Compress
-            const archivePath = await archive.compress(`${tmp}/_jbfiles`);
-            if (!archivePath) {
-                return { success: false, error: "Failed to compress journal" };
-            }
-
-            // Encrypt
-            await encryption.encryptFile(archivePath, filePath, password);
-
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: (err as Error).message };
-        }
-    },
+        args: { filePath: string; password: string; journalData: JournalData },
+    ) =>
+        saveJournal({
+            ...args,
+            sessionRoot,
+            imagesDir: sessionImagesDir,
+        }),
 );
 
 ipcMain.handle("export-html", async (_event, args: { html: string }) => {
@@ -253,12 +236,23 @@ ipcMain.handle("export-html", async (_event, args: { html: string }) => {
     }
 
     try {
-        fs.writeFileSync(result.filePath, args.html);
+        fs.writeFileSync(
+            result.filePath,
+            await exportAttachments(
+                args.html,
+                sessionImagesDir,
+                result.filePath,
+            ),
+        );
         return { success: true, filePath: result.filePath };
     } catch (err) {
         return { success: false, error: (err as Error).message };
     }
 });
+
+ipcMain.handle("import-attachment", (_event, sourcePath: string) =>
+    importAttachment(sourcePath, sessionImagesDir),
+);
 
 ipcMain.handle("save-image-dialog", async () => {
     const result = await dialog.showOpenDialog({
@@ -277,22 +271,50 @@ ipcMain.handle("check-password-strength", async (_event, password: string) => {
     return encryption.checkPasswordStrength(password);
 });
 
-// App lifecycle
-app.whenReady().then(() => {
-    console.log("[MAIN] App ready");
-    createWindow();
-
-    // Perform cleanup
+// Remove decrypted journal content left in the temp directory by processes
+// that are gone: the fixed paths older versions used, and session folders
+// whose process no longer runs (after a crash).
+function removeStaleTempFiles() {
     const tmp = os.tmpdir();
     console.log("[MAIN] Cleaning up temp directory:", tmp);
     try {
-        rimraf.sync(tmp + "/_jbimages");
+        rimraf.sync(`${tmp}/_jbimages`);
         rimraf.sync(`${tmp}/_jbfiles`);
-        rimraf.sync(tmp + "/_jb.tar.gz");
+        rimraf.sync(`${tmp}/_jb.tar.gz`);
+
+        for (const name of fs.readdirSync(tmp)) {
+            const pid = name.startsWith(SESSION_PREFIX)
+                ? Number(name.slice(SESSION_PREFIX.length).split("-")[0])
+                : null;
+            if (pid && !isRunning(pid)) rimraf.sync(path.join(tmp, name));
+        }
+
         console.log("[MAIN] Cleanup complete");
     } catch (err) {
         console.error("[MAIN] Cleanup error:", err);
     }
+}
+
+function isRunning(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (error) {
+        // EPERM means the process exists but belongs to another user.
+        return (
+            error instanceof Error && "code" in error && error.code === "EPERM"
+        );
+    }
+}
+
+// App lifecycle
+app.whenReady().then(() => {
+    console.log("[MAIN] App ready");
+    removeStaleTempFiles();
+    protocol.handle(ATTACHMENT_SCHEME, (request) =>
+        serveAttachment(request, sessionImagesDir),
+    );
+    createWindow();
 
     app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -300,6 +322,8 @@ app.whenReady().then(() => {
         }
     });
 });
+
+app.on("will-quit", () => rimraf.sync(sessionRoot));
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {

@@ -9,8 +9,12 @@ describe("archive", () => {
         const dir = mkdtempSync(join(tmpdir(), "jb-arc-"));
         writeFileSync(join(dir, "data.json"), '{"version":7,"entries":[]}');
 
-        const archivePath = await compress(dir);
-        expect(archivePath).toMatch(/\.tar\.gz$/);
+        const archivePath = join(
+            mkdtempSync(join(tmpdir(), "jb-arc-")),
+            "out.tar.gz",
+        );
+
+        await compress(dir, archivePath);
         expect(existsSync(archivePath)).toBe(true);
     });
 
@@ -23,10 +27,15 @@ describe("archive", () => {
         const json = '{"version":7,"entries":[{"content":"hi"}]}';
         writeFileSync(join(dir, "data.json"), json);
 
-        const archivePath = await compress(dir);
-        await expect(decompress(archivePath)).resolves.toBeUndefined();
+        const out = mkdtempSync(join(tmpdir(), "jb-arc-"));
+        const archivePath = join(out, "out.tar.gz");
 
-        const extracted = join(tmpdir(), "_jbfiles", "data.json");
+        await compress(dir, archivePath);
+        await expect(
+            decompress(archivePath, join(out, "files")),
+        ).resolves.toBeUndefined();
+
+        const extracted = join(out, "files", "data.json");
         expect(existsSync(extracted)).toBe(true);
         expect(readFileSync(extracted, "utf8")).toBe(json);
     });
@@ -34,11 +43,16 @@ describe("archive", () => {
     it("decompress starts from a clean directory on repeated calls", async () => {
         const dir = mkdtempSync(join(tmpdir(), "jb-arc-"));
         writeFileSync(join(dir, "data.json"), '{"version":7,"entries":[]}');
-        const archivePath = await compress(dir);
+        const out = mkdtempSync(join(tmpdir(), "jb-arc-"));
+        const archivePath = join(out, "out.tar.gz");
+        const files = join(out, "files");
+        await compress(dir, archivePath);
 
-        // A stale _jbfiles from a prior open must not cause EEXIST or leak files.
-        await decompress(archivePath);
-        await expect(decompress(archivePath)).resolves.toBeUndefined();
-        expect(existsSync(join(tmpdir(), "_jbfiles", "data.json"))).toBe(true);
+        // Files from a previously opened journal must not cause EEXIST or leak.
+        await decompress(archivePath, files);
+        writeFileSync(join(files, "stale.jpg"), "old");
+        await expect(decompress(archivePath, files)).resolves.toBeUndefined();
+        expect(existsSync(join(files, "data.json"))).toBe(true);
+        expect(existsSync(join(files, "stale.jpg"))).toBe(false);
     });
 });

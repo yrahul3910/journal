@@ -62,8 +62,11 @@ describe("file encryption", () => {
         writeFileSync(input, content);
 
         await encryptFile(input, cipher, "key");
-        expect(decryptFile(cipher, output, "key")).toBeNull();
+        expect(await decryptFile(cipher, output, "key")).toBeNull();
         expect(readFileSync(output, "utf8")).toBe(content);
+        expect(await decryptFile(cipher, output, "wrong key")).toBeInstanceOf(
+            Error,
+        );
     });
 
     it("resolves only after the encrypted file is fully written", async () => {

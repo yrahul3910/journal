@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, webUtils } from "electron";
 
 console.log("[PRELOAD] Preload script starting...");
 
@@ -26,6 +26,9 @@ try {
         }) => ipcRenderer.invoke("save-journal", args),
         exportHtml: (args: { html: string }) =>
             ipcRenderer.invoke("export-html", args),
+        importAttachment: (sourcePath: string) =>
+            ipcRenderer.invoke("import-attachment", sourcePath),
+        getPathForFile: (file: File) => webUtils.getPathForFile(file),
         saveImageDialog: () => ipcRenderer.invoke("save-image-dialog"),
         checkPasswordStrength: (password: string) =>
             ipcRenderer.invoke("check-password-strength", password),

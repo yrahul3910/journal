@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import fs from "fs";
+import { pipeline } from "stream/promises";
 import owasp from "owasp-password-strength-test";
 
 const algorithm = "aes-256-cbc";
@@ -103,67 +104,47 @@ export const encryptFile = (
     });
 };
 
-export const decryptFile = (
+/**
+ * Decrypt the journal at `path` into `outputPath`, which receives the
+ * plaintext `.tar.gz`. Returns null on success and the error otherwise; a
+ * wrong password surfaces as the cipher's padding error.
+ *
+ * The file is streamed through the decipher, so a journal of any size
+ * decrypts in bounded memory (reading it whole fails past 2 GiB).
+ */
+export const decryptFile = async (
     path: string,
     outputPath: string,
     key: string,
-): Error | null => {
+): Promise<Error | null> => {
     try {
-        console.log("[ENCRYPTION] Starting file decryption...");
-        console.log("[ENCRYPTION] Input path:", path);
-        console.log("[ENCRYPTION] Output path:", outputPath);
+        const header = Buffer.alloc(SALT_LENGTH + IV_LENGTH);
+        const file = await fs.promises.open(path);
+        const { bytesRead } = await file.read(header, 0, header.length, 0);
+        await file.close();
 
-        // Check file size first to determine if it's a legacy file
-        const stats = fs.statSync(path);
-        console.log("[ENCRYPTION] File size:", stats.size);
-
-        // Read the entire file to detect format
-        const fileContent = fs.readFileSync(path);
-        console.log("[ENCRYPTION] File read, size:", fileContent.length);
-        return tryNewFormatFromBuffer(fileContent, outputPath, key);
-    } catch (ex) {
-        console.error("[ENCRYPTION] Decrypt file error:", ex);
-        return ex as Error;
-    }
-};
-
-const tryNewFormatFromBuffer = (
-    fileBuffer: Buffer,
-    outputPath: string,
-    key: string,
-): Error | null => {
-    try {
-        console.log("[ENCRYPTION] Trying new format from buffer...");
-
-        if (fileBuffer.length < SALT_LENGTH + IV_LENGTH) {
-            console.error("[ENCRYPTION] File too small for new format");
+        if (bytesRead < header.length) {
             return new Error("File too small or corrupted");
         }
 
-        const salt = fileBuffer.subarray(0, SALT_LENGTH);
-        const iv = fileBuffer.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
-        const encrypted = fileBuffer.subarray(SALT_LENGTH + IV_LENGTH);
+        const salt = header.subarray(0, SALT_LENGTH);
+        const iv = header.subarray(SALT_LENGTH);
+        const decipher = crypto.createDecipheriv(
+            algorithm,
+            deriveKey(key, salt),
+            iv,
+        );
 
-        console.log("[ENCRYPTION] Extracted salt and IV from buffer");
+        await pipeline(
+            fs.createReadStream(path, { start: header.length }),
+            decipher,
+            fs.createWriteStream(outputPath),
+        );
+        console.log("[ENCRYPTION] Decrypted successfully");
 
-        const derivedKey = deriveKey(key, salt);
-        const decipher = crypto.createDecipheriv(algorithm, derivedKey, iv);
-
-        try {
-            const decrypted = Buffer.concat([
-                decipher.update(encrypted),
-                decipher.final(),
-            ]);
-
-            console.log("[ENCRYPTION] Decrypted successfully (new format)");
-            fs.writeFileSync(outputPath, decrypted);
-            return null;
-        } catch (err) {
-            console.error("[ENCRYPTION] New format decipher error:", err);
-            return err as Error;
-        }
+        return null;
     } catch (ex) {
-        console.error("[ENCRYPTION] New format exception:", ex);
-        return ex as Error;
+        console.error("[ENCRYPTION] Decrypt file error:", ex);
+        return ex instanceof Error ? ex : new Error(String(ex));
     }
 };

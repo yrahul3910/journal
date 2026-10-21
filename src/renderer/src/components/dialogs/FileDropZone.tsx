@@ -8,37 +8,32 @@ import { isVideo } from "@/lib/attachments";
 // play WebM or most others.
 const VIDEO_TYPES = ["video/mp4", "video/quicktime"];
 
-// Each attachment travels as one base64 string, and V8 caps strings at about
-// 512M characters (roughly 380 MB of video). The SwiftUI app enforces the
-// same limit so every journal stays openable here.
-const MAX_VIDEO_BYTES = 256 * 1024 * 1024;
-
 interface FileDropZoneProps {
-    files: string[]; // attachments as data: URLs
-    // Reads finish after the user may have added or removed other files, so
+    files: string[]; // attachment URLs
+    // Imports finish after the user may have added or removed other files, so
     // new attachments are handed over to append rather than as a full list.
     onAdd: (files: string[]) => void;
     onRemove: (index: number) => void;
-    onReadingChange: (isReading: boolean) => void;
+    onImportingChange: (isImporting: boolean) => void;
 }
 
 export function FileDropZone({
     files,
     onAdd,
     onRemove,
-    onReadingChange,
+    onImportingChange,
 }: FileDropZoneProps) {
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const pendingReads = useRef(new Set<AbortController>());
+    const pendingImports = useRef(new Set<AbortController>());
 
     useEffect(() => {
-        const reads = pendingReads.current;
+        const imports = pendingImports.current;
 
-        // A read still running when the editor closes must not land in
+        // An import still running when the editor closes must not land in
         // whichever entry is edited next.
         return () => {
-            for (const read of reads) read.abort();
+            for (const batch of imports) batch.abort();
         };
     }, []);
 
@@ -68,29 +63,34 @@ export function FileDropZone({
     };
 
     const processFiles = async (fileList: File[]) => {
-        const accepted: File[] = [];
+        const accepted: string[] = [];
 
         for (const file of fileList) {
-            const reason = rejectionReason(file);
+            const sourcePath = window.electron.getPathForFile(file);
+            const reason = rejectionReason(file, sourcePath);
 
             if (reason) {
                 toast.error(reason);
             } else {
-                accepted.push(file);
+                accepted.push(sourcePath);
             }
         }
 
         if (accepted.length === 0) return;
 
-        const read = new AbortController();
-        pendingReads.current.add(read);
-        onReadingChange(true);
+        const batch = new AbortController();
+        pendingImports.current.add(batch);
+        onImportingChange(true);
 
+        // The main process copies each file into the open journal; the
+        // renderer only ever holds the URL it hands back.
         const results = await Promise.allSettled(
-            accepted.map((file) => readAsDataUrl(file, read.signal)),
+            accepted.map((sourcePath) =>
+                window.electron.importAttachment(sourcePath),
+            ),
         );
-        pendingReads.current.delete(read);
-        if (read.signal.aborted) return;
+        pendingImports.current.delete(batch);
+        if (batch.signal.aborted) return;
 
         const added = results.flatMap((result) =>
             result.status === "fulfilled" ? [result.value] : [],
@@ -98,10 +98,10 @@ export function FileDropZone({
 
         if (added.length > 0) onAdd(added);
         if (added.length < accepted.length) {
-            toast.error("Couldn't read one or more of the selected files.");
+            toast.error("Couldn't add one or more of the selected files.");
         }
 
-        onReadingChange(pendingReads.current.size > 0);
+        onImportingChange(pendingImports.current.size > 0);
     };
 
     const handleClick = () => {
@@ -177,37 +177,15 @@ export function FileDropZone({
     );
 }
 
-// Why `file` can't be attached, or null when it can.
-function rejectionReason(file: File): string | null {
-    if (VIDEO_TYPES.includes(file.type)) {
-        return file.size > MAX_VIDEO_BYTES
-            ? `${file.name} is larger than 256 MB.`
-            : null;
+// Why `file` can't be attached, or null when it can. `sourcePath` is empty
+// for a file that exists only in memory, such as an image dragged from a web
+// page, which the main process has nothing to copy from.
+function rejectionReason(file: File, sourcePath: string): string | null {
+    if (!file.type.startsWith("image/") && !VIDEO_TYPES.includes(file.type)) {
+        return `${file.name} isn't an image or an MP4 or MOV video.`;
     }
 
-    return file.type.startsWith("image/")
+    return sourcePath
         ? null
-        : `${file.name} isn't an image or an MP4 or MOV video.`;
-}
-
-function readAsDataUrl(file: File, signal: AbortSignal): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        // SAFETY: readAsDataURL always produces a string result.
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(reader.error);
-
-        signal.addEventListener("abort", () => {
-            reader.abort();
-            reject(signal.reason);
-        });
-
-        // Chromium only plays MOV when it is labeled as MP4, the same
-        // container family.
-        reader.readAsDataURL(
-            VIDEO_TYPES.includes(file.type)
-                ? new Blob([file], { type: "video/mp4" })
-                : file,
-        );
-    });
+        : `${file.name} isn't saved on this computer. Save it, then attach the file.`;
 }

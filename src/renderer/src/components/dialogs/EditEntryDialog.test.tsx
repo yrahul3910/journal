@@ -19,26 +19,23 @@ import { EditEntryDialog } from "./EditEntryDialog";
 
 Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
 
-const image = `data:image/png;base64,${btoa("png")}`;
-const video = "data:video/mp4;base64,bW92";
+const image = "journalbear://attachments/photo.png";
+const video = "journalbear://attachments/clip.mp4";
 let root: Root;
-let heldReads: FileReader[];
+let finishHeldImport: (url: string) => void;
 
 beforeEach(() => {
-    // Hold video reads open until a test finishes them, the way a large
+    // Hold video imports open until a test finishes them, the way a large
     // video outlasts a photo picked after it.
-    heldReads = [];
-    const read = FileReader.prototype.readAsDataURL;
-
-    vi.spyOn(FileReader.prototype, "readAsDataURL").mockImplementation(
-        function (this: FileReader, blob: Blob) {
-            if (blob.type === "video/mp4") {
-                heldReads.push(this);
-            } else {
-                read.call(this, blob);
-            }
-        },
-    );
+    vi.stubGlobal("electron", {
+        getPathForFile: (file: File) => `/picked/${file.name}`,
+        importAttachment: (path: string) =>
+            path.endsWith(".mov")
+                ? new Promise<string>((resolve) => {
+                      finishHeldImport = resolve;
+                  })
+                : Promise.resolve(image),
+    });
 
     useJournalStore.setState({
         journalData: { version: 7, entries: [] },
@@ -51,7 +48,7 @@ beforeEach(() => {
 
 afterEach(() => {
     act(() => root.unmount());
-    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     useJournalStore.setState(useJournalStore.getInitialState(), true);
 });
 
@@ -61,7 +58,7 @@ function button(label: RegExp) {
     );
 }
 
-const submit = () => button(/Add Entry|Reading attachments/);
+const submit = () => button(/Add Entry|Adding attachments/);
 
 async function pick(file: File) {
     const input = document.body.querySelector("input[type=file]");
@@ -76,25 +73,22 @@ async function pick(file: File) {
     });
 }
 
-async function finishHeldRead(result: string) {
-    await act(async () => {
-        Object.defineProperty(heldReads[0], "result", { value: result });
-        heldReads[0].dispatchEvent(new Event("load"));
-    });
+async function finishImport(url: string) {
+    await act(async () => finishHeldImport(url));
 }
 
 describe("EditEntryDialog", () => {
-    it("keeps attachments whose reads overlap and waits for them before adding", async () => {
+    it("keeps attachments whose imports overlap and waits for them before adding", async () => {
         await pick(new File(["mov"], "clip.mov", { type: "video/quicktime" }));
         await pick(new File(["png"], "photo.png", { type: "image/png" }));
         await vi.waitFor(() =>
             expect(document.body.querySelector("img")).not.toBeNull(),
         );
 
-        expect(submit()?.textContent).toBe("Reading attachments...");
+        expect(submit()?.textContent).toBe("Adding attachments...");
         expect(submit()?.disabled).toBe(true);
 
-        await finishHeldRead(video);
+        await finishImport(video);
 
         expect(submit()?.textContent).toBe("Add Entry");
         expect(useJournalStore.getState().encodedAttachments).toEqual([
@@ -109,16 +103,16 @@ describe("EditEntryDialog", () => {
         ).toEqual([image, video]);
     });
 
-    it("drops a read that finishes after the editor is closed", async () => {
+    it("drops an import that finishes after the editor is closed", async () => {
         await pick(new File(["mov"], "clip.mov", { type: "video/quicktime" }));
 
         act(() => button(/^Cancel$/)?.click());
         act(() => button(/^Discard$/)?.click());
         expect(useJournalStore.getState().activeDialog).toBeNull();
 
-        // The stale read lands only after the next edit session has begun.
+        // The stale import lands only after the next edit session has begun.
         act(() => useJournalStore.setState({ activeDialog: "edit" }));
-        await finishHeldRead(video);
+        await finishImport(video);
 
         expect(useJournalStore.getState().encodedAttachments).toEqual([]);
         expect(submit()?.textContent).toBe("Add Entry");

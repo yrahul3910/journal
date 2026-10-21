@@ -18,6 +18,7 @@ export function MenuBar() {
     // Track which menu is open so hovering a sibling trigger switches to it
     // (only once a menu has been opened by clicking).
     const [openMenu, setOpenMenu] = useState<MenuName | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const menuProps = (name: MenuName) => ({
         // modal={false} keeps pointer events alive outside the open menu so that
@@ -70,7 +71,6 @@ export function MenuBar() {
             useJournalStore.setState({
                 currentFilePath: result.filePath,
                 currentFileVersion: result.fileVersion,
-                encryptedData: result.encryptedData,
                 viewMode: "journal",
             });
             openDialog("decrypt");
@@ -83,8 +83,10 @@ export function MenuBar() {
             return;
         }
 
+        setIsSaving(true);
         const toastId = toast.loading("Saving journal...");
         const result = await saveJournal();
+        setIsSaving(false);
 
         if (result.success) {
             toast.success("Journal saved successfully!", { id: toastId });
@@ -202,8 +204,11 @@ export function MenuBar() {
                             <DropdownMenuItem onClick={handleOpen}>
                                 Open
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleSave}>
-                                Save
+                            <DropdownMenuItem
+                                onClick={handleSave}
+                                disabled={isSaving}
+                            >
+                                {isSaving ? "Saving..." : "Save"}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleExport}>
                                 Export to HTML

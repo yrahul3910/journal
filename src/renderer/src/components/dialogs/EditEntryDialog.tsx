@@ -55,7 +55,7 @@ export function EditEntryDialog() {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
-    const [isReadingFiles, setIsReadingFiles] = useState(false);
+    const [isImportingFiles, setIsImportingFiles] = useState(false);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     // Snapshot of the form state when the dialog opened, used to detect edits.
@@ -152,7 +152,7 @@ export function EditEntryDialog() {
         setShowEmojiPicker(false);
         setShowDiscardConfirm(false);
         setShowPreview(false);
-        setIsReadingFiles(false);
+        setIsImportingFiles(false);
         initialRef.current = null;
     };
 
@@ -162,10 +162,10 @@ export function EditEntryDialog() {
     };
 
     // Guards every close path (Escape, click outside, Cancel button): if the
-    // entry has unsaved changes or attachments still being read, ask before
+    // entry has unsaved changes or attachments still being added, ask before
     // discarding instead of closing.
     const attemptClose = () => {
-        if (isReadingFiles || isDirty()) {
+        if (isImportingFiles || isDirty()) {
             setShowDiscardConfirm(true);
         } else {
             handleClose();
@@ -334,7 +334,7 @@ export function EditEntryDialog() {
                                 files={encodedAttachments}
                                 onAdd={addEncodedAttachments}
                                 onRemove={removeEncodedAttachment}
-                                onReadingChange={setIsReadingFiles}
+                                onImportingChange={setIsImportingFiles}
                             />
                         </div>
                     </div>
@@ -345,10 +345,10 @@ export function EditEntryDialog() {
                         </Button>
                         <Button
                             onClick={handleSubmit}
-                            disabled={isReadingFiles}
+                            disabled={isImportingFiles}
                         >
-                            {isReadingFiles
-                                ? "Reading attachments..."
+                            {isImportingFiles
+                                ? "Adding attachments..."
                                 : isNewEntry
                                   ? "Add Entry"
                                   : "Update Entry"}

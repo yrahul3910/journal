@@ -17,8 +17,8 @@ beforeEach(() => {
 
 describe("EntryViewer", () => {
     it("plays video attachments inline and shows images as images", () => {
-        const image = "data:image/png;base64,AAAA";
-        const video = "data:video/mp4;base64,AAAA";
+        const image = "journalbear://attachments/photo.png";
+        const video = "journalbear://attachments/clip.mp4";
         useJournalStore.setState({
             selectedEntry: {
                 entryDate: "2026-03-15T12:00:00Z",

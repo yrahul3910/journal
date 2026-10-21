@@ -8,7 +8,6 @@ export interface ElectronAPI {
     openFileDialog: () => Promise<{
         filePath: string;
         fileVersion: number;
-        encryptedData: string;
     } | null>;
     saveFileDialog: () => Promise<string | null>;
     decryptJournal: (args: {
@@ -24,6 +23,10 @@ export interface ElectronAPI {
     exportHtml: (args: {
         html: string;
     }) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    // Copies a picked file into the open journal and resolves to the URL the
+    // renderer loads it from.
+    importAttachment: (sourcePath: string) => Promise<string>;
+    getPathForFile: (file: File) => string;
     saveImageDialog: () => Promise<string | null>;
     checkPasswordStrength: (password: string) => Promise<string[]>;
 }

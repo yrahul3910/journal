@@ -62,7 +62,7 @@ exports[`exportToHTML > generates deterministic HTML for a journal (snapshot) 1`
 <p>Great <strong>day</strong> out.</p></div>
     <div class="entry-images">
       <img src="data:image/png;base64,AAAA" alt="Attachment" />
-      <video controls src="data:video/mp4;base64,AAAA"></video>
+      <video controls src="journalbear://attachments/clip.mp4"></video>
     </div>
   </div>
 

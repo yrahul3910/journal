@@ -1,14 +1,15 @@
-import os from "os";
 import fs from "fs";
 import * as tar from "tar";
 
 /**
- * Creates an .tar.gz file containing the files in the directory
+ * Creates a .tar.gz file containing the files in the directory
  * @param directory - The path to the directory with the journal files, to be zipped
- * @param func - The callback function
+ * @param filename - Where to write the .tar.gz
  */
-export const compress = async (directory: string): Promise<string> => {
-    const filename = `${os.tmpdir()}/_jb_${Date.now()}.tar.gz`;
+export const compress = async (
+    directory: string,
+    filename: string,
+): Promise<void> => {
     await tar.c(
         {
             z: true,
@@ -17,17 +18,17 @@ export const compress = async (directory: string): Promise<string> => {
         },
         fs.readdirSync(directory),
     );
-
-    return filename;
 };
 
 /**
- * Decompresses a .tar.gz file into a fresh `_jbfiles` directory.
+ * Decompresses a .tar.gz file into `directory`, emptying it first.
  * @param filename - The .tar.gz to uncompress
+ * @param directory - Where to extract it
  */
-export const decompress = async (filename: string): Promise<void> => {
-    const directory = `${os.tmpdir()}/_jbfiles`;
-
+export const decompress = async (
+    filename: string,
+    directory: string,
+): Promise<void> => {
     fs.rmSync(directory, { recursive: true, force: true });
     fs.mkdirSync(directory, { recursive: true });
 

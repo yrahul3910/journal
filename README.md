@@ -57,7 +57,7 @@ Code shared between the main and renderer processes.
 Application icons for each platform, referenced from the `electron-builder` configuration.
 
 # File Format
-The `.zjournal` file format is formed as follows. The base is a JSON file called `data.json`. All attachments are stored in an `images` folder beside this JSON file. These two are put in a directory called `_jbfiles` in the temp directory. This directory is compressed to a `.tar.gz` format, and this file is encrypted with AES-256 (AES-256-CBC, with the key derived from the password via PBKDF2 and a random salt and IV).
+The `.zjournal` file format is formed as follows. The base is a JSON file called `data.json`. All attachments, images and videos alike, are stored as plain files in an `images` folder beside this JSON file, and each entry's `attachments` lists their paths (`./_jbfiles/images/<name>`). The extension tells the kinds apart: `.mp4` and `.mov` are videos and everything else is an image; the apps write videos as `.mp4`. The JSON file and the `images` folder are compressed to a `.tar.gz` format, and this file is encrypted with AES-256 (AES-256-CBC, with the key derived from the password via PBKDF2 and a random salt and IV).
 
 The JSON file (format version 7.0) looks like this:
 ```
