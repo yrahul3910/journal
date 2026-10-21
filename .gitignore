@@ -73,4 +73,5 @@ DerivedData/
 
 # Local test journals
 *.zjournal
+!swiftui/JournalBearTests/Fixtures/*.zjournal
 build/

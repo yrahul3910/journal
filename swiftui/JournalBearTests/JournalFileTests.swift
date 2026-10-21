@@ -6,22 +6,18 @@ import SwiftUI
 
 /// Read-path regression tests against a real `.zjournal` file.
 ///
-/// The fixture (`test_journal.zjournal`, password `$Password123`) lives at the repo
-/// root and is gitignored, so we resolve it relative to this source file rather than
-/// bundling it. Tests `#require` it exists and fail loudly if it's missing.
-///
-/// Once the write/encrypt path lands, these should be joined by round-trip tests that
-/// build a `JournalData`, save it, reopen it, and assert equality — no binary fixture
-/// or embedded password needed.
+/// The committed fixture `Fixtures/test_journal.zjournal` (password `$Password123`)
+/// holds three entries: June 16 with two JPEGs, June 15 with no attachments, and
+/// June 14 with `Fixtures/clip.mp4`. Its media is synthetic, so it can live in the
+/// repository and CI. Tests resolve it relative to this source file rather than
+/// bundling it.
 struct JournalFileTests {
     static let password = "$Password123"
 
     static var fixtureURL: URL {
-        URL(fileURLWithPath: #filePath)        // macos/JournalBearTests/JournalFileTests.swift
-            .deletingLastPathComponent()       // macos/JournalBearTests
-            .deletingLastPathComponent()       // macos
-            .deletingLastPathComponent()       // repo root
-            .appendingPathComponent("test_journal.zjournal")
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/test_journal.zjournal")
     }
 
     private static func openFixture(password: String = password) throws -> JournalData {
@@ -35,7 +31,7 @@ struct JournalFileTests {
 
     @Test func opensAndDecodesAllEntries() throws {
         let data = try Self.openFixture()
-        #expect(data.entries.count == 2)
+        #expect(data.entries.count == 3)
     }
 
     @Test func resolvesImageAttachmentsAsValidJPEGs() throws {
@@ -43,18 +39,18 @@ struct JournalFileTests {
 
         // JournalFile.open returns file order; find the entry with attachments
         // rather than assuming an index.
-        let withImages = try #require(data.entries.first { !$0.images.isEmpty })
-        #expect(withImages.images.count == 2)
+        let withImages = try #require(data.entries.first { !$0.media.isEmpty })
+        #expect(withImages.media.count == 2)
 
-        for image in withImages.images {
-            #expect(!image.isEmpty)
-            #expect(image.prefix(3).elementsEqual([0xFF, 0xD8, 0xFF])) // JPEG SOI marker
+        for attachment in withImages.media {
+            #expect(attachment.kind == .image)
+            #expect(attachment.data.prefix(3).elementsEqual([0xFF, 0xD8, 0xFF])) // JPEG SOI marker
         }
     }
 
     @Test func entryWithoutAttachmentsHasNoImages() throws {
         let data = try Self.openFixture()
-        #expect(data.entries.contains { $0.images.isEmpty })
+        #expect(data.entries.contains { $0.media.isEmpty })
     }
 
     @Test func wrongPasswordThrows() throws {
@@ -160,7 +156,7 @@ struct JournalFileTests {
 
     @Test func imageAttachmentsSurviveASaveRoundTrip() throws {
         let original = try Self.openFixture()
-        let withImages = try #require(original.entries.first { !$0.images.isEmpty })
+        let withImages = try #require(original.entries.first { !$0.media.isEmpty })
 
         let out = Self.tempURL()
         defer { try? FileManager.default.removeItem(at: out) }
@@ -169,8 +165,64 @@ struct JournalFileTests {
         let reopened = try JournalFile.open(url: out, password: "pw")
 
         let entry = try #require(reopened.entries.first)
-        #expect(entry.images.count == withImages.images.count)
-        #expect(entry.images.first?.prefix(3).elementsEqual([0xFF, 0xD8, 0xFF]) == true)
+        #expect(entry.media.count == withImages.media.count)
+        #expect(entry.media.first?.data.prefix(3).elementsEqual([0xFF, 0xD8, 0xFF]) == true)
+    }
+
+    // MARK: - Video attachments
+
+    /// A ten-second 90x160 H.264 clip, committed next to these tests.
+    static var clipURL: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/clip.mp4")
+    }
+
+    @Test func videoAttachmentsSurviveASaveRoundTripAsMP4() throws {
+        let clip = try Data(contentsOf: Self.clipURL)
+        let png = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+        let out = Self.tempURL()
+        defer { try? FileManager.default.removeItem(at: out) }
+
+        try JournalFile.save(
+            [
+                JournalEntry(
+                    entryDate: "2030-01-02T03:04:05Z",
+                    content: "A video day",
+                    sentiment: "Happy",
+                    media: [MediaAttachment(kind: .image, data: png), MediaAttachment(kind: .video, data: clip)]
+                )
+            ],
+            to: out,
+            password: "round-trip-pw"
+        )
+        let entry = try #require(try JournalFile.open(url: out, password: "round-trip-pw").entries.first)
+
+        #expect(entry.media.map(\.kind) == [.image, .video])
+        #expect(entry.media.last?.data == clip)
+        #expect(entry.attachments.map { URL(fileURLWithPath: $0).pathExtension } == ["png", "mp4"])
+    }
+
+    @Test func classifiesAttachmentsByFileExtension() {
+        #expect(MediaAttachment(data: Data(), filename: "clip.mp4").kind == .video)
+        #expect(MediaAttachment(data: Data(), filename: "IMG_0001.MOV").kind == .video)
+        #expect(MediaAttachment(data: Data(), filename: "photo.jpg").kind == .image)
+        #expect(MediaAttachment(data: Data(), filename: "untitled").kind == .image)
+    }
+
+    /// Playback reads the decrypted bytes through a resource loader, never a
+    /// temporary file. A slice checks that byte ranges are taken relative to
+    /// the data's own start index.
+    @Test func playsVideoBytesFromMemory() async throws {
+        let attachment = try #require(Self.openFixture().entries.flatMap(\.media).first { $0.kind == .video })
+        let video = InMemoryVideo(data: (Data(repeating: 0, count: 3) + attachment.data).dropFirst(3))
+
+        let (isPlayable, duration) = try await video.asset.load(.isPlayable, .duration)
+        #expect(isPlayable)
+        #expect(abs(duration.seconds - 10) < 0.1)
+
+        let aspectRatio = try #require(await video.displayAspectRatio())
+        #expect(abs(aspectRatio - 90.0 / 160.0) < 0.01)
     }
 
     // MARK: - Date parsing

@@ -18,31 +18,41 @@ struct NewEntryView: View {
     @State var date = Date()
     @State var sentiment = "Neutral"
     @State var content = ""
-    @State var images: [Data] = []
+    @State var media: [MediaAttachment] = []
 
     // Snapshot the seeded values on appear so `isDirty` reflects only the
     // user's edits, not the values the dialog opened with.
     @State private var initialDate = Date()
     @State private var initialSentiment = "Neutral"
     @State private var initialContent = ""
-    @State private var initialImages: [Data] = []
+    @State private var initialMedia: [MediaAttachment] = []
 
     @State private var showDiscardConfirmation = false
+    @State private var showOversizedVideoAlert = false
 #if os(macOS)
-    @State private var showImageImporter = false
+    @State private var showMediaImporter = false
 #else
     @State private var photoSelection: [PhotosPickerItem] = []
+    @State private var pendingMediaLoads = 0
 #endif
 
     private var canSave: Bool {
-        !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+#if os(iOS)
+        // Picked videos can take a while to load; saving before they arrive
+        // would silently drop them.
+        guard pendingMediaLoads == 0 else { return false }
+#endif
+        return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    // Attachments are compared by id: an attachment never changes once made,
+    // and this runs on every view update, where comparing bytes would scan
+    // whole videos.
     private var isDirty: Bool {
         date != initialDate ||
         sentiment != initialSentiment ||
         content != initialContent ||
-        images != initialImages
+        media.map(\.id) != initialMedia.map(\.id)
     }
 
     var body: some View {
@@ -77,16 +87,23 @@ struct NewEntryView: View {
                             Text("Attachments").font(.subheadline).foregroundStyle(.secondary)
                             Spacer()
 #if os(macOS)
-                            Button("Add Images…") { showImageImporter = true }
+                            Button("Add Images or Videos…") { showMediaImporter = true }
 #else
-                            PhotosPicker("Add Images…", selection: $photoSelection, matching: .images)
+                            if pendingMediaLoads > 0 {
+                                ProgressView().controlSize(.small)
+                            }
+                            PhotosPicker(
+                                "Add Images or Videos…",
+                                selection: $photoSelection,
+                                matching: .any(of: [.images, .videos])
+                            )
 #endif
                         }
-                        if !images.isEmpty {
+                        if !media.isEmpty {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 10) {
-                                    ForEach(Array(images.enumerated()), id: \.offset) { index, data in
-                                        thumbnail(data, index: index)
+                                    ForEach(Array(media.enumerated()), id: \.element.id) { index, attachment in
+                                        thumbnail(attachment, index: index)
                                     }
                                 }
                             }
@@ -112,20 +129,20 @@ struct NewEntryView: View {
 #if os(macOS)
         .frame(width: 520, height: 640)
         .fileImporter(
-            isPresented: $showImageImporter,
-            allowedContentTypes: [.png, .jpeg],
+            isPresented: $showMediaImporter,
+            allowedContentTypes: [.png, .jpeg, .mpeg4Movie, .quickTimeMovie],
             allowsMultipleSelection: true
         ) { result in
-            addImages(from: result)
+            addMedia(from: result)
         }
 #else
-        .onChange(of: photoSelection) { loadPickedPhotos() }
+        .onChange(of: photoSelection) { loadPickedMedia() }
 #endif
         .onAppear {
             initialDate = date
             initialSentiment = sentiment
             initialContent = content
-            initialImages = images
+            initialMedia = media
 #if DEBUG
             if let testDraft = ProcessInfo.processInfo.environment[
                 "JOURNALBEAR_UI_TEST_ENTRY_DRAFT"
@@ -146,21 +163,42 @@ struct NewEntryView: View {
         } message: {
             Text("Your entry has unsaved changes. If you discard, they will be lost.")
         }
+        .alert("Video Too Large", isPresented: $showOversizedVideoAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Videos larger than \(Int64(MediaAttachment.maxVideoBytes).formatted(.byteCount(style: .memory))) can't be attached.")
+        }
     }
 
     @ViewBuilder
-    private func thumbnail(_ data: Data, index: Int) -> some View {
+    private func thumbnail(_ attachment: MediaAttachment, index: Int) -> some View {
         ZStack(alignment: .topTrailing) {
-            AttachmentImage(
-                data: data,
-                cacheKey: AttachmentImage.cacheKey(scope: "editor", index: index, data: data),
-                maxPixelSize: 300,
-                contentMode: .fill
-            )
+            Group {
+                switch attachment.kind {
+                case .image:
+                    AttachmentImage(
+                        data: attachment.data,
+                        cacheKey: AttachmentImage.cacheKey(scope: "editor", index: index, data: attachment.data),
+                        maxPixelSize: 300,
+                        contentMode: .fill
+                    )
+                case .video:
+                    Rectangle()
+                        .fill(.quaternary)
+                        .overlay {
+                            Image(systemName: "video.fill")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Video")
+                }
+            }
             .frame(width: 92, height: 92)
             .clipShape(RoundedRectangle(cornerRadius: 8))
+            .accessibilityIdentifier("editor-attachment-\(index)")
             Button {
-                images.remove(at: index)
+                media.remove(at: index)
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundStyle(.white, .black.opacity(0.6))
@@ -170,25 +208,56 @@ struct NewEntryView: View {
         }
     }
 
+    /// Adds `attachment`, or raises the size alert for a video over the
+    /// shared limit.
+    private func attach(_ attachment: MediaAttachment) {
+        if attachment.kind == .video && attachment.data.count > MediaAttachment.maxVideoBytes {
+            showOversizedVideoAlert = true
+        } else {
+            media.append(attachment)
+        }
+    }
+
 #if os(macOS)
-    private func addImages(from result: Result<[URL], Error>) {
+    private func addMedia(from result: Result<[URL], Error>) {
         guard case .success(let urls) = result else { return }
         for url in urls {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-            if let data = try? Data(contentsOf: url) { images.append(data) }
+
+            // The importer also admits .m4v, .mpg4, and .qt files, which conform
+            // to the movie types it allows, so classify by content type rather
+            // than by the archive's extension rule.
+            let values = try? url.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey])
+            let kind: MediaAttachment.Kind = values?.contentType?.conforms(to: .movie) == true ? .video : .image
+
+            // Reject oversized videos before reading them into memory.
+            if kind == .video, (values?.fileSize ?? 0) > MediaAttachment.maxVideoBytes {
+                showOversizedVideoAlert = true
+                continue
+            }
+
+            if let data = try? Data(contentsOf: url) {
+                attach(MediaAttachment(kind: kind, data: data))
+            }
         }
     }
 #else
-    private func loadPickedPhotos() {
+    private func loadPickedMedia() {
         let items = photoSelection
         photoSelection = []
         guard !items.isEmpty else { return }
+        pendingMediaLoads += 1
         Task {
+            defer { pendingMediaLoads -= 1 }
+
             for item in items {
-                if let data = try? await item.loadTransferable(type: Data.self),
-                   let normalized = normalizedImageData(data) {
-                    images.append(normalized)
+                guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+
+                if item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) }) {
+                    attach(MediaAttachment(kind: .video, data: data))
+                } else if let normalized = normalizedImageData(data) {
+                    attach(MediaAttachment(kind: .image, data: normalized))
                 }
             }
         }
@@ -218,7 +287,7 @@ struct NewEntryView: View {
             entryDate: ISO8601DateFormatter().string(from: date),
             content: content,
             sentiment: sentiment,
-            images: images
+            media: media
         )
         if let editingID {
             store.updateEntry(entry, id: editingID)

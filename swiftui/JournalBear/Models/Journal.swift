@@ -7,11 +7,49 @@ struct JournalData: Decodable {
     var entries: [JournalEntry]
 }
 
+/// One attachment's bytes, decoded from the archive or picked by the user.
+///
+/// Images and videos share the archive's `images/` directory; the file
+/// extension tells them apart (see `init(data:filename:)`).
+struct MediaAttachment: Identifiable {
+    enum Kind {
+        case image
+        case video
+    }
+
+    /// The archive file extensions read as video. The Electron and SwiftUI
+    /// apps write videos as `.mp4`; `.mov` is accepted too since it is the same
+    /// container family.
+    static let videoFileExtensions: Set<String> = ["mp4", "mov"]
+
+    /// The largest video the Electron and SwiftUI apps accept. Electron holds each
+    /// attachment as one base64 string, which V8 caps at about 383 MiB of
+    /// data, so a larger video would make the journal unopenable there.
+    static let maxVideoBytes = 256 * 1024 * 1024
+
+    let id = UUID()
+    let kind: Kind
+    let data: Data
+
+    init(kind: Kind, data: Data) {
+        self.kind = kind
+        self.data = data
+    }
+
+    /// Classifies `data` by the extension of `filename`, the same way the
+    /// archive is read.
+    init(data: Data, filename: String) {
+        let fileExtension = URL(fileURLWithPath: filename).pathExtension.lowercased()
+        self.init(kind: Self.videoFileExtensions.contains(fileExtension) ? .video : .image, data: data)
+    }
+}
+
 /// A single journal entry.
 ///
-/// `attachments` is a list of image references stored under `images/` in the
-/// archive. Decoding stays tolerant of `entryDate` being a string or epoch number
-/// and of a missing `attachments`, so one odd field never fails the whole load.
+/// `attachments` is a list of image and video references stored under
+/// `images/` in the archive. Decoding stays tolerant of `entryDate` being a
+/// string or epoch number and of a missing `attachments`, so one odd field
+/// never fails the whole load.
 final class JournalEntry: Identifiable, Decodable, ObservableObject {
     let id = UUID()
     @Published var entryDate: String
@@ -19,9 +57,9 @@ final class JournalEntry: Identifiable, Decodable, ObservableObject {
     var sentiment: String
     var attachments: [String]
 
-    /// Decoded image bytes for `attachments`, resolved against the archive at open
-    /// time. Not part of the JSON; populated by `JournalFile`.
-    var images: [Data] = []
+    /// The decoded attachments for `attachments`, resolved against the archive
+    /// at open time. Not part of the JSON; populated by `JournalFile`.
+    var media: [MediaAttachment] = []
 
     private enum CodingKeys: String, CodingKey {
         case entryDate, content, sentiment, attachments
@@ -32,13 +70,13 @@ final class JournalEntry: Identifiable, Decodable, ObservableObject {
         content: String,
         sentiment: String,
         attachments: [String] = [],
-        images: [Data] = []
+        media: [MediaAttachment] = []
     ) {
         self.entryDate = entryDate
         self.content = content
         self.sentiment = sentiment
         self.attachments = attachments
-        self.images = images
+        self.media = media
     }
 
     init(from decoder: Decoder) throws {

@@ -3,9 +3,12 @@ import XCTest
 extension XCUIApplication {
     /// Launch with macOS window restoration disabled: a previous run's
     /// killed instance would otherwise restore its window next to the fresh
-    /// one, making every element query ambiguous.
+    /// one, making every element query ambiguous. The saved split-view layout
+    /// is blanked for this launch too, so a sidebar collapsed in everyday use
+    /// doesn't hide the entry list from tests.
     func launchClean() {
         launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        launchArguments += ["-NSSplitView Subview Frames main, SidebarNavigationSplitView", "()"]
         launch()
     }
 }

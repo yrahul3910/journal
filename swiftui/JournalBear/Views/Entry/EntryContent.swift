@@ -29,40 +29,29 @@ struct EntryContent: View {
                 .textual.textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
-            if !entry.images.isEmpty {
+            if !entry.media.isEmpty {
                 Divider()
                 Label(
-                    "^[\(entry.images.count) attachment](inflect: true)",
+                    "^[\(entry.media.count) attachment](inflect: true)",
                     systemImage: "paperclip"
                 )
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 
-                ForEach(Array(entry.images.enumerated()), id: \.offset) { index, data in
-                    Button {
-#if os(macOS)
-                        AttachmentPreviewWindowController.shared.show(
-                            images: entry.images,
-                            cacheScope: entry.id.uuidString,
-                            startAt: index
-                        )
-#else
-                        preview = AttachmentPreview(index: index)
-#endif
-                    } label: {
-                        AttachmentImage(
-                            data: data,
-                            cacheKey: AttachmentImage.cacheKey(
-                                scope: entry.id.uuidString, index: index, data: data
-                            )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                ForEach(Array(entry.media.enumerated()), id: \.element.id) { index, attachment in
+                    switch attachment.kind {
+                    case .image:
+                        imageButton(attachment.data, index: index)
+                    case .video:
+                        AttachmentVideo(data: attachment.data)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
+                            // The platform player view drops identifiers, so a
+                            // container element carries it around the controls.
+                            .accessibilityElement(children: .contain)
+                            .accessibilityIdentifier("entry-attachment-\(index)")
+                            .accessibilityLabel("Video attachment \(index + 1)")
                     }
-                    .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
-                    .accessibilityIdentifier("entry-attachment-\(index)")
-                    .accessibilityLabel("Attachment \(index + 1)")
-                    .help("View full size")
                 }
             } else if !entry.attachments.isEmpty {
                 Label(
@@ -77,7 +66,7 @@ struct EntryContent: View {
 #if os(iOS)
         .fullScreenCover(item: $preview) { preview in
             AttachmentPreviewView(
-                images: entry.images,
+                images: images,
                 cacheScope: entry.id.uuidString,
                 startAt: preview.index
             )
@@ -100,6 +89,43 @@ struct EntryContent: View {
             }
         }
 #endif
+    }
+
+    /// The entry's images, which the full-size viewer pages through. Videos
+    /// play inline instead, so they are left out.
+    private var images: [Data] {
+        entry.media.filter { $0.kind == .image }.map(\.data)
+    }
+
+    /// An inline image that opens the full-size viewer. `index` is the
+    /// image's position among all of the entry's attachments.
+    private func imageButton(_ data: Data, index: Int) -> some View {
+        let imageIndex = entry.media[..<index].count { $0.kind == .image }
+
+        return Button {
+#if os(macOS)
+            AttachmentPreviewWindowController.shared.show(
+                images: images,
+                cacheScope: entry.id.uuidString,
+                startAt: imageIndex
+            )
+#else
+            preview = AttachmentPreview(index: imageIndex)
+#endif
+        } label: {
+            AttachmentImage(
+                data: data,
+                cacheKey: AttachmentImage.cacheKey(
+                    scope: entry.id.uuidString, index: index, data: data
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, maxHeight: 480, alignment: .leading)
+        .accessibilityIdentifier("entry-attachment-\(index)")
+        .accessibilityLabel("Attachment \(index + 1)")
+        .help("View full size")
     }
 }
 

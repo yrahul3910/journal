@@ -229,7 +229,7 @@ struct ContentView: View {
                     date: JournalEntry.parseDate(entry.entryDate) ?? Date(),
                     sentiment: entry.sentiment,
                     content: entry.content,
-                    images: entry.images
+                    media: entry.media
                 )
                 .environmentObject(store)
                 .journalLockOverlay()

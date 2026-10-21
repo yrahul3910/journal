@@ -13,8 +13,7 @@ final class JournalSearchUITests: XCTestCase {
         let fixtureURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("test_journal.zjournal")
+            .appendingPathComponent("JournalBearTests/Fixtures/test_journal.zjournal")
         XCTAssertTrue(FileManager.default.fileExists(atPath: fixtureURL.path))
 
         let app = XCUIApplication()

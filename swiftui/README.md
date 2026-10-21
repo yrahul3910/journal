@@ -89,10 +89,7 @@ DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" \
 Those overrides keep the test run ad-hoc signed on purpose, even when a team is
 available — nothing here needs a real identity, and skipping profile resolution
 is faster.
-The read-path tests open `test_journal.zjournal` from the repo root (gitignored;
-its password is embedded in the test). When the write path lands, add round-trip
-tests that build → save → reopen → assert, so no committed fixture or password
-is needed.
+Tests that read a journal open the committed fixture `JournalBearTests/Fixtures/test_journal.zjournal` (password `$Password123`, embedded in the tests). It holds three entries: one with two generated JPEGs, one with no attachments, and one with the ten-second `Fixtures/clip.mp4`. All of its media is synthetic, so it is safe to keep in the repository and run in CI. `launchClean()` also blanks the saved sidebar layout for each UI test launch, so a sidebar collapsed in everyday use doesn't hide the entry list.
 
 ## Layout
 - `JournalBear/JournalBearApp.swift` — app entry, menu commands.
@@ -106,28 +103,18 @@ is needed.
   - `JournalFile.swift` — orchestrates decrypt → gunzip → untar → parse `data.json`.
 
 ## File format
-`.zjournal` = `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`, where the
-plaintext is a gzip-compressed tar of `data.json` plus an `images/` directory.
-This matches the Electron app's `src/main/encryption.ts` and `archive.ts`.
+`.zjournal` = `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`, where the plaintext is a gzip-compressed tar of `data.json` plus an `images/` directory. This matches the Electron app's `src/main/encryption.ts` and `archive.ts`.
+
+`images/` holds every attachment as a plain file, videos included, and each entry's `attachments` lists their paths. The file extension tells the kinds apart: `.mp4` and `.mov` are videos and everything else is an image. The Electron and SwiftUI apps write videos as `.mp4`; MOV is the same container family, and Chromium and AVFoundation both play it under that name. Videos over 256 MB are rejected when attached, because the Electron app holds each attachment as one base64 string and V8 caps strings at about 383 MiB of data.
 
 ## Status
-Targets the **7.0 format only** — no legacy fallbacks. Read path: opens and
-decrypts a `.zjournal`, lists entries, renders structured Markdown entry content
-with Textual, and renders image attachments inline (every image is a plain file
-under `images/`).
-Emoji shortcodes (`:smile:`) are intentionally unsupported — Unicode only.
-Markdown image URLs are intentionally not fetched; journal attachments are rendered
-from the encrypted archive.
+Targets the **7.0 format only** — no legacy fallbacks. Read path: opens and decrypts a `.zjournal`, lists entries, renders structured Markdown entry content with Textual, renders image attachments inline, and plays video attachments inline (paused until played) from memory, without writing decrypted video to disk. Emoji shortcodes (`:smile:`) are intentionally unsupported — Unicode only. Markdown image URLs are intentionally not fetched; journal attachments are rendered from the encrypted archive.
 
 The entries array is still read under the key `en` transitionally; 7.0 renames it
 to `entries`, switched over once a real 7.0 file exists to test against. A full
 format spec will live in a design doc in the repo root.
 
-Write path: **New Entry** (⌘N / toolbar) composes an entry (date, mood, Markdown
-content, image attachments) and re-encrypts the whole journal back to the
-open file, in the same format the Electron app reads. Saving is verified by
-round-trip tests; cross-app interop (Electron opening a SwiftUI-saved file) hasn't
-been verified yet.
+Write path: **New Entry** (⌘N / toolbar) composes an entry (date, mood, Markdown content, image and video attachments) and re-encrypts the whole journal back to the open file, in the same format the Electron app reads. Saving is verified by round-trip tests; cross-app interop (Electron opening a SwiftUI-saved file) hasn't been verified yet.
 
 Not yet implemented: deleting entries, statistics.
 

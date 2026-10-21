@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DD0000000000000000000001 /* Textual in Frameworks */ = {isa = PBXBuildFile; productRef = DD0000000000000000000003 /* Textual */; };
+		EE0000000000000000000001 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000002 /* AVKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -24,6 +25,7 @@
 		AA0000000000000000000006 /* JournalBear for Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "JournalBear for Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0000000000000000000002 /* JournalBearTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JournalBearTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC0000000000000000000002 /* JournalBearUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JournalBearUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE0000000000000000000002 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -50,6 +52,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD0000000000000000000001 /* Textual in Frameworks */,
+				EE0000000000000000000001 /* AVKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +80,7 @@
 				CC0000000000000000000003 /* JournalBearUITests */,
 				AA0000000000000000000003 /* Products */,
 				AA0000000000000000000004 /* JournalBear */,
+				EE0000000000000000000003 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -88,6 +92,14 @@
 				CC0000000000000000000002 /* JournalBearUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		EE0000000000000000000003 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EE0000000000000000000002 /* AVKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

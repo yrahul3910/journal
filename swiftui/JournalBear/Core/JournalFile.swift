@@ -17,7 +17,7 @@ struct JournalError: Error {
 /// On-disk layout (produced by the Electron app):
 ///   `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`
 /// where the plaintext is a gzip-compressed tar containing `data.json` and an
-/// `images/` directory holding every attachment as a plain image file.
+/// `images/` directory holding every attachment, image or video, as a plain file.
 enum JournalFile {
     static func open(url: URL, password: String) throws -> JournalData {
         // URLs from the system file pickers are security-scoped on iOS (and in
@@ -52,9 +52,9 @@ enum JournalFile {
         // Every attachment is a file under `images/`, referenced by name.
         data.entries = data.entries.map { entry in
             var resolved = entry
-            resolved.images = entry.attachments.compactMap { reference in
+            resolved.media = entry.attachments.compactMap { reference in
                 let filename = reference.split(separator: "/").last.map(String.init) ?? reference
-                return files["images/" + filename]
+                return files["images/" + filename].map { MediaAttachment(data: $0, filename: filename) }
             }
             return resolved
         }
@@ -87,9 +87,9 @@ enum JournalFile {
 
         for entry in entries {
             var refs: [String] = []
-            for image in entry.images {
-                let filename = "\(UUID().uuidString).\(imageExtension(image))"
-                archiveFiles.append((name: "images/\(filename)", data: image))
+            for attachment in entry.media {
+                let filename = "\(UUID().uuidString).\(fileExtension(for: attachment))"
+                archiveFiles.append((name: "images/\(filename)", data: attachment.data))
                 refs.append("./_jbfiles/images/\(filename)")
             }
             diskEntries.append(DiskEntry(
@@ -117,12 +117,22 @@ enum JournalFile {
         return output
     }
 
-    private static func imageExtension(_ data: Data) -> String {
-        // PNG signature 89 50 4E 47; everything else is treated as JPEG.
-        if data.count >= 4, data[0] == 0x89, data[1] == 0x50, data[2] == 0x4E, data[3] == 0x47 {
-            return "png"
+    /// Videos are archived as `.mp4` whatever their source container: MOV and
+    /// MP4 share the ISO base media format, and both apps play either under
+    /// that name.
+    private static func fileExtension(for attachment: MediaAttachment) -> String {
+        let data = attachment.data
+
+        switch attachment.kind {
+        case .video:
+            return "mp4"
+        case .image:
+            // PNG signature 89 50 4E 47; everything else is treated as JPEG.
+            if data.count >= 4, data[0] == 0x89, data[1] == 0x50, data[2] == 0x4E, data[3] == 0x47 {
+                return "png"
+            }
+            return "jpg"
         }
-        return "jpg"
     }
 }
 

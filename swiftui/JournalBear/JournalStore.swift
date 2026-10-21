@@ -261,7 +261,7 @@ final class JournalStore: ObservableObject {
         updated[index].entryDate = entry.entryDate
         updated[index].content = entry.content
         updated[index].sentiment = entry.sentiment
-        updated[index].images = entry.images
+        updated[index].media = entry.media
         entries = sortedByDateDescending(updated)
         changeToken &+= 1
         hasUnsavedChanges = true
