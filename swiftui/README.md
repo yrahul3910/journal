@@ -105,7 +105,7 @@ Tests that read a journal open the committed fixture `JournalBearTests/Fixtures/
 ## File format
 `.zjournal` = `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`, where the plaintext is a gzip-compressed tar of `data.json` plus an `images/` directory. This matches the Electron app's `src/main/encryption.ts` and `archive.ts`.
 
-`images/` holds every attachment as a plain file, videos included, and each entry's `attachments` lists their paths. The file extension tells the kinds apart: `.mp4` and `.mov` are videos and everything else is an image. The Electron and SwiftUI apps write videos as `.mp4`; MOV is the same container family, and Chromium and AVFoundation both play it under that name. Videos over 256 MB are rejected when attached, because the Electron app holds each attachment as one base64 string and V8 caps strings at about 383 MiB of data.
+`images/` holds every attachment as a plain file, videos included, and each entry's `attachments` lists their paths. The file extension tells the kinds apart: `.mp4` and `.mov` are videos and everything else is an image. The Electron and SwiftUI apps write videos as `.mp4`; MOV is the same container family, and Chromium and AVFoundation both play it under that name.
 
 ## Status
 Targets the **7.0 format only** — no legacy fallbacks. Read path: opens and decrypts a `.zjournal`, lists entries, renders structured Markdown entry content with Textual, renders image attachments inline, and plays video attachments inline (paused until played) from memory, without writing decrypted video to disk. Emoji shortcodes (`:smile:`) are intentionally unsupported — Unicode only. Markdown image URLs are intentionally not fetched; journal attachments are rendered from the encrypted archive.

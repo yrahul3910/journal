@@ -28,7 +28,6 @@ struct NewEntryView: View {
     @State private var initialMedia: [MediaAttachment] = []
 
     @State private var showDiscardConfirmation = false
-    @State private var showOversizedVideoAlert = false
 #if os(macOS)
     @State private var showMediaImporter = false
 #else
@@ -163,11 +162,6 @@ struct NewEntryView: View {
         } message: {
             Text("Your entry has unsaved changes. If you discard, they will be lost.")
         }
-        .alert("Video Too Large", isPresented: $showOversizedVideoAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Videos larger than \(Int64(MediaAttachment.maxVideoBytes).formatted(.byteCount(style: .memory))) can't be attached.")
-        }
     }
 
     @ViewBuilder
@@ -208,16 +202,6 @@ struct NewEntryView: View {
         }
     }
 
-    /// Adds `attachment`, or raises the size alert for a video over the
-    /// shared limit.
-    private func attach(_ attachment: MediaAttachment) {
-        if attachment.kind == .video && attachment.data.count > MediaAttachment.maxVideoBytes {
-            showOversizedVideoAlert = true
-        } else {
-            media.append(attachment)
-        }
-    }
-
 #if os(macOS)
     private func addMedia(from result: Result<[URL], Error>) {
         guard case .success(let urls) = result else { return }
@@ -228,17 +212,11 @@ struct NewEntryView: View {
             // The importer also admits .m4v, .mpg4, and .qt files, which conform
             // to the movie types it allows, so classify by content type rather
             // than by the archive's extension rule.
-            let values = try? url.resourceValues(forKeys: [.contentTypeKey, .fileSizeKey])
-            let kind: MediaAttachment.Kind = values?.contentType?.conforms(to: .movie) == true ? .video : .image
-
-            // Reject oversized videos before reading them into memory.
-            if kind == .video, (values?.fileSize ?? 0) > MediaAttachment.maxVideoBytes {
-                showOversizedVideoAlert = true
-                continue
-            }
+            let contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType
+            let kind: MediaAttachment.Kind = contentType?.conforms(to: .movie) == true ? .video : .image
 
             if let data = try? Data(contentsOf: url) {
-                attach(MediaAttachment(kind: kind, data: data))
+                media.append(MediaAttachment(kind: kind, data: data))
             }
         }
     }
@@ -255,9 +233,9 @@ struct NewEntryView: View {
                 guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
 
                 if item.supportedContentTypes.contains(where: { $0.conforms(to: .movie) }) {
-                    attach(MediaAttachment(kind: .video, data: data))
+                    media.append(MediaAttachment(kind: .video, data: data))
                 } else if let normalized = normalizedImageData(data) {
-                    attach(MediaAttachment(kind: .image, data: normalized))
+                    media.append(MediaAttachment(kind: .image, data: normalized))
                 }
             }
         }

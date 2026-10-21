@@ -22,11 +22,6 @@ struct MediaAttachment: Identifiable {
     /// container family.
     static let videoFileExtensions: Set<String> = ["mp4", "mov"]
 
-    /// The largest video the Electron and SwiftUI apps accept. Electron holds each
-    /// attachment as one base64 string, which V8 caps at about 383 MiB of
-    /// data, so a larger video would make the journal unopenable there.
-    static let maxVideoBytes = 256 * 1024 * 1024
-
     let id = UUID()
     let kind: Kind
     let data: Data
