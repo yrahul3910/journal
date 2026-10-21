@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import { format } from "date-fns";
 import { SENTIMENT_COLORS } from "@/types/journal";
 import { ImageModal } from "@/components/dialogs/ImageModal";
+import { isVideo } from "@/lib/attachments";
 import { useState } from "react";
 
 export function EntryViewer() {
@@ -58,22 +59,42 @@ export function EntryViewer() {
                                 Attachments
                             </h3>
                             <div className="grid grid-cols-2 gap-4">
-                                {selectedEntry.attachments.map((img, idx) => (
-                                    <div key={idx} className="relative group">
-                                        <img
-                                            src={img}
-                                            alt={`Attachment ${idx + 1}`}
-                                            className="rounded-lg border shadow-sm w-full h-auto cursor-pointer hover:shadow-md transition-shadow"
-                                            onClick={() =>
-                                                setSelectedImage(img)
-                                            }
-                                            onContextMenu={(e) => {
-                                                e.preventDefault();
-                                                handleImageContextMenu(img);
-                                            }}
-                                        />
-                                    </div>
-                                ))}
+                                {selectedEntry.attachments.map(
+                                    (attachment, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="relative group"
+                                        >
+                                            {isVideo(attachment) ? (
+                                                // biome-ignore lint/a11y/useMediaCaption: user videos have no captions
+                                                <video
+                                                    src={attachment}
+                                                    controls
+                                                    preload="metadata"
+                                                    aria-label={`Attachment ${idx + 1}`}
+                                                    className="rounded-lg border shadow-sm w-full h-auto"
+                                                />
+                                            ) : (
+                                                <img
+                                                    src={attachment}
+                                                    alt={`Attachment ${idx + 1}`}
+                                                    className="rounded-lg border shadow-sm w-full h-auto cursor-pointer hover:shadow-md transition-shadow"
+                                                    onClick={() =>
+                                                        setSelectedImage(
+                                                            attachment,
+                                                        )
+                                                    }
+                                                    onContextMenu={(e) => {
+                                                        e.preventDefault();
+                                                        handleImageContextMenu(
+                                                            attachment,
+                                                        );
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    ),
+                                )}
                             </div>
                         </div>
                     )}

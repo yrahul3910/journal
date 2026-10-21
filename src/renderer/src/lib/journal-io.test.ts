@@ -13,7 +13,10 @@ const fixture: JournalData = {
             entryDate: "2026-03-15T12:00:00Z",
             content: "# Trip\n\nGreat **day** out.",
             sentiment: "Happy",
-            attachments: ["data:image/png;base64,AAAA"],
+            attachments: [
+                "data:image/png;base64,AAAA",
+                "data:video/mp4;base64,AAAA",
+            ],
         },
         {
             entryDate: "2026-01-02T12:00:00Z",

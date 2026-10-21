@@ -31,7 +31,7 @@ const STEPS = [
                     <li>Click "Entry" → "New Entry" in the menu</li>
                     <li>Select a date and how you're feeling</li>
                     <li>Write your entry using Markdown formatting</li>
-                    <li>Add emoji and images if you'd like</li>
+                    <li>Add emoji, images, and videos if you'd like</li>
                     <li>Click "Add Entry" to save</li>
                 </ol>
             </div>

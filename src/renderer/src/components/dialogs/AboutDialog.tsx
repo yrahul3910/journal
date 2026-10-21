@@ -33,7 +33,7 @@ export function AboutDialog() {
                         <ul className="text-sm space-y-1 list-disc list-inside">
                             <li>AES-256 encryption for maximum security</li>
                             <li>Markdown formatting support</li>
-                            <li>Image attachments</li>
+                            <li>Image and video attachments</li>
                             <li>Sentiment tracking</li>
                             <li>Statistics and insights</li>
                             <li>Dark mode support</li>

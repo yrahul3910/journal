@@ -1,6 +1,6 @@
 import { JournalEntry, SENTIMENT_COLORS } from "@/types/journal";
 import { format } from "date-fns";
-import { ImageIcon } from "lucide-react";
+import { Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EntryCardProps {
@@ -52,7 +52,7 @@ export function EntryCard({ entry, isSelected, onClick }: EntryCardProps) {
                             {format(date, "MMM dd, yyyy")}
                         </p>
                         {hasAttachments && (
-                            <ImageIcon className="h-3 w-3 text-muted-foreground" />
+                            <Paperclip className="h-3 w-3 text-muted-foreground" />
                         )}
                     </div>
 

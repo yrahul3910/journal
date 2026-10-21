@@ -28,7 +28,7 @@ interface JournalStore {
     // Edit entry state
     editingEntry: JournalEntry | null;
     isNewEntry: boolean;
-    encodedImages: string[];
+    encodedAttachments: string[];
 
     // Actions - Data management
     setJournalData: (data: JournalData | null) => void;
@@ -55,7 +55,9 @@ interface JournalStore {
     // Actions - Edit entry
     setEditingEntry: (entry: JournalEntry | null) => void;
     setIsNewEntry: (isNew: boolean) => void;
-    setEncodedImages: (images: string[]) => void;
+    setEncodedAttachments: (attachments: string[]) => void;
+    addEncodedAttachments: (attachments: string[]) => void;
+    removeEncodedAttachment: (index: number) => void;
     clearEditState: () => void;
 
     // Computed
@@ -80,7 +82,7 @@ export const useJournalStore = create<JournalStore>((set, get) => ({
     statisticsFilter: {},
     editingEntry: null,
     isNewEntry: false,
-    encodedImages: [],
+    encodedAttachments: [],
 
     // Data management actions
     setJournalData: (data) => set({ journalData: data }),
@@ -175,12 +177,23 @@ export const useJournalStore = create<JournalStore>((set, get) => ({
     // Edit entry actions
     setEditingEntry: (entry) => set({ editingEntry: entry }),
     setIsNewEntry: (isNew) => set({ isNewEntry: isNew }),
-    setEncodedImages: (images) => set({ encodedImages: images }),
+    setEncodedAttachments: (attachments) =>
+        set({ encodedAttachments: attachments }),
+    addEncodedAttachments: (attachments) =>
+        set((state) => ({
+            encodedAttachments: [...state.encodedAttachments, ...attachments],
+        })),
+    removeEncodedAttachment: (index) =>
+        set((state) => ({
+            encodedAttachments: state.encodedAttachments.filter(
+                (_, i) => i !== index,
+            ),
+        })),
     clearEditState: () =>
         set({
             editingEntry: null,
             isNewEntry: false,
-            encodedImages: [],
+            encodedAttachments: [],
         }),
 
     // Computed values

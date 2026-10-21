@@ -44,7 +44,8 @@ exports[`exportToHTML > generates deterministic HTML for a journal (snapshot) 1`
     .entry-images {
       margin-top: 15px;
     }
-    .entry-images img {
+    .entry-images img,
+    .entry-images video {
       max-width: 100%;
       margin: 10px 0;
       border-radius: 8px;
@@ -61,6 +62,7 @@ exports[`exportToHTML > generates deterministic HTML for a journal (snapshot) 1`
 <p>Great <strong>day</strong> out.</p></div>
     <div class="entry-images">
       <img src="data:image/png;base64,AAAA" alt="Attachment" />
+      <video controls src="data:video/mp4;base64,AAAA"></video>
     </div>
   </div>
 

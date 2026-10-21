@@ -121,7 +121,7 @@ export function MenuBar() {
         useJournalStore.setState({
             isNewEntry: true,
             editingEntry: null,
-            encodedImages: [],
+            encodedAttachments: [],
         });
         openDialog("edit");
     };
@@ -140,7 +140,7 @@ export function MenuBar() {
         useJournalStore.setState({
             isNewEntry: false,
             editingEntry: selectedEntry,
-            encodedImages: selectedEntry.attachments || [],
+            encodedAttachments: selectedEntry.attachments || [],
         });
         openDialog("edit");
     };

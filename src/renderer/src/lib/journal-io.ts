@@ -1,3 +1,4 @@
+import { isVideo } from "@/lib/attachments";
 import { useJournalStore } from "@/store/journal-store";
 import showdown from "showdown";
 
@@ -108,7 +109,8 @@ export async function exportToHTML(): Promise<{
     .entry-images {
       margin-top: 15px;
     }
-    .entry-images img {
+    .entry-images img,
+    .entry-images video {
       max-width: 100%;
       margin: 10px 0;
       border-radius: 8px;
@@ -140,9 +142,13 @@ export async function exportToHTML(): Promise<{
 
             if (entry.attachments && entry.attachments.length > 0) {
                 html += '    <div class="entry-images">\n';
-                entry.attachments.forEach((img) => {
-                    html += `      <img src="${img}" alt="Attachment" />\n`;
+
+                entry.attachments.forEach((attachment) => {
+                    html += isVideo(attachment)
+                        ? `      <video controls src="${attachment}"></video>\n`
+                        : `      <img src="${attachment}" alt="Attachment" />\n`;
                 });
+
                 html += "    </div>\n";
             }
 

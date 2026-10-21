@@ -38,8 +38,10 @@ export function EditEntryDialog() {
         closeDialog,
         isNewEntry,
         editingEntry,
-        encodedImages,
-        setEncodedImages,
+        encodedAttachments,
+        setEncodedAttachments,
+        addEncodedAttachments,
+        removeEncodedAttachment,
         addEntry,
         updateEntry,
         selectedEntryIndex,
@@ -53,6 +55,7 @@ export function EditEntryDialog() {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const [isReadingFiles, setIsReadingFiles] = useState(false);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     // Snapshot of the form state when the dialog opened, used to detect edits.
@@ -60,7 +63,7 @@ export function EditEntryDialog() {
         date: number;
         sentiment: Sentiment;
         content: string;
-        images: string[];
+        attachments: string[];
     } | null>(null);
 
     const isOpen = activeDialog === "edit";
@@ -68,16 +71,16 @@ export function EditEntryDialog() {
     // Load editing entry data
     useEffect(() => {
         if (isOpen && editingEntry) {
-            const images = editingEntry.attachments || [];
+            const attachments = editingEntry.attachments || [];
             setDate(new Date(editingEntry.entryDate));
             setSentiment(editingEntry.sentiment);
             setContent(editingEntry.content);
-            setEncodedImages(images);
+            setEncodedAttachments(attachments);
             initialRef.current = {
                 date: new Date(editingEntry.entryDate).getTime(),
                 sentiment: editingEntry.sentiment,
                 content: editingEntry.content,
-                images,
+                attachments,
             };
         } else if (isOpen && isNewEntry) {
             // Reset for new entry
@@ -85,12 +88,12 @@ export function EditEntryDialog() {
             setDate(now);
             setSentiment("Neutral");
             setContent("");
-            setEncodedImages([]);
+            setEncodedAttachments([]);
             initialRef.current = {
                 date: now.getTime(),
                 sentiment: "Neutral",
                 content: "",
-                images: [],
+                attachments: [],
             };
         }
     }, [isOpen, editingEntry, isNewEntry]);
@@ -102,8 +105,10 @@ export function EditEntryDialog() {
             date.getTime() !== initial.date ||
             sentiment !== initial.sentiment ||
             content !== initial.content ||
-            encodedImages.length !== initial.images.length ||
-            encodedImages.some((img, i) => img !== initial.images[i])
+            encodedAttachments.length !== initial.attachments.length ||
+            encodedAttachments.some(
+                (attachment, i) => attachment !== initial.attachments[i],
+            )
         );
     };
 
@@ -126,7 +131,7 @@ export function EditEntryDialog() {
             entryDate: date,
             content,
             sentiment,
-            attachments: encodedImages,
+            attachments: encodedAttachments,
         };
 
         if (isNewEntry) {
@@ -147,6 +152,7 @@ export function EditEntryDialog() {
         setShowEmojiPicker(false);
         setShowDiscardConfirm(false);
         setShowPreview(false);
+        setIsReadingFiles(false);
         initialRef.current = null;
     };
 
@@ -156,9 +162,10 @@ export function EditEntryDialog() {
     };
 
     // Guards every close path (Escape, click outside, Cancel button): if the
-    // entry has unsaved changes, ask before discarding instead of closing.
+    // entry has unsaved changes or attachments still being read, ask before
+    // discarding instead of closing.
     const attemptClose = () => {
-        if (isDirty()) {
+        if (isReadingFiles || isDirty()) {
             setShowDiscardConfirm(true);
         } else {
             handleClose();
@@ -324,19 +331,27 @@ export function EditEntryDialog() {
                         <div>
                             <Label>Attachments</Label>
                             <FileDropZone
-                                files={encodedImages}
-                                onChange={setEncodedImages}
+                                files={encodedAttachments}
+                                onAdd={addEncodedAttachments}
+                                onRemove={removeEncodedAttachment}
+                                onReadingChange={setIsReadingFiles}
                             />
                         </div>
-
                     </div>
 
                     <DialogFooter>
                         <Button variant="outline" onClick={attemptClose}>
                             Cancel
                         </Button>
-                        <Button onClick={handleSubmit}>
-                            {isNewEntry ? "Add Entry" : "Update Entry"}
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isReadingFiles}
+                        >
+                            {isReadingFiles
+                                ? "Reading attachments..."
+                                : isNewEntry
+                                  ? "Add Entry"
+                                  : "Update Entry"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

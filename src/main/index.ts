@@ -13,6 +13,7 @@ import {
     migrate51to70,
 } from "../shared/journal";
 import * as archive from "./archive";
+import { readAttachment, writeAttachment } from "./attachments";
 import * as encryption from "./encryption";
 
 let mainWindow: BrowserWindow | null = null;
@@ -125,25 +126,6 @@ ipcMain.handle("save-file-dialog", async () => {
     return result.filePath;
 });
 
-// Read an image file referenced by a 7.0 attachment path and return it as a
-// data: URL for the renderer. Returns null if the file is missing so the caller
-// can drop the reference. B (file-serving over a protocol) will replace this.
-function loadImageAsDataUrl(imagesDir: string, ref: string): string | null {
-    const filename = ref.split("/").pop();
-    if (!filename) return null;
-
-    const fullPath = path.join(imagesDir, filename);
-    if (!fs.existsSync(fullPath)) {
-        console.warn(`[DECRYPT] Image not found: ${fullPath}`);
-        return null;
-    }
-
-    const ext = filename.split(".").pop()?.toLowerCase();
-    const mimeType =
-        ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
-    return `data:${mimeType};base64,${fs.readFileSync(fullPath).toString("base64")}`;
-}
-
 ipcMain.handle(
     "decrypt-journal",
     async (_event, args: { filePath: string; password: string }) => {
@@ -184,7 +166,7 @@ ipcMain.handle(
                         .map((att) =>
                             att.startsWith("data:")
                                 ? att
-                                : loadImageAsDataUrl(imagesDir, att),
+                                : readAttachment(imagesDir, att),
                         )
                         .filter((att): att is string => att !== null);
                 }
@@ -222,39 +204,20 @@ ipcMain.handle(
             // Create images directory inside _jbfiles
             fs.mkdirSync(`${tmp}/_jbfiles/images`, { recursive: true });
 
-            // Write image attachments and update attachment field to use file paths
+            // Write each attachment into images/ and store its path in place
+            // of the in-memory data: URL.
             journalData.entries.forEach((entry: any) => {
                 if (entry.attachments && entry.attachments.length > 0) {
-                    const filePaths: string[] = [];
-                    entry.attachments.forEach((img: string, imgIdx: number) => {
-                        // TODO: This seems wrong, it should probably also check for file path strings
-                        // instead of declaring everything as a PNG
-
-                        // Determine file extension from data URL
-                        const isJpeg = img.includes("data:image/jpeg");
-                        const ext = isJpeg ? "jpg" : "png";
-
-                        // Use timestamp-based naming for better compatibility
-                        const timestamp = entry.entryDate || Date.now();
-                        const filename = `${timestamp}_${imgIdx}.${ext}`;
-                        const filePath = `./_jbfiles/images/${filename}`;
-
-                        // Save image file
-                        const buffer = Buffer.from(
-                            img.replace(/^data:image\/\w+;base64,/, ""),
-                            "base64",
-                        );
-                        fs.writeFileSync(
-                            `${tmp}/_jbfiles/images/${filename}`,
-                            buffer,
-                        );
-
-                        // Store file path for JSON
-                        filePaths.push(filePath);
-                    });
-
-                    // Update attachment to use file paths instead of data URLs
-                    entry.attachments = filePaths;
+                    // Use timestamp-based naming for better compatibility
+                    const timestamp = entry.entryDate || Date.now();
+                    entry.attachments = entry.attachments.map(
+                        (attachment: string, index: number) =>
+                            writeAttachment(
+                                `${tmp}/_jbfiles/images`,
+                                `${timestamp}_${index}`,
+                                attachment,
+                            ),
+                    );
                 }
             });
 
