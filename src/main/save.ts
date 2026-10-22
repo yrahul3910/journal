@@ -3,9 +3,10 @@ import path from "node:path";
 
 import { rimraf } from "rimraf";
 
+import { VERSION_NUMBER } from "../shared/constants";
 import * as archive from "./archive";
 import { stageAttachment } from "./attachments";
-import * as encryption from "./encryption";
+import { sealContainer, verifyContainer } from "./container";
 
 import type { JournalData } from "../shared/journal";
 
@@ -28,11 +29,11 @@ let latestSave: Promise<unknown> = Promise.resolve();
  *
  * Saves run one at a time in the order they are requested, since two saves
  * encrypting into the same file at once would interleave their bytes. The
- * journal is written beside `filePath` and renamed over it, so a save that
- * fails leaves the previous version intact. Plaintext copies are removed
- * whether or not the save succeeds. Resolves to the outcome; it rejects only
- * if removing those copies fails, and a rejected save doesn't hold up the
- * saves queued after it.
+ * journal is written beside `filePath` as format 7.1, reopened to verify it,
+ * and only then renamed over it, so a save that fails leaves the previous
+ * version intact. Plaintext copies are removed whether or not the save
+ * succeeds. Resolves to the outcome; it rejects only if removing those copies
+ * fails, and a rejected save doesn't hold up the saves queued after it.
  */
 export function saveJournal(
     request: SaveRequest,
@@ -83,12 +84,19 @@ async function writeJournal({
             );
         }
 
+        // The writer, not the renderer's state, decides the format version.
+        journalData.version = VERSION_NUMBER;
         await fs.promises.writeFile(
             path.join(stagingDir, "data.json"),
             JSON.stringify(journalData),
         );
         await archive.compress(stagingDir, archivePath);
-        await encryption.encryptFile(archivePath, encryptedPath, password);
+        const plaintextHash = await sealContainer(
+            archivePath,
+            encryptedPath,
+            password,
+        );
+        await verifyContainer(encryptedPath, password, plaintextHash);
         await fs.promises.rename(encryptedPath, filePath);
 
         return { success: true };

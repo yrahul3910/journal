@@ -13,8 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useJournalStore } from "@/store/journal-store";
 
 export function DecryptDialog() {
-    const { activeDialog, closeDialog, currentFilePath, currentFileVersion } =
-        useJournalStore();
+    const { activeDialog, closeDialog, currentFilePath } = useJournalStore();
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +30,7 @@ export function DecryptDialog() {
     }, [isOpen]);
 
     const handleSubmit = async () => {
-        if (!currentFilePath || !currentFileVersion) {
+        if (!currentFilePath) {
             setError("No file selected");
             return;
         }
@@ -43,7 +42,6 @@ export function DecryptDialog() {
             const result = await window.electron.decryptJournal({
                 filePath: currentFilePath,
                 password,
-                fileVersion: currentFileVersion,
             });
 
             if (result.success && result.data) {

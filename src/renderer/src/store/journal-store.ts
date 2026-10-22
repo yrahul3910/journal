@@ -13,7 +13,6 @@ interface JournalStore {
     journalData: JournalData | null;
     currentFilePath: string | null;
     password: string | null;
-    currentFileVersion: number | null;
 
     // UI state
     viewMode: ViewMode;
@@ -39,7 +38,6 @@ interface JournalStore {
     // Actions - File management
     setCurrentFilePath: (path: string | null) => void;
     setPassword: (password: string | null) => void;
-    setCurrentFileVersion: (version: number | null) => void;
 
     // Actions - UI
     setViewMode: (mode: ViewMode) => void;
@@ -69,7 +67,6 @@ export const useJournalStore = create<JournalStore>((set, get) => ({
     journalData: null,
     currentFilePath: null,
     password: null,
-    currentFileVersion: null,
     viewMode: "welcome",
     activeDialog: null,
     theme: "light",
@@ -140,7 +137,6 @@ export const useJournalStore = create<JournalStore>((set, get) => ({
             journalData: null,
             currentFilePath: null,
             password: null,
-            currentFileVersion: null,
             selectedEntry: null,
             selectedEntryIndex: null,
             viewMode: "welcome",
@@ -149,7 +145,6 @@ export const useJournalStore = create<JournalStore>((set, get) => ({
     // File management actions
     setCurrentFilePath: (path) => set({ currentFilePath: path }),
     setPassword: (password) => set({ password }),
-    setCurrentFileVersion: (version) => set({ currentFileVersion: version }),
 
     // UI actions
     setViewMode: (mode) => set({ viewMode: mode }),

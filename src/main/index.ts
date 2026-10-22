@@ -123,9 +123,12 @@ ipcMain.on("close-window", () => {
 ipcMain.handle("open-file-dialog", async () => {
     console.log("[MAIN] Opening file dialog...");
     const result = await dialog.showOpenDialog({
+        // Older Electron builds saved .journal; every app now saves .zjournal.
         filters: [
-            { name: "JournalBear 5.1 Document", extensions: ["zjournal"] },
-            { name: "JournalBear 7.0 Document", extensions: ["journal"] },
+            {
+                name: "JournalBear Journal",
+                extensions: ["zjournal", "journal"],
+            },
         ],
     });
 
@@ -133,20 +136,12 @@ ipcMain.handle("open-file-dialog", async () => {
         return null;
     }
 
-    const filePath = result.filePaths[0];
-    const fileVersion = filePath.endsWith("zjournal") ? 5.1 : 7.0;
-
-    return {
-        filePath,
-        fileVersion,
-    };
+    return { filePath: result.filePaths[0] };
 });
 
 ipcMain.handle("save-file-dialog", async () => {
     const result = await dialog.showSaveDialog({
-        filters: [
-            { name: "JournalBear 7.0 Document", extensions: ["journal"] },
-        ],
+        filters: [{ name: "JournalBear Journal", extensions: ["zjournal"] }],
     });
 
     if (result.canceled || !result.filePath) {
@@ -156,6 +151,14 @@ ipcMain.handle("save-file-dialog", async () => {
     return result.filePath;
 });
 
+const DECRYPT_FAILURES: Record<encryption.DecryptFailure, string> = {
+    wrongPassword: "Wrong password.",
+    damaged: "This journal is damaged and can't be opened.",
+    newerVersion:
+        "This journal was made by a newer version of JournalBear. Update the app to open it.",
+    wrongPasswordOrDamaged: "Wrong password, or the file is damaged.",
+};
+
 ipcMain.handle(
     "decrypt-journal",
     async (_event, args: { filePath: string; password: string }) => {
@@ -164,13 +167,13 @@ ipcMain.handle(
 
         try {
             // decrypt -> decompress -> read JSON
-            const err = await encryption.decryptFile(
+            const failure = await encryption.decryptFile(
                 filePath,
                 archivePath,
                 password,
             );
-            if (err) {
-                return new Error("Wrong password or corrupted file");
+            if (failure) {
+                return { success: false, error: DECRYPT_FAILURES[failure] };
             }
 
             await archive.decompress(archivePath, sessionFilesDir);
@@ -203,7 +206,7 @@ ipcMain.handle(
                 return { success: true, data };
             } catch (readErr) {
                 console.error("[DECRYPT] Error reading journal:", readErr);
-                return new Error("Failed to read journal data");
+                return { success: false, error: "Failed to read journal data" };
             }
         } catch (err) {
             return { success: false, error: (err as Error).message };

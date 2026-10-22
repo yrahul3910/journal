@@ -1,13 +1,16 @@
-import { describe, it, expect } from "vitest";
-import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { describe, expect, it } from "vitest";
+
+import { sealContainer } from "./container";
 import {
-    getEncryptedText,
-    getDecryptedText,
     checkPasswordStrength,
-    encryptFile,
     decryptFile,
+    getDecryptedText,
+    getEncryptedText,
 } from "./encryption";
 
 describe("text encryption", () => {
@@ -51,33 +54,38 @@ describe("checkPasswordStrength", () => {
     });
 });
 
-describe("file encryption", () => {
+describe("decryptFile", () => {
     const dir = mkdtempSync(join(tmpdir(), "jb-enc-"));
 
-    it("round-trips a file through encryptFile -> decryptFile", async () => {
-        const input = join(dir, "plain.txt");
-        const cipher = join(dir, "cipher.bin");
-        const output = join(dir, "plain.out.txt");
-        const content = "the quick brown fox\n".repeat(100);
-        writeFileSync(input, content);
+    it("opens a legacy 7.0 journal and reports any failure as either cause", async () => {
+        const fixture = fileURLToPath(
+            new URL(
+                "../../swiftui/JournalBearTests/Fixtures/test_journal.zjournal",
+                import.meta.url,
+            ),
+        );
+        const output = join(dir, "legacy.tar.gz");
 
-        await encryptFile(input, cipher, "key");
-        expect(await decryptFile(cipher, output, "key")).toBeNull();
-        expect(readFileSync(output, "utf8")).toBe(content);
-        expect(await decryptFile(cipher, output, "wrong key")).toBeInstanceOf(
-            Error,
+        expect(await decryptFile(fixture, output, "$Password123")).toBeNull();
+        expect(readFileSync(output).subarray(0, 2)).toEqual(
+            Buffer.from([0x1f, 0x8b]), // gzip magic
+        );
+        expect(await decryptFile(fixture, output, "wrong")).toBe(
+            "wrongPasswordOrDamaged",
         );
     });
 
-    it("resolves only after the encrypted file is fully written", async () => {
-        const input = join(dir, "sync.txt");
-        const cipher = join(dir, "sync.bin");
-        writeFileSync(input, "hello world");
+    it("opens a 7.1 journal and reports a wrong password as such", async () => {
+        const archive = join(dir, "archive.tar.gz");
+        const journal = join(dir, "journal.zjournal");
+        const output = join(dir, "reopened.tar.gz");
+        writeFileSync(archive, "archive bytes");
+        await sealContainer(archive, journal, "key");
 
-        // Contract: the promise resolves after the output stream finishes, so
-        // the file is fully written (salt + IV + ciphertext) once we await it.
-        await encryptFile(input, cipher, "key");
-        expect(existsSync(cipher)).toBe(true);
-        expect(readFileSync(cipher).length).toBeGreaterThan(16 + 16);
-    });
+        expect(await decryptFile(journal, output, "key")).toBeNull();
+        expect(readFileSync(output, "utf8")).toBe("archive bytes");
+        expect(await decryptFile(journal, output, "wrong key")).toBe(
+            "wrongPassword",
+        );
+    }, 30_000);
 });

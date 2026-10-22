@@ -1,7 +1,15 @@
 import crypto from "crypto";
 import fs from "fs";
 import { pipeline } from "stream/promises";
+
 import owasp from "owasp-password-strength-test";
+
+import {
+    ContainerError,
+    type ContainerFailure,
+    isContainer,
+    openContainer,
+} from "./container";
 
 const algorithm = "aes-256-cbc";
 const SALT_LENGTH = 16;
@@ -57,75 +65,43 @@ export const checkPasswordStrength = (pwd: string): string[] => {
     else return [];
 };
 
-export const encryptFile = (
-    path: string,
-    outputPath: string,
-    key: string,
-): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        try {
-            const salt = crypto.randomBytes(SALT_LENGTH);
-            const iv = crypto.randomBytes(IV_LENGTH);
-            const derivedKey = deriveKey(key, salt);
-
-            const cipher = crypto.createCipheriv(algorithm, derivedKey, iv);
-            const input = fs.createReadStream(path);
-            const output = fs.createWriteStream(outputPath);
-
-            // Write salt and IV first
-            output.write(salt);
-            output.write(iv);
-
-            input.pipe(cipher).pipe(output);
-
-            output.on("finish", () => {
-                console.log("[ENCRYPTION] File encrypted successfully");
-                resolve();
-            });
-
-            input.on("error", (err) => {
-                console.error("[ENCRYPTION] Encrypt input error:", err);
-                reject(err);
-            });
-
-            output.on("error", (err) => {
-                console.error("[ENCRYPTION] Encrypt output error:", err);
-                reject(err);
-            });
-
-            cipher.on("error", (err) => {
-                console.error("[ENCRYPTION] Cipher error:", err);
-                reject(err);
-            });
-        } catch (ex) {
-            console.error("[ENCRYPTION] Encrypt file error:", ex);
-            reject(ex as Error);
-        }
-    });
-};
+export type DecryptFailure = ContainerFailure | "wrongPasswordOrDamaged";
 
 /**
  * Decrypt the journal at `path` into `outputPath`, which receives the
- * plaintext `.tar.gz`. Returns null on success and the error otherwise; a
- * wrong password surfaces as the cipher's padding error.
+ * plaintext `.tar.gz`. Returns null on success, or why it failed.
  *
- * The file is streamed through the decipher, so a journal of any size
- * decrypts in bounded memory (reading it whole fails past 2 GiB).
+ * A 7.1 container (see `openContainer`) tells a wrong password, damage, and a
+ * newer format apart, and other errors from it, such as I/O failures, are
+ * thrown. A legacy 5.1 or 7.0 file cannot tell them apart, so any failure
+ * there, I/O included, is `wrongPasswordOrDamaged`. Either way the file is
+ * streamed, so a journal of any size decrypts in bounded memory.
  */
 export const decryptFile = async (
     path: string,
     outputPath: string,
     key: string,
-): Promise<Error | null> => {
+): Promise<DecryptFailure | null> => {
+    if (await isContainer(path)) {
+        try {
+            await pipeline(
+                await openContainer(path, key),
+                fs.createWriteStream(outputPath),
+            );
+            return null;
+        } catch (error) {
+            if (error instanceof ContainerError) return error.failure;
+            throw error;
+        }
+    }
+
     try {
         const header = Buffer.alloc(SALT_LENGTH + IV_LENGTH);
         const file = await fs.promises.open(path);
         const { bytesRead } = await file.read(header, 0, header.length, 0);
         await file.close();
 
-        if (bytesRead < header.length) {
-            return new Error("File too small or corrupted");
-        }
+        if (bytesRead < header.length) return "wrongPasswordOrDamaged";
 
         const salt = header.subarray(0, SALT_LENGTH);
         const iv = header.subarray(SALT_LENGTH);
@@ -145,6 +121,6 @@ export const decryptFile = async (
         return null;
     } catch (ex) {
         console.error("[ENCRYPTION] Decrypt file error:", ex);
-        return ex instanceof Error ? ex : new Error(String(ex));
+        return "wrongPasswordOrDamaged";
     }
 };

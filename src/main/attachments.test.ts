@@ -196,8 +196,12 @@ describe("exportAttachments", () => {
     });
 });
 
-describe("the SwiftUI app's fixture journal", () => {
-    it("opens with its images and serves its video", async () => {
+describe("the committed fixture journals", () => {
+    // The legacy one was written by the SwiftUI app, the 7.1 one by this app.
+    it.each([
+        ["test_journal.zjournal", 7],
+        ["test_journal_7.1.zjournal", 7.1],
+    ])("%s opens with its images and serves its video", async (name, version) => {
         const fixtures = fileURLToPath(
             new URL(
                 "../../swiftui/JournalBearTests/Fixtures/",
@@ -210,7 +214,7 @@ describe("the SwiftUI app's fixture journal", () => {
 
         expect(
             await decryptFile(
-                join(fixtures, "test_journal.zjournal"),
+                join(fixtures, name),
                 archivePath,
                 "$Password123",
             ),
@@ -227,6 +231,7 @@ describe("the SwiftUI app's fixture journal", () => {
             ),
         );
 
+        expect(data.version).toBe(version);
         expect(urls.map((entry) => entry.length)).toEqual([2, 0, 1]);
         expect(
             urls

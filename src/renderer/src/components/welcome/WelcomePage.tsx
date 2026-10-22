@@ -22,7 +22,6 @@ export function WelcomePage() {
         if (result) {
             useJournalStore.setState({
                 currentFilePath: result.filePath,
-                currentFileVersion: result.fileVersion,
                 viewMode: "journal",
             });
             openDialog("decrypt");

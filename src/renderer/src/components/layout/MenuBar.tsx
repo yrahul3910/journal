@@ -70,7 +70,6 @@ export function MenuBar() {
         if (result) {
             useJournalStore.setState({
                 currentFilePath: result.filePath,
-                currentFileVersion: result.fileVersion,
                 viewMode: "journal",
             });
             openDialog("decrypt");

@@ -14,11 +14,8 @@ try {
         // File operations
         openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
         saveFileDialog: () => ipcRenderer.invoke("save-file-dialog"),
-        decryptJournal: (args: {
-            filePath: string;
-            password: string;
-            fileVersion: number;
-        }) => ipcRenderer.invoke("decrypt-journal", args),
+        decryptJournal: (args: { filePath: string; password: string }) =>
+            ipcRenderer.invoke("decrypt-journal", args),
         saveJournal: (args: {
             filePath: string;
             password: string;

@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { VERSION_NUMBER, SENTIMENT_COLORS } from "./journal";
 
 describe("journal constants", () => {
-    it("VERSION_NUMBER is 7.0 for the current format", () => {
-        expect(VERSION_NUMBER).toBe(7.0);
+    it("VERSION_NUMBER is 7.1 for the current format", () => {
+        expect(VERSION_NUMBER).toBe(7.1);
     });
 
     it("SENTIMENT_COLORS covers every sentiment plus Unknown", () => {

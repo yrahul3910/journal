@@ -5,15 +5,11 @@ export interface ElectronAPI {
     closeWindow: () => void;
 
     // File operations
-    openFileDialog: () => Promise<{
-        filePath: string;
-        fileVersion: number;
-    } | null>;
+    openFileDialog: () => Promise<{ filePath: string } | null>;
     saveFileDialog: () => Promise<string | null>;
     decryptJournal: (args: {
         filePath: string;
         password: string;
-        fileVersion: number;
     }) => Promise<{ success: boolean; data?: any; error?: string }>;
     saveJournal: (args: {
         filePath: string;
