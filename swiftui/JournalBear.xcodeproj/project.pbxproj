@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DD0000000000000000000001 /* Textual in Frameworks */ = {isa = PBXBuildFile; productRef = DD0000000000000000000003 /* Textual */; };
+		DD0000000000000000000004 /* Clibsodium in Frameworks */ = {isa = PBXBuildFile; productRef = DD0000000000000000000006 /* Clibsodium */; };
 		EE0000000000000000000001 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000002 /* AVKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -52,6 +53,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD0000000000000000000001 /* Textual in Frameworks */,
+				DD0000000000000000000004 /* Clibsodium in Frameworks */,
 				EE0000000000000000000001 /* AVKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -123,6 +125,7 @@
 			name = "JournalBear for Mac";
 			packageProductDependencies = (
 				DD0000000000000000000003 /* Textual */,
+				DD0000000000000000000006 /* Clibsodium */,
 			);
 			productName = JournalBear;
 			productReference = AA0000000000000000000006 /* JournalBear for Mac.app */;
@@ -203,6 +206,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				DD0000000000000000000002 /* XCRemoteSwiftPackageReference "textual" */,
+				DD0000000000000000000005 /* XCRemoteSwiftPackageReference "swift-sodium" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AA0000000000000000000003 /* Products */;
@@ -418,7 +422,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 7.0;
+				MARKETING_VERSION = 7.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBear;
 				PRODUCT_MODULE_NAME = JournalBear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -482,7 +486,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 7.0;
+				MARKETING_VERSION = 7.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yrahul.JournalBear;
 				PRODUCT_MODULE_NAME = JournalBear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -653,6 +657,14 @@
 				minimumVersion = 0.5.0;
 			};
 		};
+		DD0000000000000000000005 /* XCRemoteSwiftPackageReference "swift-sodium" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jedisct1/swift-sodium";
+			requirement = {
+				kind = exactVersion;
+				version = 0.11.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -660,6 +672,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DD0000000000000000000002 /* XCRemoteSwiftPackageReference "textual" */;
 			productName = Textual;
+		};
+		DD0000000000000000000006 /* Clibsodium */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD0000000000000000000005 /* XCRemoteSwiftPackageReference "swift-sodium" */;
+			productName = Clibsodium;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

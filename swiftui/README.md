@@ -89,7 +89,7 @@ DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer" \
 Those overrides keep the test run ad-hoc signed on purpose, even when a team is
 available — nothing here needs a real identity, and skipping profile resolution
 is faster.
-Tests that read a journal open the committed fixture `JournalBearTests/Fixtures/test_journal.zjournal` (password `$Password123`, embedded in the tests). It holds three entries: one with two generated JPEGs, one with no attachments, and one with the ten-second `Fixtures/clip.mp4`. All of its media is synthetic, so it is safe to keep in the repository and run in CI. `launchClean()` also blanks the saved sidebar layout for each UI test launch, so a sidebar collapsed in everyday use doesn't hide the entry list.
+Tests that read a journal open the committed fixture `JournalBearTests/Fixtures/test_journal.zjournal` (password `$Password123`, embedded in the tests). It holds three entries: one with two generated JPEGs, one with no attachments, and one with the ten-second `Fixtures/clip.mp4`. All of its media is synthetic, so it is safe to keep in the repository and run in CI. `Fixtures/test_journal_7.1.zjournal` is the same journal written by the Electron app as format 7.1, and the container tests check this app's output byte for byte against the vectors in `../test-vectors/journal-format-7.1.json`, which the Electron tests check too. `launchClean()` also blanks the saved sidebar layout for each UI test launch, so a sidebar collapsed in everyday use doesn't hide the entry list.
 
 ## Layout
 - `JournalBear/JournalBearApp.swift` — app entry, menu commands.
@@ -97,24 +97,24 @@ Tests that read a journal open the committed fixture `JournalBearTests/Fixtures/
 - `JournalBear/JournalStore.swift` — observable state; open/decrypt flow.
 - `JournalBear/Models/Journal.swift` — `JournalData` / `JournalEntry` (lenient decoding).
 - `JournalBear/Core/` — the `.zjournal` read pipeline:
-  - `Crypto.swift` — PBKDF2-HMAC-SHA256 (100k rounds) + AES-256-CBC (CommonCrypto).
+  - `JournalContainer.swift`: the format 7.1 container: scrypt (libsodium, through swift-sodium), then HKDF, HMAC, and AES-256-GCM in 64 KiB chunks (CryptoKit).
+  - `Crypto.swift`: the legacy 7.0 cipher, PBKDF2-HMAC-SHA256 (100k rounds) + AES-256-CBC (CommonCrypto), kept so older journals still open.
   - `Gzip.swift` — gzip header strip + raw DEFLATE inflate (Compression framework).
   - `Tar.swift` — minimal USTAR reader.
   - `JournalFile.swift` — orchestrates decrypt → gunzip → untar → parse `data.json`.
 
 ## File format
-`.zjournal` = `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`, where the plaintext is a gzip-compressed tar of `data.json` plus an `images/` directory. This matches the Electron app's `src/main/encryption.ts` and `archive.ts`.
+Journals are saved as format 7.1, specified in `journal-format-7.1.md` at the repository root: a 77-byte header (the magic `JBEARENC`, scrypt settings, salt, payload nonce, and a header MAC) followed by the payload sealed with AES-256-GCM in 64 KiB chunks. The payload is a gzip-compressed tar of `data.json` plus an `images/` directory. Journals written before 7.1 are `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]` over the same payload; they still open, and saving rewrites them as 7.1. Both layouts match the Electron app's `src/main/container.ts`, `encryption.ts`, and `archive.ts`.
 
 `images/` holds every attachment as a plain file, videos included, and each entry's `attachments` lists their paths. The file extension tells the kinds apart: `.mp4` and `.mov` are videos and everything else is an image. The Electron and SwiftUI apps write videos as `.mp4`; MOV is the same container family, and Chromium and AVFoundation both play it under that name.
 
 ## Status
-Targets the **7.0 format only** — no legacy fallbacks. Read path: opens and decrypts a `.zjournal`, lists entries, renders structured Markdown entry content with Textual, renders image attachments inline, and plays video attachments inline (paused until played) from memory, without writing decrypted video to disk. Emoji shortcodes (`:smile:`) are intentionally unsupported — Unicode only. Markdown image URLs are intentionally not fetched; journal attachments are rendered from the encrypted archive.
+Reads 7.0 and 7.1 journals and writes 7.1; the older 5.1 format is not supported. Read path: opens and decrypts a `.zjournal`, lists entries, renders structured Markdown entry content with Textual, renders image attachments inline, and plays video attachments inline (paused until played) from memory, without writing decrypted video to disk. Emoji shortcodes (`:smile:`) are intentionally unsupported; use Unicode emoji. Markdown image URLs are intentionally not fetched; journal attachments are rendered from the encrypted archive.
 
 The entries array is still read under the key `en` transitionally; 7.0 renames it
-to `entries`, switched over once a real 7.0 file exists to test against. A full
-format spec will live in a design doc in the repo root.
+to `entries`, switched over once a real 7.0 file exists to test against.
 
-Write path: **New Entry** (⌘N / toolbar) composes an entry (date, mood, Markdown content, image and video attachments) and re-encrypts the whole journal back to the open file, in the same format the Electron app reads. Saving is verified by round-trip tests; cross-app interop (Electron opening a SwiftUI-saved file) hasn't been verified yet.
+Write path: **New Entry** (⌘N / toolbar) composes an entry (date, mood, Markdown content, image and video attachments) and re-encrypts the whole journal back to the open file as format 7.1, which the Electron app reads. Every save is decrypted again before it replaces the file, so a save that would not reopen leaves the previous file in place.
 
 Not yet implemented: deleting entries, statistics.
 

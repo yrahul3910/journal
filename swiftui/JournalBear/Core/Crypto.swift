@@ -1,7 +1,9 @@
 import Foundation
 import CommonCrypto
 
-/// Cryptographic primitives matching the Electron app's `encryption.ts`.
+/// The cipher of legacy (7.0) journals, matching the Electron app's
+/// `encryption.ts`, kept so they still open; journals are saved as 7.1 (see
+/// `JournalContainer`).
 ///
 /// Key derivation: PBKDF2-HMAC-SHA256, 100_000 rounds, 32-byte key.
 /// Cipher: AES-256-CBC with PKCS#7 padding.
@@ -56,42 +58,6 @@ enum Crypto {
 
         guard status == kCCSuccess else { throw JournalError.decryptionFailed }
         output.removeSubrange(decryptedCount..<output.count)
-        return output
-    }
-
-    /// Cryptographically secure random bytes (`SystemRandomNumberGenerator` is a
-    /// CSPRNG on Apple platforms). Used for fresh salt + IV on each save.
-    static func randomBytes(_ count: Int) -> Data {
-        var rng = SystemRandomNumberGenerator()
-        return Data((0..<count).map { _ in UInt8.random(in: .min ... .max, using: &rng) })
-    }
-
-    static func aesCBCEncrypt(plaintext: Data, key: Data, iv: Data) throws -> Data {
-        let bufferSize = plaintext.count + kCCBlockSizeAES128
-        var output = Data(count: bufferSize)
-        var encryptedCount = 0
-
-        let status = output.withUnsafeMutableBytes { outRaw -> Int32 in
-            plaintext.withUnsafeBytes { inRaw in
-                key.withUnsafeBytes { keyRaw in
-                    iv.withUnsafeBytes { ivRaw in
-                        CCCrypt(
-                            CCOperation(kCCEncrypt),
-                            CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding),
-                            keyRaw.baseAddress, key.count,
-                            ivRaw.baseAddress,
-                            inRaw.baseAddress, plaintext.count,
-                            outRaw.baseAddress, bufferSize,
-                            &encryptedCount
-                        )
-                    }
-                }
-            }
-        }
-
-        guard status == kCCSuccess else { throw JournalError.encryptionFailed }
-        output.removeSubrange(encryptedCount..<output.count)
         return output
     }
 }

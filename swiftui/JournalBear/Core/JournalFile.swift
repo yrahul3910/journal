@@ -1,23 +1,34 @@
 import Foundation
 
-struct JournalError: Error {
+struct JournalError: Error, Equatable {
     let message: String
 
     static let tooSmall = JournalError(message: "The file is too small or corrupted.")
     static let decryptionFailed = JournalError(message: "Wrong password, or the file is corrupted.")
+    static let wrongPassword = JournalError(message: "Wrong password.")
+    static let damaged = JournalError(message: "This journal is damaged and can't be opened.")
+    static let newerVersion = JournalError(
+        message: "This journal was made by a newer version of JournalBear. Update the app to open it."
+    )
+    static let keyDerivationFailed = JournalError(
+        message: "There isn't enough free memory to unlock or save the journal."
+    )
     static let decompressionFailed = JournalError(message: "The journal could not be decompressed.")
     static let parseFailed = JournalError(message: "The journal data could not be read.")
-    static let encryptionFailed = JournalError(message: "The journal could not be encrypted.")
+    static let saveNotVerified = JournalError(
+        message: "The journal could not be saved: the new file did not reopen correctly."
+    )
     static let compressionFailed = JournalError(message: "The journal could not be compressed.")
     static let saveFailed = JournalError(message: "The journal could not be saved.")
 }
 
-/// Reads a `.zjournal` file. Supports the 7.0 format only.
+/// Reads and writes `.zjournal` files.
 ///
-/// On-disk layout (produced by the Electron app):
-///   `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`
-/// where the plaintext is a gzip-compressed tar containing `data.json` and an
-/// `images/` directory holding every attachment, image or video, as a plain file.
+/// The plaintext of every journal is a gzip-compressed tar containing
+/// `data.json` and an `images/` directory holding every attachment, image or
+/// video, as a plain file. Saving always encrypts it as format 7.1 (see
+/// `JournalContainer`); opening also accepts the legacy 7.0 layout,
+/// `[16-byte salt][16-byte IV][AES-256-CBC ciphertext]`.
 enum JournalFile {
     static func open(url: URL, password: String) throws -> JournalData {
         // URLs from the system file pickers are security-scoped on iOS (and in
@@ -27,14 +38,20 @@ enum JournalFile {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
 
         let fileData = try Data(contentsOf: url)
-        guard fileData.count > 32 else { throw JournalError.tooSmall }
+        let tarGz: Data
 
-        let salt = fileData.subdata(in: 0..<16)
-        let iv = fileData.subdata(in: 16..<32)
-        let ciphertext = fileData.subdata(in: 32..<fileData.count)
+        if JournalContainer.isContainer(fileData) {
+            tarGz = try JournalContainer.open(fileData, password: password)
+        } else {
+            guard fileData.count > 32 else { throw JournalError.tooSmall }
 
-        let key = Crypto.deriveKey(password: password, salt: salt)
-        let tarGz = try Crypto.aesCBCDecrypt(ciphertext: ciphertext, key: key, iv: iv)
+            let salt = fileData.subdata(in: 0..<16)
+            let iv = fileData.subdata(in: 16..<32)
+            let ciphertext = fileData.subdata(in: 32..<fileData.count)
+            let key = Crypto.deriveKey(password: password, salt: salt)
+            tarGz = try Crypto.aesCBCDecrypt(ciphertext: ciphertext, key: key, iv: iv)
+        }
+
         let tarball = try Gzip.decompress(tarGz)
         let files = Tar.extract(tarball)
 
@@ -62,9 +79,8 @@ enum JournalFile {
         return data
     }
 
-    /// Writes `entries` to `url`, encrypted with `password`, in the same on-disk
-    /// format the Electron app reads: a gzipped USTAR of `data.json` + an `images/`
-    /// directory, AES-256-CBC encrypted with a fresh salt + IV prepended.
+    /// Writes `entries` to `url` as a 7.1 journal encrypted with `password`,
+    /// replacing the file atomically once the new bytes have been verified.
     static func save(_ entries: [JournalEntry], to url: URL, password: String) throws {
         let output = try encrypt(entries, password: password)
 
@@ -78,9 +94,14 @@ enum JournalFile {
         }
     }
 
-    /// Produces the complete `.zjournal` byte layout for `entries` without
-    /// touching disk, for callers that let the system write the file (the
-    /// save-location exporter for brand-new journals).
+    /// Produces the complete `.zjournal` bytes for `entries` without touching
+    /// disk, for callers that let the system write the file (the save-location
+    /// exporter for brand-new journals).
+    ///
+    /// The bytes are opened through the read path, from the header just
+    /// written, before they are returned; anything that does not decrypt to
+    /// the archive it was made from throws `JournalError.saveNotVerified`, so
+    /// no caller can replace a journal with a file nobody could open.
     static func encrypt(_ entries: [JournalEntry], password: String) throws -> Data {
         var archiveFiles: [(name: String, data: Data)] = []
         var diskEntries: [DiskEntry] = []
@@ -100,21 +121,19 @@ enum JournalFile {
             ))
         }
 
-        let json = try JSONEncoder().encode(DiskJournal(version: 7, entries: diskEntries))
+        let json = try JSONEncoder().encode(DiskJournal(version: 7.1, entries: diskEntries))
         archiveFiles.insert((name: "data.json", data: json), at: 0)
 
-        let tarball = Tar.create(archiveFiles)
-        let gzipped = try Gzip.compress(tarball)
+        // Compressing the tarball as a temporary frees it before sealing and
+        // verifying need their own journal-sized buffers.
+        let gzipped = try Gzip.compress(Tar.create(archiveFiles))
 
-        let salt = Crypto.randomBytes(16)
-        let iv = Crypto.randomBytes(16)
-        let key = Crypto.deriveKey(password: password, salt: salt)
-        let ciphertext = try Crypto.aesCBCEncrypt(plaintext: gzipped, key: key, iv: iv)
+        let file = try JournalContainer.seal(gzipped, password: password)
 
-        var output = salt
-        output.append(iv)
-        output.append(ciphertext)
-        return output
+        guard (try? JournalContainer.open(file, password: password)) == gzipped else {
+            throw JournalError.saveNotVerified
+        }
+        return file
     }
 
     /// Videos are archived as `.mp4` whatever their source container: MOV and

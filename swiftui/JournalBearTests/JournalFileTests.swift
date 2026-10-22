@@ -9,19 +9,23 @@ import SwiftUI
 /// The committed fixture `Fixtures/test_journal.zjournal` (password `$Password123`)
 /// holds three entries: June 16 with two JPEGs, June 15 with no attachments, and
 /// June 14 with `Fixtures/clip.mp4`. Its media is synthetic, so it can live in the
-/// repository and CI. Tests resolve it relative to this source file rather than
-/// bundling it.
+/// repository and CI. `Fixtures/test_journal_7.1.zjournal` is the same journal
+/// written by the Electron app as format 7.1. Tests resolve both relative to this
+/// source file rather than bundling them.
 struct JournalFileTests {
     static let password = "$Password123"
 
-    static var fixtureURL: URL {
+    static func fixtureURL(_ name: String = "test_journal.zjournal") -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
-            .appendingPathComponent("Fixtures/test_journal.zjournal")
+            .appendingPathComponent("Fixtures/\(name)")
     }
 
-    private static func openFixture(password: String = password) throws -> JournalData {
-        let url = fixtureURL
+    private static func openFixture(
+        _ name: String = "test_journal.zjournal",
+        password: String = password
+    ) throws -> JournalData {
+        let url = fixtureURL(name)
         try #require(
             FileManager.default.fileExists(atPath: url.path),
             "Missing fixture: \(url.path)"
@@ -29,9 +33,11 @@ struct JournalFileTests {
         return try JournalFile.open(url: url, password: password)
     }
 
-    @Test func opensAndDecodesAllEntries() throws {
-        let data = try Self.openFixture()
+    @Test(arguments: [("test_journal.zjournal", 7.0), ("test_journal_7.1.zjournal", 7.1)])
+    func opensAndDecodesAllEntries(fixture: String, version: Double) throws {
+        let data = try Self.openFixture(fixture)
         #expect(data.entries.count == 3)
+        #expect(data.version == version)
     }
 
     @Test func resolvesImageAttachmentsAsValidJPEGs() throws {
@@ -53,11 +59,19 @@ struct JournalFileTests {
         #expect(data.entries.contains { $0.media.isEmpty })
     }
 
+    /// A wrong key can pass the legacy cipher's padding check and fail later,
+    /// in gunzip; only the 7.1 container reports a wrong password as such.
     @Test func wrongPasswordThrows() throws {
-        let url = Self.fixtureURL
-        try #require(FileManager.default.fileExists(atPath: url.path))
+        let legacyURL = Self.fixtureURL()
+        let containerURL = Self.fixtureURL("test_journal_7.1.zjournal")
+        try #require(FileManager.default.fileExists(atPath: legacyURL.path))
+        try #require(FileManager.default.fileExists(atPath: containerURL.path))
+
         #expect(throws: JournalError.self) {
-            _ = try JournalFile.open(url: url, password: "definitely-the-wrong-password")
+            _ = try JournalFile.open(url: legacyURL, password: "definitely-the-wrong-password")
+        }
+        #expect(throws: JournalError.wrongPassword) {
+            _ = try JournalFile.open(url: containerURL, password: "definitely-the-wrong-password")
         }
     }
 
@@ -83,6 +97,8 @@ struct JournalFileTests {
         try JournalFile.save(entries, to: out, password: "round-trip-pw")
         let reopened = try JournalFile.open(url: out, password: "round-trip-pw")
 
+        #expect(try Data(contentsOf: out).starts(with: Data("JBEARENC".utf8)))
+        #expect(reopened.version == 7.1)
         #expect(reopened.entries.count == original.entries.count + 1)
         #expect(reopened.entries.contains { $0.content == "Round-trip test entry" })
     }
@@ -328,7 +344,7 @@ struct JournalFileTests {
         defer { try? FileManager.default.removeItem(at: out) }
 
         try JournalFile.save(entries, to: out, password: "correct-horse")
-        #expect(throws: JournalError.self) {
+        #expect(throws: JournalError.wrongPassword) {
             _ = try JournalFile.open(url: out, password: "wrong-horse")
         }
     }
