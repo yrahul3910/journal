@@ -1,0 +1,68 @@
+{
+    "description": "Known-answer tests for the JournalBear 7.1 container (journal-format-7.1.md). Payload byte i is i mod 251. Every app must reproduce these files byte for byte from the given password, kdfSalt, and payloadNonce, with the writers' scrypt settings (N = 2^17, r = 8, p = 1). fileKey and payloadKey are the intermediate keys, so a mismatch can be traced to scrypt or to HKDF.",
+    "vectors": [
+        {
+            "name": "empty payload",
+            "password": "correct horse battery staple",
+            "kdfSalt": "000102030405060708090a0b0c0d0e0f",
+            "payloadNonce": "808182838485868788898a8b8c8d8e8f",
+            "payloadLength": 0,
+            "fileKey": "1b2946da71f41179e83b99dc33842d15741b87c4121c8c7f3781c1df864fb58b",
+            "payloadKey": "62c25f2928f8f9973d9574bca69009883a3083ba6745592eab4095fedd7abf41",
+            "headerHex": "4a42454152454e430101110801000102030405060708090a0b0c0d0e0f808182838485868788898a8b8c8d8e8f3364b211d659ea863228628cc8d7bc25d20cf36e77ad6c2e6e04061876fee0ac",
+            "fileLength": 93,
+            "fileSha256": "ab886beb544debc126e6366f425cbabb97e2f25412dff0d9f0b59769dac38211",
+            "fileHex": "4a42454152454e430101110801000102030405060708090a0b0c0d0e0f808182838485868788898a8b8c8d8e8f3364b211d659ea863228628cc8d7bc25d20cf36e77ad6c2e6e04061876fee0acc0373102b2362498d1a76f19e44eb32b"
+        },
+        {
+            "name": "one-byte payload",
+            "password": "correct horse battery staple",
+            "kdfSalt": "101112131415161718191a1b1c1d1e1f",
+            "payloadNonce": "909192939495969798999a9b9c9d9e9f",
+            "payloadLength": 1,
+            "fileKey": "b60a633be1c6d2a21f4dada499780fc55a70d9ba9f510617a82eeae7dbb15d06",
+            "payloadKey": "64174bf9edce7fa31376f0aaf5a33c1a494c4afa725d1e4b24e1c439abaf2e71",
+            "headerHex": "4a42454152454e430101110801101112131415161718191a1b1c1d1e1f909192939495969798999a9b9c9d9e9f0c5529b34af6cc3b5d022482a15aafffe68e69fd808782dea0969f257e60c39e",
+            "fileLength": 94,
+            "fileSha256": "e7d2fc3fb055a73599702427d2452f0c09fc9ff158912c1a80c0217a036dc370",
+            "fileHex": "4a42454152454e430101110801101112131415161718191a1b1c1d1e1f909192939495969798999a9b9c9d9e9f0c5529b34af6cc3b5d022482a15aafffe68e69fd808782dea0969f257e60c39eb82e32d3e54a556fe3fa4c0e0e9c5b6525"
+        },
+        {
+            "name": "exactly one chunk",
+            "password": "correct horse battery staple",
+            "kdfSalt": "202122232425262728292a2b2c2d2e2f",
+            "payloadNonce": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+            "payloadLength": 65536,
+            "fileKey": "766c1a990c450de66c45653a924360f9a13c6b90a5b89eea2300231f1dcea6e5",
+            "payloadKey": "12730275858d2eeab159269a1a890fca097baa39f83b51ebb6512aa3a5595e1d",
+            "headerHex": "4a42454152454e430101110801202122232425262728292a2b2c2d2e2fa0a1a2a3a4a5a6a7a8a9aaabacadaeafce3cebc99d2dbc7d2e6676df27c9842085fb7456835821b5293d727587a63450",
+            "fileLength": 65629,
+            "fileSha256": "390c096b81200936712ebf1bdae846a1d869d5b25eb05a9e3cae1545f1360c53"
+        },
+        {
+            "name": "one chunk plus one byte",
+            "password": "correct horse battery staple",
+            "kdfSalt": "303132333435363738393a3b3c3d3e3f",
+            "payloadNonce": "b0b1b2b3b4b5b6b7b8b9babbbcbdbebf",
+            "payloadLength": 65537,
+            "fileKey": "f8a0a52a76f796e9333f608a4861cfa9ffdca7072c2852a7c9a4500d16bdaffd",
+            "payloadKey": "d33000da1aa5244c9fa5f8a258b1b09d98a51002f74c87e0a4a2e100971f9962",
+            "headerHex": "4a42454152454e430101110801303132333435363738393a3b3c3d3e3fb0b1b2b3b4b5b6b7b8b9babbbcbdbebff931b61cf53e17ae8fafac948f6c4ee19fb0a7cd3d83253719b4fd5ad3755782",
+            "fileLength": 65646,
+            "fileSha256": "79e41401ba7cc382deb2041f54d936fe40246036224d8e2f5ac663a1e94c1953"
+        },
+        {
+            "name": "password needing NFC normalization",
+            "password": "cafe\u0301 au lait",
+            "kdfSalt": "404142434445464748494a4b4c4d4e4f",
+            "payloadNonce": "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf",
+            "payloadLength": 1,
+            "fileKey": "ca3f901419478b7142cee0f508fa1948bf7a7d179ed698f9c6443169e0f3c2c1",
+            "payloadKey": "8c68f0516c1eebd52b622165cc27de9ba9a51e7f021c141afb984c55bc5e46e9",
+            "headerHex": "4a42454152454e430101110801404142434445464748494a4b4c4d4e4fc0c1c2c3c4c5c6c7c8c9cacbcccdcecf6f588f53f45def45e1f4d5a4b57d345bf9c7a285cb4750eaaba6e52b837e2de6",
+            "fileLength": 94,
+            "fileSha256": "6bfdb996a21eae8d8fc7241ec6540b562d00909136de350ec7d897912a0051b7",
+            "fileHex": "4a42454152454e430101110801404142434445464748494a4b4c4d4e4fc0c1c2c3c4c5c6c7c8c9cacbcccdcecf6f588f53f45def45e1f4d5a4b57d345bf9c7a285cb4750eaaba6e52b837e2de68277ec41caf492dcee002fad8a2aecf88e"
+        }
+    ]
+}
